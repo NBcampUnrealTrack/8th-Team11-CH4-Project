@@ -58,13 +58,22 @@ public:
 	UPROPERTY(ReplicatedUsing = OnRep_BombHolder)
 	ACharacter* BombHolder;
 
+	// 폭탄을 붙일 SocketName
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
+	FName AttachSocketName;
+
+	// 다시 Pass하기 위한 쿨타임 값
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
+	float PassCooldownTime;
+
+	// DebugSphere를 Draw 할지 여부
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
+	bool bShowDebugSphere = true;
+
 private:
+	// 폭탄을 Pass할 수 있는지 여부
 	bool bCanPass;
 
 	// 다시 Pass에 필요한 쿨타임 관리 Timer
 	FTimerHandle PassCooldownTimer;
-
-	// 다시 Pass하기 위한 시간 값
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
-	float PassCooldownTime;
 };
