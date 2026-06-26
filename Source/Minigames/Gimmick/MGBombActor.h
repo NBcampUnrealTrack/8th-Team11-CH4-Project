@@ -32,9 +32,10 @@ protected:
 	void OnTriggerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 private:
-	void AttachToCurrentHolder();
+	// TargetHolder에 MGBombActor를 부착하는 함수
+	void AttachToHolder(ACharacter* TargetHolder);
 
-	// Pass
+	// Timer에 의해 호출될 bCanPass를 true로 만들어주는 함수
 	void ResetPassCooldown();
 
 public:

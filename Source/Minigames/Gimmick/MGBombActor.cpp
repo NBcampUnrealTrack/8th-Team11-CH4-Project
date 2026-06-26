@@ -23,12 +23,11 @@ AMGBombActor::AMGBombActor() :
 
 	BombMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BombStaticMesh"));
 	BombMesh->SetupAttachment(RootComponent);
-	BombMesh->SetCollisionProfileName(TEXT("NoCollision")); // 폭탄 자체는 NoCollision
-
+	BombMesh->SetCollisionProfileName(TEXT("NoCollision")); // 폭탄 자체의 StaticMesh는 NoCollision
 
 	PassTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("PassTrigger"));
 	PassTrigger->SetupAttachment(RootComponent);
-	PassTrigger->SetSphereRadius(PassTriggerRadius);
+	PassTrigger->SetSphereRadius(PassTriggerRadius);		// PassTriggerRadius 값 변경 가능
 
 	bReplicates = true;
 
@@ -60,11 +59,11 @@ void AMGBombActor::OnTriggerOverlap(
 			GetWorld(),
 			GetActorLocation(),             // 구체의 중심점 (폭탄의 현재 위치)
 			PassTriggerRadius,              // 구체의 반지름
-			16,                             // 세그먼트 수 (숫자가 높을수록 부드러운 구체가 됨)
+			16,                             // 세그먼트 수
 			FColor::Red,                    // 선 색상
 			false,                          // 영구 지속 여부 (false면 특정 시간 뒤 사라짐)
-			1.5f,                           // 지속 시간 (1.5초 동안 잔상이 남음)
-			0,                              // 깊이 우선순위
+			1.5f,                           // 지속 시간
+			0,                              // 깊이 우선순위, 0순위면 어떠한 경우에도 보임
 			1.5f                            // 선 두께
 		);
 	}
@@ -81,37 +80,39 @@ void AMGBombActor::OnTriggerOverlap(
 	if (OverlappedCharacter && OverlappedCharacter != BombHolder)
 	{
 		MG_LOG_ROLE(LogTemp, Warning, TEXT("Bomb Passed [%s] -> [%s]"),
-			BombHolder ? *BombHolder->GetName() : TEXT("Initial Point"), *OverlappedCharacter->GetName());
+			BombHolder ? *BombHolder->GetName() : TEXT("Initial Point"),
+			*OverlappedCharacter->GetName());
 
-		SetBombHolder(OverlappedCharacter);
+		SetBombHolder(OverlappedCharacter);		// 폭탄을 Overlapped된 Character에 부착
 	}
 }
 
+// 폭탄을 NewHolder에 부착, OnTriggerOverlap에서 실행됨
 void AMGBombActor::SetBombHolder(ACharacter* NewHolder)
 {
 	if (!HasAuthority() || BombHolder == NewHolder)
 	{
-		return;
+		return;	// Authority가 없거나 || NewHolder와 (현재)BombHolder가 같다면 조기종료
 	}
 
 	BombHolder = NewHolder;
-	AttachToCurrentHolder();
+	AttachToHolder(NewHolder);
 
 	// 폭탄을 옮겼으면 
-	bCanPass = false;		// 폭탄을 들고 있지 않기 때문에 false
+	bCanPass = false;						// 폭탄을 들고 있지 않기 때문에 false
 	GetWorldTimerManager().SetTimer(
-		PassCooldownTimer,		// 관리하는 Handler 객체
-		this,					// 
-		&AMGBombActor::ResetPassCooldown, // 타이머 종료시 실행될 함수
-		PassCooldownTime,	// 쿨타임
-		false				// 반복 여부, false : 반복x
+		PassCooldownTimer,					// 관리하는 Handler 객체
+		this,								// 이 객체에
+		&AMGBombActor::ResetPassCooldown,   // 타이머 종료시 실행될 함수, bCanPass를 true로 만들어주는 함수
+		PassCooldownTime,					// 쿨타임
+		false								// 반복 여부, false : 반복x
 	);
 }
 
 // BombHolder 변수 값이 바뀌었을 때 모든 Client들에 실행되는 함수
 void AMGBombActor::OnRep_BombHolder()
 {
-	AttachToCurrentHolder();
+	AttachToHolder(BombHolder);
 }
 
 // Replication에 필요한 기본 함수
@@ -123,9 +124,9 @@ void AMGBombActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME(ThisClass, BombHolder);
 }
 
-void AMGBombActor::AttachToCurrentHolder()
+void AMGBombActor::AttachToHolder(ACharacter* TargetHolder)
 {
-	if (!BombHolder)	// BombHolder가 유효하지 않으면
+	if (!TargetHolder)	// TargetHolder가 유효하지 않으면
 	{
 		return;
 	}
@@ -134,7 +135,7 @@ void AMGBombActor::AttachToCurrentHolder()
 	if (!AttachSocketName.IsNone())
 	{
 		this->AttachToComponent(
-			BombHolder->GetMesh(),
+			TargetHolder->GetMesh(),
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 			AttachSocketName		// 변수 'AttachSocketName'에 부착
 		);
@@ -142,7 +143,7 @@ void AMGBombActor::AttachToCurrentHolder()
 	else // 변수 'AttachSocketName'이 NAME_None 이라면 (= 에디터에서 BombActor의 AttachSocketName에 값 입력 안했을 때)
 	{
 		this->AttachToComponent(
-			BombHolder->GetCapsuleComponent(),
+			TargetHolder->GetCapsuleComponent(),
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale
 			// 소켓 이름을 인자로 넘기지 않으면 CapsuleComponent의 정중앙에 부착
 		);
