@@ -16,6 +16,8 @@ class MINIGAMES_API AMGGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 
 public:
+	AMGGameModeBase();
+
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 	virtual void Logout(AController* Exiting) override;

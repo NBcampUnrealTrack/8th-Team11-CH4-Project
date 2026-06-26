@@ -7,6 +7,14 @@
 #include "GameState/MGGameStateBase.h"
 #include "Kismet/GameplayStatics.h"
 
+AMGGameModeBase::AMGGameModeBase()
+{
+	bUseSeamlessTravel = true;		// 심리스 트래블 기능 활성화
+	// PlayerController : Interaction Key 유지 ( E, F, R, Q 등 )
+	// PlayerState : 플레이어별 점수, 등수 등 기록용
+	// 필요에 따라서는 PlayerCharacter도 유지
+}
+
 void AMGGameModeBase::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
