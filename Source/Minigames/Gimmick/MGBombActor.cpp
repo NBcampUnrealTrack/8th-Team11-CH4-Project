@@ -131,22 +131,24 @@ void AMGBombActor::AttachToHolder(ACharacter* TargetHolder)
 		return;
 	}
 
+	USkeletalMeshComponent* MeshComp = TargetHolder->GetMesh();
+	UCapsuleComponent* CapsuleComp = TargetHolder->GetCapsuleComponent();
+
 	// 변수 'AttachSocketName'이 NAME_Nome이 아니라면 (= 에디터에서 BombActor의 AttachSocketName에 값 입력)
-	if (!AttachSocketName.IsNone())
+	if (!AttachSocketName.IsNone() && MeshComp && MeshComp->DoesSocketExist(AttachSocketName))
 	{
 		this->AttachToComponent(
-			TargetHolder->GetMesh(),
+			MeshComp,
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 			AttachSocketName		// 변수 'AttachSocketName'에 부착
 		);
 	}
-	else // 변수 'AttachSocketName'이 NAME_None 이라면 (= 에디터에서 BombActor의 AttachSocketName에 값 입력 안했을 때)
-	{
+	else // 변수 'AttachSocketName'이 NAME_None 이거나 (= 에디터에서 BombActor의 AttachSocketName에 값 입력 안했을 때)
+	{	 // 에디터에서 입력한 'AttachSocketName'이름의 소켓이 없을 때
 		this->AttachToComponent(
-			TargetHolder->GetCapsuleComponent(),
+			CapsuleComp,
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale
-			// 소켓 이름을 인자로 넘기지 않으면 CapsuleComponent의 정중앙에 부착
-		);
+		);	// CapsuleComponent의 정중앙에 부착
 	}
 }
 
