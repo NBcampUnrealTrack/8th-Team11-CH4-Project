@@ -55,7 +55,8 @@ public:
 	float PassTriggerRadius;
 
 	//----------------------------------------------------------
-	// 폭탄을 소유한 Character
+	// 폭탄을 소유한 Character, 서버에서 BombHolder가 바뀌면 Replication되고
+	// Replication된 값을 받은 각 Client에서 OnRep_BombHolder()가 호출됨
 	UPROPERTY(ReplicatedUsing = OnRep_BombHolder)
 	ACharacter* BombHolder;
 
