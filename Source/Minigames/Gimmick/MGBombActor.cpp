@@ -134,13 +134,14 @@ void AMGBombActor::AttachToHolder(ACharacter* TargetHolder)
 	USkeletalMeshComponent* MeshComp = TargetHolder->GetMesh();
 	UCapsuleComponent* CapsuleComp = TargetHolder->GetCapsuleComponent();
 
-	// 변수 'AttachSocketName'이 NAME_Nome이 아니라면 (= 에디터에서 BombActor의 AttachSocketName에 값 입력)
+	// 변수 'AttachSocketName'이 NAME_Nome이 아니고 (= 에디터에서 BombActor의 AttachSocketName에 값 입력)
+	// && 스켈레탈 메쉬가 존재하고 && 'AttachSocketName'변수 이름의 소켓이 실제로 존재할 때
 	if (!AttachSocketName.IsNone() && MeshComp && MeshComp->DoesSocketExist(AttachSocketName))
 	{
 		this->AttachToComponent(
 			MeshComp,
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-			AttachSocketName		// 변수 'AttachSocketName'에 부착
+			AttachSocketName		// 변수 'AttachSocketName' 소켓에 부착
 		);
 	}
 	else // 변수 'AttachSocketName'이 NAME_None 이거나 (= 에디터에서 BombActor의 AttachSocketName에 값 입력 안했을 때)
