@@ -5,4 +5,5 @@
 
 void UMGGameInstance::Init()
 {
+	Super::Init();
 }
