@@ -79,6 +79,11 @@ void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	EIC->BindAction(LandMineAction, ETriggerEvent::Started, this, &ThisClass::HandleLandMineInput);
 
 	EIC->BindAction(MeleeAttackAction, ETriggerEvent::Started, this, &ThisClass::HandleMeleeAttackInput);
+
+	if (IsValid(TakeFlagAction))
+	{
+		EIC->BindAction(TakeFlagAction, ETriggerEvent::Started, this, &ThisClass::HandleTakeFlagInput);
+	}
 }
 
 void AMGPlayerCharacter::BeginPlay()
@@ -110,6 +115,7 @@ void AMGPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 
 	DOREPLIFETIME(ThisClass, CurrentAimPitch);
 	DOREPLIFETIME(ThisClass, bCanAttack);
+	DOREPLIFETIME(ThisClass, bFlagState);
 }
 
 void AMGPlayerCharacter::Tick(float DeltaTime)
@@ -190,6 +196,14 @@ void AMGPlayerCharacter::HandleMeleeAttackInput(const FInputActionValue& InValue
 		{
 			PlayMeleeAttackMontage();
 		}
+	}
+}
+
+void AMGPlayerCharacter::HandleTakeFlagInput(const FInputActionValue& InValue)
+{
+	if (IsLocallyControlled() == true)
+	{
+		ServerRPCTakeFlag();
 	}
 }
 
@@ -378,10 +392,54 @@ void AMGPlayerCharacter::TakeBuff(float InBuffValue)
 	}
 }
 
-bool AMGPlayerCharacter::SetHasFlag(bool HasFlag)
+bool AMGPlayerCharacter::SetHasFlag(bool bHasFlag)
 {
-	FlagState = HasFlag;
-	return FlagState;
+	bFlagState = bHasFlag;
+	return bFlagState;
+}
+
+void AMGPlayerCharacter::ServerRPCTakeFlag_Implementation()
+{
+	if (bFlagState == true) return;
+
+	TArray<FHitResult> OutHitResults;
+	FCollisionQueryParams Params(NAME_None, false, this);
+
+	// 뺏기 범위 설정
+	const float StealRange = 1500.f;
+	const FVector Start = GetActorLocation();
+	const FVector End = Start;
+
+	// 스윕으로 다른 플레이어 캐릭터 탐색.
+	bool bIsHitDetected = GetWorld()->SweepMultiByChannel(OutHitResults, 
+															Start, 
+															End, 
+															FQuat::Identity, 
+															ECC_Pawn, 
+															FCollisionShape::MakeSphere(StealRange), 
+															Params);
+
+	if (bIsHitDetected == true)
+	{
+		for (auto const& OutHitResult : OutHitResults)
+		{
+			AMGPlayerCharacter* TargetCharacter = Cast<AMGPlayerCharacter>(OutHitResult.GetActor());
+
+			if (IsValid(TargetCharacter) == true && TargetCharacter->GetHasFlag() == true)
+			{
+				TargetCharacter->SetHasFlag(false);
+
+				this->SetHasFlag(true);
+
+				break;
+			}
+		}
+	}
+}
+
+bool AMGPlayerCharacter::ServerRPCTakeFlag_Validate()
+{
+	return true;
 }
 
 void AMGPlayerCharacter::ClientRPCPlayMeleeAttackMontage_Implementation(AMGPlayerCharacter* InTargetCharacter)
