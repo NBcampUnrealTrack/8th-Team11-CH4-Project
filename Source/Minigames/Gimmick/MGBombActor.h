@@ -16,6 +16,7 @@ public:
 
 	// virtual void Tick(float DeltaTime) override;
 
+	// BombHolder 값이 바뀌었을 때 호출될 OnRep 함수
 	UFUNCTION()
 	void OnRep_BombHolder();
 
@@ -23,8 +24,8 @@ public:
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_OnExplode();
 
-	// NewHolder를 BombHolder로 변경하는 함수
-	void SetBombHolder(ACharacter* NewHolder);
+	// 폭탄의 ExplodeTimer를 관리, GameMode에서 최초로 폭탄을 넘기는 함수
+	void ActivateBomb(ACharacter* InitialHolder);
 
 	// Replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -36,14 +37,14 @@ protected:
 	void OnTriggerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 private:
+	// NewHolder를 BombHolder로 변경하는 함수
+	void SetBombHolder(ACharacter* NewHolder);
+
 	// TargetHolder에 MGBombActor를 부착하는 함수
 	void AttachToHolder(ACharacter* TargetHolder);
 
 	// Timer에 의해 호출될 bCanPass를 true로 만들어주는 함수
 	void ResetPassCooldown();
-
-	// 폭탄의 ExplodeTimer를 관리하는 함수
-	void ActivateBomb();
 
 	// ExplodeTimer 경과 후 폭탄이 터질 때 실행될 함수
 	void ExplodeBomb();
@@ -62,6 +63,7 @@ public:
 	UPROPERTY() 
 	class USphereComponent* PassTrigger;
 
+	// PassTrigger의 반지름
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
 	float PassTriggerRadius;
 
@@ -76,6 +78,7 @@ public:
 	//------------------------------------------------ Dynamic
 	// 폭탄을 소유한 Character, 서버에서 BombHolder가 바뀌면 Replication되고
 	// Replication된 값을 받은 각 Client에서 OnRep_BombHolder()가 호출됨
+	// OnRep를 이용하면 Culling 등으로 무시될 일 없이 반드시 실행됨
 	UPROPERTY(ReplicatedUsing = OnRep_BombHolder)
 	ACharacter* BombHolder;
 
