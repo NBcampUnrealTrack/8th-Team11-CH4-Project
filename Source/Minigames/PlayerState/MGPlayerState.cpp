@@ -4,8 +4,6 @@
 #include "PlayerState/MGPlayerState.h"
 #include "Net/UnrealNetwork.h"
 
-#include "Net/UnrealNetwork.h"
-
 AMGPlayerState::AMGPlayerState()
 	: TotalScore(0)
 {
