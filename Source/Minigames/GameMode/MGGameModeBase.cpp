@@ -6,6 +6,7 @@
 #include "Controller/MGPlayerController.h"
 #include "GameState/MGGameStateBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "PlayerState/MGFlagPlayerState.h"
 
 AMGGameModeBase::AMGGameModeBase()
 {
@@ -63,6 +64,11 @@ void AMGGameModeBase::BeginPlay()
 	RemainWaitingTimeForEnding = EndingTime;
 }
 
+void AMGGameModeBase::StartMiniGame()
+{
+	// 자식 구현
+}
+
 void AMGGameModeBase::OnCharacterDead(AMGPlayerController* InController)
 {
 	if (IsValid(InController) == false || AlivePlayerControllers.Find(InController) == INDEX_NONE)
@@ -74,6 +80,23 @@ void AMGGameModeBase::OnCharacterDead(AMGPlayerController* InController)
 
 	AlivePlayerControllers.Remove(InController);
 	DeadPlayerControllers.Add(InController);
+}
+
+void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
+{
+	int32 PlayerCount = GameState->PlayerArray.Num();
+
+	int32 AddScore = 0;
+	if (Rank == 1)
+	{
+		AddScore = 10;
+	}
+	else
+	{
+		AddScore = FMath::FloorToInt(9.f / (PlayerCount - 1) * (PlayerCount - Rank)) + 1;
+	}
+
+	PS->SetScore(PS->GetScore() + AddScore);
 }
 
 void AMGGameModeBase::OnMainTimerElapsed()
@@ -110,6 +133,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			NotificationString = FString::Printf(TEXT(""));
 
 			MGGameState->MatchState = EMatchState::Playing;
+			StartMiniGame();
 		}
 
 		NotifyToAllPlayer(NotificationString);
@@ -130,7 +154,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 
 			AlivePlayerControllers[0]->ClientRPCShowGameResultWidget(1);
 		}
-
+			
 		break;
 	}
 	case EMatchState::Ending:
