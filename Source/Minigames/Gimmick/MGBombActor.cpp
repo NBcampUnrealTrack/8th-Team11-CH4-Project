@@ -81,7 +81,7 @@ void AMGBombActor::OnTriggerOverlap(
 	// Overlapped된 Character이고 && 현재 폭탄을 들고 있지 않다면
 	if (OverlappedCharacter && OverlappedCharacter != BombHolder)
 	{
-		MG_LOG_ROLE(LogTemp, Warning, TEXT("Bomb Passed [%s] -> [%s]"),
+		MG_LOG_ROLE(LogMGNet, Warning, TEXT("Bomb Passed [%s] -> [%s]"),
 			BombHolder ? *BombHolder->GetName() : TEXT("Initial Point"),
 			*OverlappedCharacter->GetName());
 
@@ -160,8 +160,15 @@ void AMGBombActor::ResetPassCooldown()
 	bCanPass = true;
 }
 
-void AMGBombActor::ActivateBomb()
+void AMGBombActor::ActivateBomb(ACharacter* InitialHolder)
 {
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	SetBombHolder(InitialHolder);
+
 	GetWorldTimerManager().SetTimer(
 		ExplodeTimer,
 		this,
@@ -193,16 +200,16 @@ void AMGBombActor::ExplodeBomb()
 		return;
 	}	// 서버에서만 실행되도록 Authority 체크 후 조기 종료
 
-	MG_LOG_ROLE(LogTemp, Warning, TEXT("Bomb explode : %s"), 
+	MG_LOG_ROLE(LogMGNet, Warning, TEXT("Bomb explode : %s"),
 		BombHolder ? *BombHolder->GetName() : TEXT("Initial Point"));
 
 	if (BombHolder)
 	{
-		// AMGGameModeBase* 를 일단 사용중인데 변경 필요함
+		// AGameModeBase* 를 일단 사용중인데 AMGBombGameModeBase* 등으로 변경 필요함 ❗❗❗❗❗❗❗❗❗❗
 		AGameModeBase* CurrentGameMode = GetWorld()->GetAuthGameMode();
 		if (CurrentGameMode)
 		{
-			// 나중에 GameMode에 만들 탈락 처리 함수를 호출하면서 현재 폭탄 주인을 인자로 넘기기
+			// 나중에 GameMode에 만들 탈락 처리 함수를 호출하면서 현재 폭탄 주인을 인자로 넘기기 
 			// CurrentGameMode->EliminatePlayer(BombHolder);
 		}
 	}
@@ -211,12 +218,12 @@ void AMGBombActor::ExplodeBomb()
 	Multicast_OnExplode();
 
 	// 따로 RPC를 설정하지 않아도 자동으로 레플리케이션
-	// Destroy();
+	// Destroy();			// Multicast 함수 호출 직후에 Destroy를 할 경우 패킷이 보내지지 않을 수 있음
 	SetLifeSpan(0.1f);		// Multicast가 될 수 있도록 약간의 딜레이 후 Destroy
 }
 
 void AMGBombActor::Multicast_OnExplode_Implementation()
 {
 	// UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
-	MG_LOG_NET(LogTemp, Log, TEXT("Explosion Niagara Effect and Sound"));
+	MG_LOG_NET(LogMGNet, Log, TEXT("Explosion Niagara Effect and Sound"));
 }
