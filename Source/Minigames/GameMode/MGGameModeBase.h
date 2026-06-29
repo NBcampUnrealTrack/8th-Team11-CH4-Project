@@ -7,6 +7,11 @@
 
 class AMGPlayerController;
 
+UENUM(BlueprintType)
+enum class EMinigameType : uint8
+{
+	PASSBOME UMETA(DisplayName = "PassTheBomb")
+};
 /**
  *
  */
@@ -23,6 +28,10 @@ public:
 	virtual void Logout(AController* Exiting) override;
 
 	virtual void BeginPlay() override;
+
+	virtual void StartMinigame();	//오버라이드 시 Super호출 필수
+
+	virtual void EndMinigame();		//오버라이드 시 Super호출 필수
 
 	void OnCharacterDead(AMGPlayerController* InController);
 
@@ -49,9 +58,5 @@ public:
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TArray<TObjectPtr<AMGPlayerController>> AlivePlayerControllers;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TArray<TObjectPtr<AMGPlayerController>> DeadPlayerControllers;
-
+	TArray<TObjectPtr<AMGPlayerController>> AllPlayerControllers;
 };
