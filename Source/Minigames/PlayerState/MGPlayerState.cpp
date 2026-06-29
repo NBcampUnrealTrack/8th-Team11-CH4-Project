@@ -15,4 +15,6 @@ void AMGPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ThisClass, TotalScore);
+	DOREPLIFETIME(ThisClass, MGScore);
+	DOREPLIFETIME(ThisClass, Rank);
 }
