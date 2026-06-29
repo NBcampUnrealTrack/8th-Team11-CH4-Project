@@ -14,6 +14,7 @@ class UAnimMontage;
 class UMGStatusComponent;
 class UMGHPTextWidgetComponent;
 class UUW_HPText;
+class UMGInteractionOverlapComponent;
 
 UCLASS()
 class MINIGAMES_API AMGPlayerCharacter : public ACharacter
@@ -56,6 +57,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Components")
 	TObjectPtr<UMGHPTextWidgetComponent> HPTextWidgetComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UMGInteractionOverlapComponent> InteractionComponent;
 
 #pragma endregion
 

@@ -2,7 +2,9 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "Type/MGPlayerColor.h"
 #include "MGPlayerState.generated.h"
 
 /**
@@ -27,4 +29,9 @@ public:
 
 	UPROPERTY(Replicated)
 	int32 TotalScore;	// 게임 최종점수
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EMGPlayerColor PlayerColor = EMGPlayerColor::Red;
+
+	FLinearColor GetPlayerLinearColor() const;
 };
