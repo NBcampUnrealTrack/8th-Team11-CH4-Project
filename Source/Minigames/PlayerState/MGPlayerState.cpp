@@ -4,9 +4,15 @@
 #include "PlayerState/MGPlayerState.h"
 #include "Net/UnrealNetwork.h"
 
-void AMGPlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+AMGPlayerState::AMGPlayerState()
+	: TotalScore(0)
+{
+	bReplicates = true;
+}
+
+void AMGPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	
-	DOREPLIFETIME(AMGPlayerState, Rank);
+
+	DOREPLIFETIME(ThisClass, TotalScore);
 }

@@ -1,4 +1,4 @@
-// MGFlagGameModeBase.h
+﻿// MGFlagGameModeBase.h
 
 #pragma once
 
@@ -14,7 +14,7 @@ class MINIGAMES_API AMGFlagGameModeBase : public AMGGameModeBase
 public:
 	virtual void BeginPlay() override;
 
-	virtual void StartMiniGame() override;
+	virtual void StartMinigame() override;
 	
 protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

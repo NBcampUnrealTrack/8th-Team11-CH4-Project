@@ -35,7 +35,7 @@ void AMGGameModeBase::PostLogin(APlayerController* NewPlayer)
 	AMGPlayerController* NewPlayerController = Cast<AMGPlayerController>(NewPlayer);
 	if (IsValid(NewPlayerController) == true)
 	{
-		AlivePlayerControllers.Add(NewPlayerController);
+		AllPlayerControllers.Add(NewPlayerController);
 
 		NewPlayerController->NotificationText = FText::FromString(TEXT("Connected to the game server."));
 	}
@@ -46,10 +46,9 @@ void AMGGameModeBase::Logout(AController* Exiting)
 	Super::Logout(Exiting);
 
 	AMGPlayerController* ExitingPlayerController = Cast<AMGPlayerController>(Exiting);
-	if (IsValid(ExitingPlayerController) == true && AlivePlayerControllers.Find(ExitingPlayerController) != INDEX_NONE)
+	if (IsValid(ExitingPlayerController) == true && AllPlayerControllers.Find(ExitingPlayerController) != INDEX_NONE)
 	{
-		AlivePlayerControllers.Remove(ExitingPlayerController);
-		DeadPlayerControllers.Add(ExitingPlayerController);
+		AllPlayerControllers.Remove(ExitingPlayerController);
 	}
 }
 
@@ -64,22 +63,28 @@ void AMGGameModeBase::BeginPlay()
 	RemainWaitingTimeForEnding = EndingTime;
 }
 
-void AMGGameModeBase::StartMiniGame()
+void AMGGameModeBase::StartMinigame()
 {
-	// 자식 구현
+	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
+	MGGameState->MatchState = EMatchState::Playing;
+}
+
+void AMGGameModeBase::EndMinigame()
+{
+	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
+	MGGameState->MatchState = EMatchState::Ending;
 }
 
 void AMGGameModeBase::OnCharacterDead(AMGPlayerController* InController)
 {
-	if (IsValid(InController) == false || AlivePlayerControllers.Find(InController) == INDEX_NONE)
+	if (IsValid(InController) == false || AllPlayerControllers.Find(InController) == INDEX_NONE)
 	{
 		return;
 	}
 
-	InController->ClientRPCShowGameResultWidget(AlivePlayerControllers.Num());
+	InController->ClientRPCShowGameResultWidget(AllPlayerControllers.Num());
 
-	AlivePlayerControllers.Remove(InController);
-	DeadPlayerControllers.Add(InController);
+	AllPlayerControllers.Remove(InController);
 }
 
 void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
@@ -115,7 +120,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 	{
 		FString NotificationString = FString::Printf(TEXT(""));
 
-		if (AlivePlayerControllers.Num() < MinimumPlayerCountForPlaying)
+		if (AllPlayerControllers.Num() < MinimumPlayerCountForPlaying)
 		{
 			NotificationString = FString::Printf(TEXT("Wait another players for playing."));
 
@@ -132,29 +137,11 @@ void AMGGameModeBase::OnMainTimerElapsed()
 		{
 			NotificationString = FString::Printf(TEXT(""));
 
-			MGGameState->MatchState = EMatchState::Playing;
-			StartMiniGame();
+			StartMinigame();
 		}
 
 		NotifyToAllPlayer(NotificationString);
 
-		break;
-	}
-	case EMatchState::Playing:
-	{
-		MGGameState->AlivePlayerControllerCount = AlivePlayerControllers.Num();
-
-		FString NotificationString = FString::Printf(TEXT("%d / %d"), MGGameState->AlivePlayerControllerCount, MGGameState->AlivePlayerControllerCount + DeadPlayerControllers.Num());
-
-		NotifyToAllPlayer(NotificationString);
-
-		if (MGGameState->AlivePlayerControllerCount <= 1)
-		{
-			MGGameState->MatchState = EMatchState::Ending;
-
-			AlivePlayerControllers[0]->ClientRPCShowGameResultWidget(1);
-		}
-			
 		break;
 	}
 	case EMatchState::Ending:
@@ -167,13 +154,9 @@ void AMGGameModeBase::OnMainTimerElapsed()
 
 		if (RemainWaitingTimeForEnding <= 0)
 		{
-			for (auto AliveController : AlivePlayerControllers)
+			for (auto MGPC : AllPlayerControllers)
 			{
-				AliveController->ClientRPCReturnToTitle();
-			}
-			for (auto DeadController : DeadPlayerControllers)
-			{
-				DeadController->ClientRPCReturnToTitle();
+				MGPC->ClientRPCReturnToTitle();
 			}
 
 			MainTimerHandle.Invalidate();
@@ -186,8 +169,6 @@ void AMGGameModeBase::OnMainTimerElapsed()
 
 		break;
 	}
-	case EMatchState::End:
-		break;
 	default:
 		break;
 	}
@@ -195,13 +176,8 @@ void AMGGameModeBase::OnMainTimerElapsed()
 
 void AMGGameModeBase::NotifyToAllPlayer(const FString& NotificationString)
 {
-	for (auto AlivePlayerController : AlivePlayerControllers)
+	for (auto MGPC : AllPlayerControllers)
 	{
-		AlivePlayerController->NotificationText = FText::FromString(NotificationString);
-	}
-
-	for (auto DeadPlayerController : DeadPlayerControllers)
-	{
-		DeadPlayerController->NotificationText = FText::FromString(NotificationString);
+		MGPC->NotificationText = FText::FromString(NotificationString);
 	}
 }
