@@ -37,7 +37,7 @@ void AMGPassBombGameMode::StartMinigame()
 	if (BombNominee.IsValidIndex(BombIndex))
 	{
 		BombActor = GetWorld()->SpawnActor<AMGBombActor>(BombActorClass);
-		BombActor->SetBombHolder(BombNominee[BombIndex]->GetCharacter());
+		BombActor->ActivateBomb(BombNominee[BombIndex]->GetCharacter());
 		//BombPC = BombNominee[BombIndex];
 		// BombNominee[BombIndex]->GetCharacter();
 	}
