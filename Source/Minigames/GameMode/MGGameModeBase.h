@@ -5,6 +5,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "MGGameModeBase.generated.h"
 
+class AMGPlayerState;
 class AMGPlayerController;
 
 UENUM(BlueprintType)
@@ -35,6 +36,8 @@ public:
 
 	void OnCharacterDead(AMGPlayerController* InController);
 
+	void GiveScore(AMGPlayerState* PS, int32 Rank);
+	
 private:
 	UFUNCTION()
 	void OnMainTimerElapsed();

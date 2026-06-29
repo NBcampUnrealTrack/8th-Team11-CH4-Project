@@ -6,6 +6,7 @@
 #include "Controller/MGPlayerController.h"
 #include "GameState/MGGameStateBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "PlayerState/MGFlagPlayerState.h"
 
 AMGGameModeBase::AMGGameModeBase()
 {
@@ -84,6 +85,23 @@ void AMGGameModeBase::OnCharacterDead(AMGPlayerController* InController)
 	InController->ClientRPCShowGameResultWidget(AllPlayerControllers.Num());
 
 	AllPlayerControllers.Remove(InController);
+}
+
+void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
+{
+	int32 PlayerCount = GameState->PlayerArray.Num();
+
+	int32 AddScore = 0;
+	if (Rank == 1)
+	{
+		AddScore = 10;
+	}
+	else
+	{
+		AddScore = FMath::FloorToInt(9.f / (PlayerCount - 1) * (PlayerCount - Rank)) + 1;
+	}
+
+	PS->SetScore(PS->GetScore() + AddScore);
 }
 
 void AMGGameModeBase::OnMainTimerElapsed()
