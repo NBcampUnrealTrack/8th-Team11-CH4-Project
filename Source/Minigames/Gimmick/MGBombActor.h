@@ -19,7 +19,11 @@ public:
 	UFUNCTION()
 	void OnRep_BombHolder();
 
+	// 폭탄이 터질 때 실행될 함수, [폭발 나이아가라 이펙트, 사운드] 등
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_OnExplode();
 
+	// NewHolder를 BombHolder로 변경하는 함수
 	void SetBombHolder(ACharacter* NewHolder);
 
 	// Replication
@@ -38,7 +42,14 @@ private:
 	// Timer에 의해 호출될 bCanPass를 true로 만들어주는 함수
 	void ResetPassCooldown();
 
+	// 폭탄의 ExplodeTimer를 관리하는 함수
+	void ActivateBomb();
+
+	// ExplodeTimer 경과 후 폭탄이 터질 때 실행될 함수
+	void ExplodeBomb();
+
 public:
+	//------------------------------------------------ Static
 	// BombMesh를 부착할 위치
 	UPROPERTY() 
 	USceneComponent* Root;
@@ -54,23 +65,27 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
 	float PassTriggerRadius;
 
-	//----------------------------------------------------------
+	// 폭탄을 붙일 SocketName
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
+	FName AttachSocketName;
+
+	// Debug 할지 여부
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
+	bool bShowDebug = true;
+
+	//------------------------------------------------ Dynamic
 	// 폭탄을 소유한 Character, 서버에서 BombHolder가 바뀌면 Replication되고
 	// Replication된 값을 받은 각 Client에서 OnRep_BombHolder()가 호출됨
 	UPROPERTY(ReplicatedUsing = OnRep_BombHolder)
 	ACharacter* BombHolder;
 
-	// 폭탄을 붙일 SocketName
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
-	FName AttachSocketName;
-
-	// 다시 Pass하기 위한 쿨타임 값
+	// 다시 Pass하기 위한 쿨타임 시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
 	float PassCooldownTime;
 
-	// DebugSphere를 Draw 할지 여부
+	// 폭탄 카운트다운이 시작된 후 터질 때까지 걸리는 시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
-	bool bShowDebugSphere = true;
+	float ExplodeTime;
 
 private:
 	// 폭탄을 Pass할 수 있는지 여부
@@ -78,4 +93,7 @@ private:
 
 	// 다시 Pass에 필요한 쿨타임 관리 Timer
 	FTimerHandle PassCooldownTimer;
+
+	// 폭탄 활성화 시간 관리 Timer
+	FTimerHandle ExplodeTimer;
 };

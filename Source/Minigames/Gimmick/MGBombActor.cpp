@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"		// Character
 #include "Net/UnrealNetwork.h"				// Replication
 #include "Components/CapsuleComponent.h"	// Socket이 없을 때 CapsuleComponent의 중앙으로 Attach
+#include "GameMode/MGGameModeBase.h"		// Explode를 GameMode에 알려줘야함
 
 #include "DrawDebugHelpers.h"				// Debug용
 
@@ -14,7 +15,8 @@ AMGBombActor::AMGBombActor() :
 	PassTriggerRadius(100.f),
 	bCanPass(true),
 	PassCooldownTime(0.5f),
-	BombHolder(nullptr)
+	BombHolder(nullptr),
+	ExplodeTime(15.f)
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -53,7 +55,7 @@ void AMGBombActor::OnTriggerOverlap(
 	const FHitResult& SweepResult)
 {
 
-	if (bShowDebugSphere)	// Debug가 켜져있으면
+	if (bShowDebug)	// Debug가 켜져있으면
 	{
 		DrawDebugSphere(
 			GetWorld(),
@@ -156,4 +158,65 @@ void AMGBombActor::AttachToHolder(ACharacter* TargetHolder)
 void AMGBombActor::ResetPassCooldown()
 {
 	bCanPass = true;
+}
+
+void AMGBombActor::ActivateBomb()
+{
+	GetWorldTimerManager().SetTimer(
+		ExplodeTimer,
+		this,
+		&AMGBombActor::ExplodeBomb,
+		ExplodeTime,
+		false
+	);
+
+	if (bShowDebug)
+	{
+		FString DebugMessage = FString::Printf(TEXT("[%s] Countdown begin : %.1f"),
+			(GetNetMode() == ENetMode::NM_Client) ? *FString::Printf(TEXT("Client%02d"), UE::GetPlayInEditorID()) : ((GetNetMode() == ENetMode::NM_Standalone) ? TEXT("StandAlone") : TEXT("Server")),
+			ExplodeTime);
+
+		GEngine->AddOnScreenDebugMessage(
+			-1,                 // 고유 Key (-1은 기존 메시지를 지우지 않고 계속 새로 쌓음)
+			5.0f,               // 화면에 메시지가 머무르는 시간 (5초)
+			FColor::Cyan,       // 글자 색상
+			DebugMessage        // 출력할 문자열
+		);
+	}
+}
+
+// 서버에서만 실행되는 로직
+void AMGBombActor::ExplodeBomb()
+{
+	if (!HasAuthority())
+	{
+		return;
+	}	// 서버에서만 실행되도록 Authority 체크 후 조기 종료
+
+	MG_LOG_ROLE(LogTemp, Warning, TEXT("Bomb explode : %s"), 
+		BombHolder ? *BombHolder->GetName() : TEXT("Initial Point"));
+
+	if (BombHolder)
+	{
+		// AMGGameModeBase* 를 일단 사용중인데 변경 필요함
+		AGameModeBase* CurrentGameMode = GetWorld()->GetAuthGameMode();
+		if (CurrentGameMode)
+		{
+			// 나중에 GameMode에 만들 탈락 처리 함수를 호출하면서 현재 폭탄 주인을 인자로 넘기기
+			// CurrentGameMode->EliminatePlayer(BombHolder);
+		}
+	}
+
+	// 모든 클라이언트에 Multicast, [폭탄 나이아가라 이펙트, 사운드] 등
+	Multicast_OnExplode();
+
+	// 따로 RPC를 설정하지 않아도 자동으로 레플리케이션
+	// Destroy();
+	SetLifeSpan(0.1f);		// Multicast가 될 수 있도록 약간의 딜레이 후 Destroy
+}
+
+void AMGBombActor::Multicast_OnExplode_Implementation()
+{
+	// UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
+	MG_LOG_NET(LogTemp, Log, TEXT("Explosion Niagara Effect and Sound"));
 }
