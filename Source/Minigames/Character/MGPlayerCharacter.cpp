@@ -26,6 +26,8 @@
 #include "GameMode/MGGameModeBase.h"
 #include "GameState/MGGameStateBase.h"
 
+#include "Component/Button/MGInteractionOverlapComponent.h"
+
 AMGPlayerCharacter::AMGPlayerCharacter()
 	: bCanAttack(true)
 	, MeleeAttackMontagePlayTime(0.f)
@@ -61,6 +63,9 @@ AMGPlayerCharacter::AMGPlayerCharacter()
 		// Billboard 방식으로 보이나, 주인공 캐릭터를 가리게됨. 또한 UI와 멀어져도 동일한 크기가 유지되는 문제도 있음.
 	HPTextWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
 	HPTextWidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+
+	InteractionComponent =CreateDefaultSubobject<UMGInteractionOverlapComponent>(TEXT("InteractionComponent"));
 }
 
 void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
