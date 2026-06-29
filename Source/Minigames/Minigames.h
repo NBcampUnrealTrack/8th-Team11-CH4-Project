@@ -1,4 +1,4 @@
-﻿// Dedicated.h
+﻿// Minigames.h
 
 #pragma once
 

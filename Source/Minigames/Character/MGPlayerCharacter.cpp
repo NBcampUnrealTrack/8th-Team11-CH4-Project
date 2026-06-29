@@ -383,6 +383,12 @@ void AMGPlayerCharacter::TakeBuff(float InBuffValue)
 	}
 }
 
+bool AMGPlayerCharacter::SetHasFlag(bool HasFlag)
+{
+	FlagState = HasFlag;
+	return FlagState;
+}
+
 void AMGPlayerCharacter::ClientRPCPlayMeleeAttackMontage_Implementation(AMGPlayerCharacter* InTargetCharacter)
 {
 	if (IsValid(InTargetCharacter) == true)
