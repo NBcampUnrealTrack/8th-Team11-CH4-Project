@@ -5,6 +5,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "MGGameModeBase.generated.h"
 
+class AMGPlayerState;
 class AMGPlayerController;
 
 /**
@@ -24,8 +25,12 @@ public:
 
 	virtual void BeginPlay() override;
 
+	virtual void StartMiniGame();
+	
 	void OnCharacterDead(AMGPlayerController* InController);
 
+	void GiveScore(AMGPlayerState* PS, int32 Rank);
+	
 private:
 	UFUNCTION()
 	void OnMainTimerElapsed();
