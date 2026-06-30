@@ -1,9 +1,14 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// MGGameInstance.cpp
 
 #include "GameInstance/MGGameInstance.h"
 
-void UMGGameInstance::Init()
+UMGGameInstance::UMGGameInstance()
 {
-	Super::Init();
+	// GameInstance 최초 생성시 
+	CurrentRoundState = ERoundState::Lobby;
 }
+
+//void UMGGameInstance::Init()
+//{
+//	Super::Init();
+//}

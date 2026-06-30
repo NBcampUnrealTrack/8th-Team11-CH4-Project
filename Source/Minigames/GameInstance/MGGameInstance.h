@@ -1,21 +1,22 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// MGGameInstance.h
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "GameState/MGGameStateBase.h"
 #include "MGGameInstance.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class MINIGAMES_API UMGGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 public:
-	virtual void Init() override;
 
-public:
-	
+	UMGGameInstance();
+
+	//virtual void Init() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Flow")
+	ERoundState CurrentRoundState;
 };
