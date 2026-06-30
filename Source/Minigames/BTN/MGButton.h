@@ -51,4 +51,9 @@ private:
     // 값이 복제될 때 클라이언트에서 자동으로 실행
     UFUNCTION()
     void OnRep_CurrentOwnerState();
+
+    // 서버에서 소유권 추적
+    UPROPERTY()
+    class APlayerState* LastOwnerState = nullptr;
+
 };

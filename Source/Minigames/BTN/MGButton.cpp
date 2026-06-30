@@ -36,7 +36,7 @@ void AMGButton::BeginPlay()
 // 플레이어가 근처에서 키를 누르면 호출될 함수 (소유권 변경)
 bool AMGButton::SetButtonOwner(APlayerState* NewOwnerState)
 {
-    // 1. 유효성 검사
+    // 유효성 검사
     if (!NewOwnerState)
     {
         UE_LOG(LogTemp, Error, TEXT("❌ 실패: NewOwnerState가 nullptr입니다!"));
@@ -53,20 +53,20 @@ bool AMGButton::SetButtonOwner(APlayerState* NewOwnerState)
         }
     }
 
-    // 버튼 소유 개수 변경
     if (HasAuthority())
     {
+        // 이전 소유권자 개수 감소
         if (CurrentOwnerState != nullptr)
         {
             float OldScore = CurrentOwnerState->GetScore();
             CurrentOwnerState->SetScore(FMath::Max(0.f, OldScore - 1.f));
         }
 
-        float NewScore = NewOwnerState->GetScore();
-        NewOwnerState->SetScore(NewScore + 1.f);
+        // 새 소유권자 개수 증가
+        NewOwnerState->SetScore(NewOwnerState->GetScore() + 1.f);
     }
 
-    // 4. 소유권 이전
+    // 소유권 이전
     CurrentOwnerState = NewOwnerState;
 
     // 성공 로그 출력 
@@ -106,5 +106,8 @@ void AMGButton::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherA
 // 서버로부터 클라이언트 점수 전달
 void AMGButton::OnRep_CurrentOwnerState()
 {
-    OnButtonColorChanged(CurrentOwnerState);
+    GetWorldTimerManager().SetTimerForNextTick([this]()
+        {
+            OnButtonColorChanged(CurrentOwnerState);
+        });
 }
