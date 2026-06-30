@@ -3,39 +3,56 @@
 #include "Components/StaticMeshComponent.h"
 #include "PlayerState/MGPlayerState.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Net/UnrealNetwork.h"
 
 AMGButtonActor::AMGButtonActor()
 {
     PrimaryActorTick.bCanEverTick = false;
+    bReplicates = true;
 
     BaseMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMesh"));
     SetRootComponent(BaseMesh);
-
     ButtonMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ButtonMesh"));
     ButtonMesh->SetupAttachment(BaseMesh);
+}
+
+void AMGButtonActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(AMGButtonActor, bPressed);
+    DOREPLIFETIME(AMGButtonActor, CurrentColor);
+}
+
+void AMGButtonActor::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+
+    ButtonOriginLocation = ButtonMesh->GetRelativeLocation();
 }
 
 void AMGButtonActor::BeginPlay()
 {
     Super::BeginPlay();
 
-    ButtonOriginLocation = ButtonMesh->GetRelativeLocation();
     DynamicMaterial = ButtonMesh->CreateDynamicMaterialInstance(0);
-
     ApplyVisual();
 }
 
 void AMGButtonActor::BeginInteract_Implementation(AActor* Interactor)
 {
-    AMGPlayerCharacter* Player = Cast<AMGPlayerCharacter>(Interactor);
+    if (!HasAuthority())
+    {
+        return;
+    }
 
+    AMGPlayerCharacter* Player = Cast<AMGPlayerCharacter>(Interactor);
     if (!Player)
     {
         return;
     }
 
     AMGPlayerState* PlayerState = Player->GetPlayerState<AMGPlayerState>();
-
     if (!PlayerState)
     {
         return;
@@ -49,23 +66,35 @@ void AMGButtonActor::BeginInteract_Implementation(AActor* Interactor)
 
 void AMGButtonActor::EndInteract_Implementation(AActor* Interactor)
 {
+    if (!HasAuthority())
+    {
+        return;
+    }
+
     bPressed = false;
+    ApplyVisual();
+}
+
+void AMGButtonActor::OnRep_Pressed()
+{
+    ApplyVisual();
+}
+
+void AMGButtonActor::OnRep_Color()
+{
     ApplyVisual();
 }
 
 void AMGButtonActor::ApplyVisual()
 {
-    if (bPressed)
-    {
-        ButtonMesh->SetRelativeLocation(ButtonOriginLocation - FVector(0.f, 0.f, PressDepth));
-    }
-    else
-    {
-        ButtonMesh->SetRelativeLocation(ButtonOriginLocation);
-    }
+    const FVector TargetLocation = bPressed
+        ? ButtonOriginLocation - FVector(0.f, 0.f, PressDepth)
+        : ButtonOriginLocation;
+
+    ButtonMesh->SetRelativeLocation(TargetLocation);
 
     if (DynamicMaterial)
     {
-        DynamicMaterial->SetVectorParameterValue(ColorParameterName,CurrentColor);
+        DynamicMaterial->SetVectorParameterValue(ColorParameterName, CurrentColor);
     }
 }
