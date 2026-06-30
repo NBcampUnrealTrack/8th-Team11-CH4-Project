@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Component/Button/MGInteractable.h"
+#include "Gimmick/Button/MGInteractable.h"
 #include "MGButtonActor.generated.h"
 
 class UStaticMeshComponent;
