@@ -3,6 +3,8 @@
 
 AMGPlayerState::AMGPlayerState()
 	: TotalScore(0)
+    , MGScore(0)
+    , Rank(0)
 {
 	bReplicates = true;
 }
