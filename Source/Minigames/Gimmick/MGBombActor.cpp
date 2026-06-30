@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"		// Character
 #include "Net/UnrealNetwork.h"				// Replication
 #include "Components/CapsuleComponent.h"	// Socket이 없을 때 CapsuleComponent의 중앙으로 Attach
+#include "GameMode/MGGameModeBase.h"		// Explode를 GameMode에 알려줘야함
 
 #include "DrawDebugHelpers.h"				// Debug용
 
@@ -14,7 +15,8 @@ AMGBombActor::AMGBombActor() :
 	PassTriggerRadius(100.f),
 	bCanPass(true),
 	PassCooldownTime(0.5f),
-	BombHolder(nullptr)
+	BombHolder(nullptr),
+	ExplodeTime(15.f)
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -53,7 +55,7 @@ void AMGBombActor::OnTriggerOverlap(
 	const FHitResult& SweepResult)
 {
 
-	if (bShowDebugSphere)	// Debug가 켜져있으면
+	if (bShowDebug)	// Debug가 켜져있으면
 	{
 		DrawDebugSphere(
 			GetWorld(),
@@ -79,7 +81,7 @@ void AMGBombActor::OnTriggerOverlap(
 	// Overlapped된 Character이고 && 현재 폭탄을 들고 있지 않다면
 	if (OverlappedCharacter && OverlappedCharacter != BombHolder)
 	{
-		MG_LOG_ROLE(LogTemp, Warning, TEXT("Bomb Passed [%s] -> [%s]"),
+		MG_LOG_ROLE(LogMGNet, Warning, TEXT("Bomb Passed [%s] -> [%s]"),
 			BombHolder ? *BombHolder->GetName() : TEXT("Initial Point"),
 			*OverlappedCharacter->GetName());
 
@@ -131,26 +133,97 @@ void AMGBombActor::AttachToHolder(ACharacter* TargetHolder)
 		return;
 	}
 
-	// 변수 'AttachSocketName'이 NAME_Nome이 아니라면 (= 에디터에서 BombActor의 AttachSocketName에 값 입력)
-	if (!AttachSocketName.IsNone())
+	USkeletalMeshComponent* MeshComp = TargetHolder->GetMesh();
+	UCapsuleComponent* CapsuleComp = TargetHolder->GetCapsuleComponent();
+
+	// 변수 'AttachSocketName'이 NAME_Nome이 아니고 (= 에디터에서 BombActor의 AttachSocketName에 값 입력)
+	// && 스켈레탈 메쉬가 존재하고 && 'AttachSocketName'변수 이름의 소켓이 실제로 존재할 때
+	if (!AttachSocketName.IsNone() && MeshComp && MeshComp->DoesSocketExist(AttachSocketName))
 	{
 		this->AttachToComponent(
-			TargetHolder->GetMesh(),
+			MeshComp,
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-			AttachSocketName		// 변수 'AttachSocketName'에 부착
+			AttachSocketName		// 변수 'AttachSocketName' 소켓에 부착
 		);
 	}
-	else // 변수 'AttachSocketName'이 NAME_None 이라면 (= 에디터에서 BombActor의 AttachSocketName에 값 입력 안했을 때)
-	{
+	else // 변수 'AttachSocketName'이 NAME_None 이거나 (= 에디터에서 BombActor의 AttachSocketName에 값 입력 안했을 때)
+	{	 // 에디터에서 입력한 'AttachSocketName'이름의 소켓이 없을 때
 		this->AttachToComponent(
-			TargetHolder->GetCapsuleComponent(),
+			CapsuleComp,
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale
-			// 소켓 이름을 인자로 넘기지 않으면 CapsuleComponent의 정중앙에 부착
-		);
+		);	// CapsuleComponent의 정중앙에 부착
 	}
 }
 
 void AMGBombActor::ResetPassCooldown()
 {
 	bCanPass = true;
+}
+
+void AMGBombActor::ActivateBomb(ACharacter* InitialHolder)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	SetBombHolder(InitialHolder);
+
+	GetWorldTimerManager().SetTimer(
+		ExplodeTimer,
+		this,
+		&AMGBombActor::ExplodeBomb,
+		ExplodeTime,
+		false
+	);
+
+	if (bShowDebug)
+	{
+		FString DebugMessage = FString::Printf(TEXT("[%s] Countdown begin : %.1f"),
+			(GetNetMode() == ENetMode::NM_Client) ? *FString::Printf(TEXT("Client%02d"), UE::GetPlayInEditorID()) : ((GetNetMode() == ENetMode::NM_Standalone) ? TEXT("StandAlone") : TEXT("Server")),
+			ExplodeTime);
+
+		GEngine->AddOnScreenDebugMessage(
+			-1,                 // 고유 Key (-1은 기존 메시지를 지우지 않고 계속 새로 쌓음)
+			5.0f,               // 화면에 메시지가 머무르는 시간 (5초)
+			FColor::Cyan,       // 글자 색상
+			DebugMessage        // 출력할 문자열
+		);
+	}
+}
+
+// 서버에서만 실행되는 로직
+void AMGBombActor::ExplodeBomb()
+{
+	if (!HasAuthority())
+	{
+		return;
+	}	// 서버에서만 실행되도록 Authority 체크 후 조기 종료
+
+	MG_LOG_ROLE(LogMGNet, Warning, TEXT("Bomb explode : %s"),
+		BombHolder ? *BombHolder->GetName() : TEXT("Initial Point"));
+
+	if (BombHolder)
+	{
+		// AGameModeBase* 를 일단 사용중인데 AMGBombGameModeBase* 등으로 변경 필요함 ❗❗❗❗❗❗❗❗❗❗
+		AGameModeBase* CurrentGameMode = GetWorld()->GetAuthGameMode();
+		if (CurrentGameMode)
+		{
+			// 나중에 GameMode에 만들 탈락 처리 함수를 호출하면서 현재 폭탄 주인을 인자로 넘기기 
+			// CurrentGameMode->EliminatePlayer(BombHolder);
+		}
+	}
+
+	// 모든 클라이언트에 Multicast, [폭탄 나이아가라 이펙트, 사운드] 등
+	Multicast_OnExplode();
+
+	// 따로 RPC를 설정하지 않아도 자동으로 레플리케이션
+	// Destroy();			// Multicast 함수 호출 직후에 Destroy를 할 경우 패킷이 보내지지 않을 수 있음
+	SetLifeSpan(0.1f);		// Multicast가 될 수 있도록 약간의 딜레이 후 Destroy
+}
+
+void AMGBombActor::Multicast_OnExplode_Implementation()
+{
+	// UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
+	MG_LOG_NET(LogMGNet, Log, TEXT("Explosion Niagara Effect and Sound"));
 }

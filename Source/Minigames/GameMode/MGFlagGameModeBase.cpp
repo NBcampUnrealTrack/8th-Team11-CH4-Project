@@ -1,4 +1,4 @@
-// MGFlagGameModeBase.cpp
+﻿// MGFlagGameModeBase.cpp
 
 
 #include "GameMode/MGFlagGameModeBase.h"
@@ -13,9 +13,9 @@ void AMGFlagGameModeBase::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AMGFlagGameModeBase::StartMiniGame()
+void AMGFlagGameModeBase::StartMinigame()
 {
-	Super::StartMiniGame();
+	Super::StartMinigame();
 	
 	GetWorld()->GetTimerManager().SetTimer(
 		GameTimerHandle,
