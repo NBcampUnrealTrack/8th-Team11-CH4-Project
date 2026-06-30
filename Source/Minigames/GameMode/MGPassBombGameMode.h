@@ -19,18 +19,19 @@ public:
 
 	virtual void BeginPlay() override;
 
+	void EliminatePlayer(ACharacter* TargetPlayer);
+
 protected:
 	FTimerHandle BombTimerHandle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Minigame|Rule")
 	int32 BombTime;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	//TObjectPtr<AMGPlayerController> BombPC;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Minigame|Rule")
 	TSubclassOf<class AMGBombActor> BombActorClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Minigame|Rule")
 	TObjectPtr<class AMGBombActor> BombActor;
+
+	TArray<TObjectPtr<class AMGPlayerController>> AlivePlayer;
 };
