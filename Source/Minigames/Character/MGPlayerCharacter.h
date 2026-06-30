@@ -77,6 +77,9 @@ private:
 
 	void HandleMeleeAttackInput(const FInputActionValue& InValue);
 
+	// 깃발 뺏기 액션
+	void HandleTakeFlagInput(const FInputActionValue& InValue);
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
@@ -100,6 +103,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Input")
 	TObjectPtr<UInputAction> MeleeAttackAction;
+
+	// 깃발 뺏기 입력 액션
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Input")
+	TObjectPtr<UInputAction> TakeFlagAction;
 
 #pragma endregion
 
@@ -176,11 +183,22 @@ public:
 //맵이 넘어가면 깃발 뺏기 게임이 끝나므로 계속 값을 가지고 있을 필요 없을 것 같아 캐릭터 재생성시 제거되도록 여기 구현
 public:
 
-	bool SetHasFlag(bool HasFlag);
+	bool SetHasFlag(bool bHasFlag);
+
+	FORCEINLINE bool GetHasFlag() const
+	{
+		return bFlagState;
+	}
 
 private:
 
-	bool FlagState = false;
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerRPCTakeFlag();
+
+private:
+
+	UPROPERTY(Replicated)
+	bool bFlagState = false;
 
 #pragma endregion
 };
