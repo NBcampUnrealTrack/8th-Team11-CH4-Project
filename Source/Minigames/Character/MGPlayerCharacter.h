@@ -167,4 +167,16 @@ public:
 
 #pragma endregion
 
+#pragma region FlagState
+
+//맵이 넘어가면 깃발 뺏기 게임이 끝나므로 계속 값을 가지고 있을 필요 없을 것 같아 캐릭터 재생성시 제거되도록 여기 구현
+public:
+
+	bool SetHasFlag(bool HasFlag);
+
+private:
+
+	bool FlagState = false;
+
+#pragma endregion
 };

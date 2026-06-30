@@ -8,11 +8,20 @@
 UENUM(BlueprintType)
 enum class EMatchState : uint8
 {
-	None,
+	None, 
 	Waiting,
 	Playing,
 	Ending,
 	End
+};
+
+UENUM(BlueprintType)
+enum class ERoundState : uint8
+{
+	Round1,
+	Round2,
+	Round3,
+	FinalResult
 };
 
 /**
@@ -30,7 +39,10 @@ public:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
 	int32 AlivePlayerControllerCount = 0;
 
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "GameFlow")
 	EMatchState MatchState = EMatchState::Waiting;
+
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "GameFlow")
+	ERoundState RoundState = ERoundState::Round1;
 
 };
