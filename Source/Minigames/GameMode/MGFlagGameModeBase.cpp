@@ -4,6 +4,9 @@
 #include "GameMode/MGFlagGameModeBase.h"
 #include "GameState/MGFlagGameStateBase.h"
 #include "PlayerState/MGFlagPlayerState.h"
+#include "SpawnPoint/MGFlagSpawnPoint.h"
+#include "Gimmick/MGFlagActor.h"
+#include "Kismet/GameplayStatics.h"
 
 void AMGFlagGameModeBase::BeginPlay()
 {
@@ -22,7 +25,7 @@ void AMGFlagGameModeBase::StartMinigame()
 		true
 	);
 	
-	// TODO: 깃발 스폰
+	SpawnFlag();
 }
 
 void AMGFlagGameModeBase::OnGameTimerElapsed()
@@ -79,6 +82,27 @@ void AMGFlagGameModeBase::DeterMineWinner()
 		FlagPlayerStates[i]->Rank = Rank;
 		GiveScore(FlagPlayerStates[i], Rank);
 	}
+}
+
+void AMGFlagGameModeBase::SpawnFlag()
+{
+	if (!FlagClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FlagClass is not set!"));
+		return;
+	}
+	
+	TArray<AActor*> SpawnPoints;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMGFlagSpawnPoint::StaticClass(), SpawnPoints);
+	if (SpawnPoints.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Flag SpawnPoints found!"));
+		return;
+	}
+	
+	int32 RandPoint = FMath::RandRange(0, SpawnPoints.Num() - 1);
+	FTransform SpawnTransform = SpawnPoints[RandPoint]->GetActorTransform();
+	GetWorld()->SpawnActor<AMGFlagActor>(FlagClass, SpawnTransform);
 }
 
 void AMGFlagGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
