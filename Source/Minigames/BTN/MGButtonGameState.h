@@ -21,11 +21,16 @@ class MINIGAMES_API AMGButtonGameState : public AGameStateBase
 public:
     AMGButtonGameState();
 
-    // 클라이언트 상태 및 타이머 변수 
-    UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game")
+    UFUNCTION()
+    void OnRep_CurrentPhase();
+
+    UFUNCTION()
+    void OnRep_TimeRemaining();
+
+    UPROPERTY(ReplicatedUsing = OnRep_CurrentPhase, BlueprintReadOnly, Category = "Game")
     EGamePhase CurrentPhase;
 
-    UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game")
+    UPROPERTY(ReplicatedUsing = OnRep_TimeRemaining, BlueprintReadOnly, Category = "Game")
     int32 TimeRemaining;
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

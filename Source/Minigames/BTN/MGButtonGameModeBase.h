@@ -33,6 +33,9 @@ protected:
     int32 GameDuration = 30; // 게임 진행 시간
 
     // 현재 상태와 남은 시간 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Settings")
     int32 TimeRemaining;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Settings")
     EGamePhase CurrentPhase;
 };
