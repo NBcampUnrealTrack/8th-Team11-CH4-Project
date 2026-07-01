@@ -185,25 +185,25 @@ void AMGGameModeBase::OnMainTimerElapsed()
 
 
 		// Seamless Travel Test Begin-------------------
-		if (RemainWaitingTimeForEnding == 1)
-		{
-			if (IsValid(MGGameState))
-			{
-				UE_LOG(LogTemp, Warning, TEXT("=========== [Test] PlayerArray Num : %d ==========="), MGGameState->PlayerArray.Num());
-
-				for (APlayerState* BasePS : MGGameState->PlayerArray)
-				{
-					if (AMGPlayerState* MGPS = Cast<AMGPlayerState>(BasePS))
-					{
-						GiveScore(MGPS, 0);
-					}
-					else
-					{
-						UE_LOG(LogTemp, Error, TEXT("Cast to AMGPlayerState Failed!"));
-					}
-				}
-			}
-		}
+		// if (RemainWaitingTimeForEnding == 1)
+		// {
+		// 	if (IsValid(MGGameState))
+		// 	{
+		// 		UE_LOG(LogTemp, Warning, TEXT("=========== [Test] PlayerArray Num : %d ==========="), MGGameState->PlayerArray.Num());
+		// 
+		// 		for (APlayerState* BasePS : MGGameState->PlayerArray)
+		// 		{
+		// 			if (AMGPlayerState* MGPS = Cast<AMGPlayerState>(BasePS))
+		// 			{
+		// 				GiveScore(MGPS, 0);
+		// 			}
+		// 			else
+		// 			{
+		// 				UE_LOG(LogTemp, Error, TEXT("Cast to AMGPlayerState Failed!"));
+		// 			}
+		// 		}
+		// 	}
+		// }
 		// Seamless Travel Test End-------------------
 
 		--RemainWaitingTimeForEnding;
