@@ -8,11 +8,6 @@
 class AMGPlayerState;
 class AMGPlayerController;
 
-UENUM(BlueprintType)
-enum class EMinigameType : uint8
-{
-	PASSBOME UMETA(DisplayName = "PassTheBomb")
-};
 /**
  *
  */

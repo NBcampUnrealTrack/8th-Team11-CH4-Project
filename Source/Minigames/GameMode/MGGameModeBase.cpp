@@ -195,24 +195,24 @@ void AMGGameModeBase::OnMainTimerElapsed()
 					break;
 
 				case ERoundState::Round1:
-					NextMapURL = TEXT("/Game/Minigames/Level/L_MG_02_Flag");
+					NextMapURL = MGGameInstance->GetLevelURLForRoundState(ERoundState::Round2);
 					MGGameInstance->CurrentRoundState = ERoundState::Round2;
 					break;
 
 				case ERoundState::Round2:
-					NextMapURL = TEXT("/Game/Minigames/Level/L_MG_03_XXX");
+					NextMapURL = MGGameInstance->GetLevelURLForRoundState(ERoundState::Round3);
 					MGGameInstance->CurrentRoundState = ERoundState::Round3;
 					break;
 
 				case ERoundState::Round3:
 					// FinalResult을 별도 맵에 진행할거면 그곳으로, 아니라면 바로 로비로 이동(현재)
-					NextMapURL = TEXT("/Game/Level/Lobby");
+					NextMapURL = TEXT("/Game/Minigames/Level/L_Lobby");
 					MGGameInstance->CurrentRoundState = ERoundState::FinalResult;
 					break;
 
 				case ERoundState::FinalResult:
 					// 결과창에서 로비로 완전히 돌아가는 처리
-					NextMapURL = TEXT("/Game/Level/Lobby");
+					NextMapURL = TEXT("/Game/Minigames/Level/L_Lobby");
 					MGGameInstance->CurrentRoundState = ERoundState::Lobby;
 					break;
 				}

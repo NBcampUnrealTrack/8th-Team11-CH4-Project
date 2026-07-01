@@ -27,13 +27,16 @@ public:
 	void OnPlayerReady(AMGPlayerController* PC, bool bReady);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 MinimumPlayerCount = 4;
+	int32 MinimumPlayerCount = 2;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 CountdownTime = 10;
 
+	// UPROPERTY(EditDefaultsOnly)
+	// FString MinigameLevelName;
+	
 	UPROPERTY(EditDefaultsOnly)
-	FString MinigameLevelName;
+	int32 TotalRoundCount = 3;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -48,6 +51,8 @@ private:
 	void CancelCountdown();
 	
 	void TravelToMinigameLevel();
+	
+	void GenerateMinigameSequence();
 	
 	bool CheckAllPlayersReady();
 	

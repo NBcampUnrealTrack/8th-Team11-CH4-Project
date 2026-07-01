@@ -6,9 +6,12 @@
 #include "Controller/MGPlayerController.h"
 #include "PlayerState/MGLobbyPlayerState.h"
 #include "GameState/MGLobbyGameStateBase.h"
+#include "GameInstance/MGGameInstance.h"
 
 AMGLobbyGameModeBase::AMGLobbyGameModeBase()
 {
+	bUseSeamlessTravel = true;
+	
 	GameStateClass   = AMGLobbyGameStateBase::StaticClass();
 	PlayerStateClass = AMGLobbyPlayerState::StaticClass();
 }
@@ -118,6 +121,8 @@ void AMGLobbyGameModeBase::CheckAndStartCountdown()
 		GS->RemainCountdownTime = CountdownTime;
 	}
 	
+	GenerateMinigameSequence();
+	
 	GetWorldTimerManager().SetTimer(
 	   CountdownTimerHandle,
 	   this,
@@ -143,7 +148,6 @@ void AMGLobbyGameModeBase::OnCountdownElapsed()
 	}
 
 	CancelCountdown();
-	// TODO: 미니게임 선택 로직
 	// TODO: 모든 플레이어 알림
 	TravelToMinigameLevel();
 }
@@ -161,15 +165,45 @@ void AMGLobbyGameModeBase::CancelCountdown()
 
 void AMGLobbyGameModeBase::TravelToMinigameLevel()
 {
-	// TODO: 미니게임 선택 결과에 따라 MinigameLevelName 결정 (현재는 에디터 고정값에 의존)
-	// TODO: EMinigameType 기반 레벨 매핑 (TMap<EMinigameType, FString>) 적용 예정
-	
-	if (MinigameLevelName.IsEmpty())
+	UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
+	if (IsValid(GI) == false)
 	{
 		return;
 	}
 
-	GetWorld()->ServerTravel(MinigameLevelName);
+	const FString URL = GI->GetLevelURLForRound(0);   // 첫 라운드
+	if (URL.IsEmpty())
+	{
+		return;
+	}
+
+	GI->CurrentRoundState = ERoundState::Round1;   // 로비 → 첫 라운드 (난입차단 정상화)
+	GetWorld()->ServerTravel(URL);
+}
+
+void AMGLobbyGameModeBase::GenerateMinigameSequence()
+{
+	UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
+	if (IsValid(GI) == false)
+	{
+		return;
+	}
+	
+	TArray<EMinigameType> Pool;
+	GI->MinigameLevels.GenerateKeyArray(Pool);
+	
+	for (int32 i = Pool.Num() - 1; i > 0; --i)
+	{
+		const int32 j = FMath::RandRange(0, i);
+		Pool.Swap(i, j);
+	}
+	
+	const int32 Count = FMath::Min(TotalRoundCount, Pool.Num());
+	GI->MinigameSequence.Reset();
+	for (int32 i = 0; i < Count; ++i)
+	{
+		GI->MinigameSequence.Add(Pool[i]);
+	}
 }
 
 bool AMGLobbyGameModeBase::CheckAllPlayersReady()
