@@ -12,5 +12,4 @@ void AMGGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(ThisClass, AllPlayerControllerCount);
 	DOREPLIFETIME(ThisClass, MatchState);
 	DOREPLIFETIME(ThisClass, RoundState);
-	DOREPLIFETIME(ThisClass, LobbyState);
 }
