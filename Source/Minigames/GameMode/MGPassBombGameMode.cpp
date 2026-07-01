@@ -86,7 +86,7 @@ void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
 					}
 				}
 
-				//AlivePlayer.Remove(MGPC);
+				AlivePlayer.Remove(MGPC);
 			}
 		}
 	}

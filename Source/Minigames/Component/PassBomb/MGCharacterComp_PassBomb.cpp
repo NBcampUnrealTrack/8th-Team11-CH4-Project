@@ -26,6 +26,7 @@ void UMGCharacterComp_PassBomb::BeginPlay()
 
 void UMGCharacterComp_PassBomb::MulticastRPC_RetireCharacter_Implementation()
 {
+	MG_LOG_NET(LogMGNet, Log, TEXT("%s has retired."), *GetOwner()->GetName());
 }
 
 
