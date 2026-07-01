@@ -5,6 +5,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "MGGameModeBase.generated.h"
 
+class AMGPlayerState;
 class AMGPlayerController;
 
 /**
@@ -18,14 +19,23 @@ class MINIGAMES_API AMGGameModeBase : public AGameModeBase
 public:
 	AMGGameModeBase();
 
+	virtual void PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage) override;
+
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 	virtual void Logout(AController* Exiting) override;
 
 	virtual void BeginPlay() override;
 
+	virtual void StartMinigame();	//오버라이드 시 Super호출 필수
+
+	virtual void EndMinigame();		//오버라이드 시 Super호출 필수
+
 	void OnCharacterDead(AMGPlayerController* InController);
 
+	void GiveScore(AMGPlayerState* PS, int32 Rank);
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 private:
 	UFUNCTION()
 	void OnMainTimerElapsed();
@@ -49,9 +59,5 @@ public:
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TArray<TObjectPtr<AMGPlayerController>> AlivePlayerControllers;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TArray<TObjectPtr<AMGPlayerController>> DeadPlayerControllers;
-
+	TArray<TObjectPtr<AMGPlayerController>> AllPlayerControllers;
 };
