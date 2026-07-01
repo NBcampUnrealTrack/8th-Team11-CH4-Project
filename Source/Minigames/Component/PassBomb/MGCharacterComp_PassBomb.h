@@ -16,16 +16,9 @@ public:
 	// Sets default values for this component's properties
 	UMGCharacterComp_PassBomb();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_RetireCharacter();
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastRPC_RetireCharacter();
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-		
 };

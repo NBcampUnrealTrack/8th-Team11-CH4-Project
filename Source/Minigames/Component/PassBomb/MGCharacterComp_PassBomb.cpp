@@ -8,11 +8,7 @@
 // Sets default values for this component's properties
 UMGCharacterComp_PassBomb::UMGCharacterComp_PassBomb()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
 
@@ -26,14 +22,5 @@ void UMGCharacterComp_PassBomb::BeginPlay()
 
 void UMGCharacterComp_PassBomb::MulticastRPC_RetireCharacter_Implementation()
 {
+	MG_LOG_NET(LogMGNet, Log, TEXT("%s is Retired"), *GetOwner()->GetName());
 }
-
-
-// Called every frame
-void UMGCharacterComp_PassBomb::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-}
-
