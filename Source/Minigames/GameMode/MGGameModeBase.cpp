@@ -82,8 +82,8 @@ void AMGGameModeBase::BeginPlay()
 	RemainWaitingTimeForEnding = EndingTime;
 
 	// 10초 후 SeamlessTravel 하는지 테스트용
-	FTimerHandle TestEndTimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TestEndTimerHandle, this, &ThisClass::EndMinigame, 10.f, false);
+	// FTimerHandle TestEndTimerHandle;
+	// GetWorld()->GetTimerManager().SetTimer(TestEndTimerHandle, this, &ThisClass::EndMinigame, 10.f, false);
 }
 
 void AMGGameModeBase::StartMinigame()
@@ -112,7 +112,6 @@ void AMGGameModeBase::OnCharacterDead(AMGPlayerController* InController)
 
 void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 {
-	/*
 	int32 PlayerCount = GameState->PlayerArray.Num();
 
 	int32 AddScore = 0;
@@ -127,21 +126,6 @@ void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 	}
 
 	PS->SetScore(PS->GetScore() + AddScore);
-	*/
-
-
-	// Seamless Travel Test Begin-------------------
-	int32 RandomScore = FMath::RandRange(10, 100);
-
-	// 커스텀 변수 MGScore 갱신
-	PS->SetMGScore(PS->GetMGScore() + RandomScore);
-
-	// 커스텀 로그 매크로를 사용하여 Travel 전 점수 확인
-	MG_LOG_NET(LogMGNet, Warning, TEXT("[Before Travel] Player : %s | Added : %d | Total MGScore : %d"),
-		*PS->GetPlayerName(), RandomScore, PS->GetMGScore());
-
-	PS->Client_LogScoreBeforeTravel(RandomScore, PS->GetMGScore());
-	// Seamless Travel Test End-------------------
 }
 
 void AMGGameModeBase::OnMainTimerElapsed()
