@@ -9,6 +9,8 @@
 #include "PlayerState/MGFlagPlayerState.h"
 #include "GameInstance/MGGameInstance.h"				// GameInstance
 
+#include "Minigames.h"				// 커스텀 Log
+
 AMGGameModeBase::AMGGameModeBase()
 {
 	bUseSeamlessTravel = true;		// 심리스 트래블 기능 활성화
@@ -110,6 +112,7 @@ void AMGGameModeBase::OnCharacterDead(AMGPlayerController* InController)
 
 void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 {
+	/*
 	int32 PlayerCount = GameState->PlayerArray.Num();
 
 	int32 AddScore = 0;
@@ -124,6 +127,21 @@ void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 	}
 
 	PS->SetScore(PS->GetScore() + AddScore);
+	*/
+
+
+	// Seamless Travel Test Begin-------------------
+	int32 RandomScore = FMath::RandRange(10, 100);
+
+	// 커스텀 변수 MGScore 갱신
+	PS->SetMGScore(PS->GetMGScore() + RandomScore);
+
+	// 커스텀 로그 매크로를 사용하여 Travel 전 점수 확인
+	MG_LOG_NET(LogMGNet, Warning, TEXT("[Before Travel] Player : %s | Added : %d | Total MGScore : %d"),
+		*PS->GetPlayerName(), RandomScore, PS->GetMGScore());
+
+	PS->Client_LogScoreBeforeTravel(RandomScore, PS->GetMGScore());
+	// Seamless Travel Test End-------------------
 }
 
 void AMGGameModeBase::OnMainTimerElapsed()
@@ -133,6 +151,15 @@ void AMGGameModeBase::OnMainTimerElapsed()
 	{
 		return;
 	}
+
+	// 임시 Tick 디버깅 메세지
+	UE_LOG(LogTemp, Warning, TEXT("[State Check] Current Map: %s | MatchState: %d"), 
+		*GetWorld()->GetMapName(), (int32)MGGameState->MatchState);
+
+	// TODO : Lobby -> Minigame1, 2, 3, ..., -> FinalResult Level -> Lobby Level로
+	// 모든 레벨에서 Seamless Travel을 사용할 경우
+	// MGGameInstance->CurrentRoundState == ERoundState::Lobby인 경우
+	// 최초로 Lobby에서 Minigame으로 넘어왔을때 초기화 작업이 필요할 수도 있음
 
 	switch (MGGameState->MatchState)
 	{
@@ -172,6 +199,29 @@ void AMGGameModeBase::OnMainTimerElapsed()
 		FString NotificationString = FString::Printf(TEXT("Moving to next stage in %d seconds..."), RemainWaitingTimeForEnding);
 		NotifyToAllPlayer(NotificationString);
 
+
+		// Seamless Travel Test Begin-------------------
+		if (RemainWaitingTimeForEnding == 1)
+		{
+			if (IsValid(MGGameState))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("=========== [Test] PlayerArray Num : %d ==========="), MGGameState->PlayerArray.Num());
+
+				for (APlayerState* BasePS : MGGameState->PlayerArray)
+				{
+					if (AMGPlayerState* MGPS = Cast<AMGPlayerState>(BasePS))
+					{
+						GiveScore(MGPS, 0);
+					}
+					else
+					{
+						UE_LOG(LogTemp, Error, TEXT("Cast to AMGPlayerState Failed!"));
+					}
+				}
+			}
+		}
+		// Seamless Travel Test End-------------------
+
 		--RemainWaitingTimeForEnding;
 
 		// 카운트다운 종료 시 맵 이동
@@ -188,34 +238,55 @@ void AMGGameModeBase::OnMainTimerElapsed()
 				// CurrentRoundState에 따라 다음 맵과 다음 라운드 상태를 갱신
 				switch (MGGameInstance->CurrentRoundState)
 				{
-				case ERoundState::Lobby:
-					NextMapURL = TEXT("/Game/Minigames/Level/L_MG_02_Flag");
-					// TODO : Lobby 추가 후 /Game/Minigames/Level/L_MG_01_BombTag 로 바꿔야함
-					MGGameInstance->CurrentRoundState = ERoundState::Round1; // 다음 상태로 미리 갱신
-					break;
-
 				case ERoundState::Round1:
+				{
 					NextMapURL = MGGameInstance->GetLevelURLForRoundState(ERoundState::Round2);
 					MGGameInstance->CurrentRoundState = ERoundState::Round2;
 					break;
-
+				}
+			
 				case ERoundState::Round2:
+				{
 					NextMapURL = MGGameInstance->GetLevelURLForRoundState(ERoundState::Round3);
 					MGGameInstance->CurrentRoundState = ERoundState::Round3;
 					break;
-
+				}
 				case ERoundState::Round3:
+				{
 					// FinalResult을 별도 맵에 진행할거면 그곳으로, 아니라면 바로 로비로 이동(현재)
 					NextMapURL = TEXT("/Game/Minigames/Level/L_Lobby");
 					MGGameInstance->CurrentRoundState = ERoundState::FinalResult;
 					break;
-
+				}
 				case ERoundState::FinalResult:
+				{
 					// 결과창에서 로비로 완전히 돌아가는 처리
 					NextMapURL = TEXT("/Game/Minigames/Level/L_Lobby");
 					MGGameInstance->CurrentRoundState = ERoundState::Lobby;
 					break;
 				}
+				default:
+					break;
+				}
+
+				// Return To Lobby Debug Begin -----------------
+				UE_LOG(LogTemp, Warning, TEXT("[Travel Check] CurrentRoundState: %d | NextMapURL: %s"),
+					(int32)MGGameInstance->CurrentRoundState, *NextMapURL);
+
+				// 심리스 트래블 실행 (클라이언트들은 자동으로 서버를 따라옴)
+				if (NextMapURL.IsEmpty() == false)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("[Travel Check] Executing ServerTravel..."));
+					GetWorld()->ServerTravel(NextMapURL);
+				}
+				else
+				{
+					// NextMapURL이 비어있어서 트래블이 취소되었을 때 에러 로그
+					UE_LOG(LogTemp, Error, TEXT("[Travel Check] NextMapURL is EMPTY! ServerTravel Canceled."));
+				}
+
+				return;
+				// Return To Lobby Debug End -----------------
 			}
 
 			// 심리스 트래블 실행 (클라이언트들은 자동으로 서버를 따라옴)
