@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// MGLobbyGameModeBase.cpp
 
 
 #include "GameMode/MGLobbyGameModeBase.h"
@@ -95,6 +95,25 @@ void AMGLobbyGameModeBase::OnPlayerReady(AMGPlayerController* PC, bool bReady)
 	else
 	{
 		CancelCountdown();
+	}
+}
+
+void AMGLobbyGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
+{
+	Super::HandleSeamlessTravelPlayer(C); // 부모 함수 먼저 호출 (여기서 PlayerState 등이 세팅됨)
+
+	AMGPlayerController* PC = Cast<AMGPlayerController>(C);
+	if (IsValid(PC))
+	{
+		AllPlayerControllers.AddUnique(PC);
+
+		if (AMGLobbyGameStateBase* GS = GetGameState<AMGLobbyGameStateBase>())
+		{
+			GS->CurrentPlayerCount = AllPlayerControllers.Num();
+		}
+
+		// TODO: 레디 버튼 기본값은 비활성화.
+		//       로그인 후 인원이 MinimumPlayerCount 이상이면 전원 레디 버튼 활성화 (Client RPC)
 	}
 }
 

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// MGLobbyGameModeBase.h
 
 #pragma once
 
@@ -25,6 +25,9 @@ public:
 	virtual void Logout(AController* ExitingController) override;
 	
 	void OnPlayerReady(AMGPlayerController* PC, bool bReady);
+
+	// 미니게임 종료 후 Seamless를 통해 돌아오는 플레이어들을 처리하기 위한 함수 
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 MinimumPlayerCount = 2;
