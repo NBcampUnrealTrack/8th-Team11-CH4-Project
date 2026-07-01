@@ -81,9 +81,9 @@ void AMGGameModeBase::BeginPlay()
 
 	RemainWaitingTimeForEnding = EndingTime;
 
-	// 30초 후 SeamlessTravel 하는지 테스트용
+	// 10초 후 SeamlessTravel 하는지 테스트용
 	FTimerHandle TestEndTimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TestEndTimerHandle, this, &ThisClass::EndMinigame, 30.f, false);
+	GetWorld()->GetTimerManager().SetTimer(TestEndTimerHandle, this, &ThisClass::EndMinigame, 10.f, false);
 }
 
 void AMGGameModeBase::StartMinigame()
