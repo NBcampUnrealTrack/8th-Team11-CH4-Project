@@ -296,3 +296,11 @@ void AMGGameModeBase::NotifyToAllPlayer(const FString& NotificationString)
 		MGPC->NotificationText = FText::FromString(NotificationString);
 	}
 }
+
+// EndPlay에서 사용중인 모든 타이머를 안전하게 제거
+void AMGGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	GetWorld()->GetTimerManager().ClearTimer(MainTimerHandle);
+}

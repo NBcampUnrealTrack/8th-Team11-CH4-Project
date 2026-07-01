@@ -34,7 +34,8 @@ public:
 	void OnCharacterDead(AMGPlayerController* InController);
 
 	void GiveScore(AMGPlayerState* PS, int32 Rank);
-	
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 private:
 	UFUNCTION()
 	void OnMainTimerElapsed();
