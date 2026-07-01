@@ -1,10 +1,10 @@
 ﻿#include "MGButtonGameModeBase.h"
+#include "MGButtonGameState.h"
 #include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 
 AMGButtonGameModeBase::AMGButtonGameModeBase()
 {
-    // 게임 준비 단계 진입
     CurrentPhase = EGamePhase::WaitingToStart;
     TimeRemaining = 0;
 }
@@ -12,7 +12,6 @@ AMGButtonGameModeBase::AMGButtonGameModeBase()
 void AMGButtonGameModeBase::BeginPlay()
 {
     Super::BeginPlay();
-
     StartReadyPhase();
 }
 
@@ -36,25 +35,28 @@ void AMGButtonGameModeBase::StartPlayingPhase()
     UE_LOG(LogTemp, Warning, TEXT("게임 시작 (%d초) "), TimeRemaining);
 }
 
-// 타이머 
+// 타이머 갱신 로직
 void AMGButtonGameModeBase::AdvanceTimer()
 {
     TimeRemaining--;
 
+    // GameState로 데이터 전달
+    if (AMGButtonGameState* GS = GetGameState<AMGButtonGameState>())
+    {
+        GS->TimeRemaining = TimeRemaining;
+        GS->CurrentPhase = CurrentPhase;
+    }
+
     if (CurrentPhase == EGamePhase::WaitingToStart)
     {
         UE_LOG(LogTemp, Log, TEXT("시작 카운트다운: %d"), TimeRemaining);
-        if (TimeRemaining <= 0)
-        {
-            StartPlayingPhase();
-        }
+        if (TimeRemaining <= 0) StartPlayingPhase();
     }
     else if (CurrentPhase == EGamePhase::Playing)
     {
         UE_LOG(LogTemp, Log, TEXT("남은 게임 시간: %d"), TimeRemaining);
         if (TimeRemaining <= 0)
         {
-            // 타이머 끝나고 종료 넘어가기
             GetWorldTimerManager().ClearTimer(GameTimerHandle);
             EndGamePhase();
         }
@@ -66,20 +68,17 @@ void AMGButtonGameModeBase::EndGamePhase()
 {
     CurrentPhase = EGamePhase::GameOver;
     UE_LOG(LogTemp, Warning, TEXT("게임 종료!"));
-
-    // 최종 점수 집계 실행
     CalculateFinalScores();
 }
 
+// 점수 집계
 void AMGButtonGameModeBase::CalculateFinalScores()
 {
-    // 현재 월드에 있는 모든 플레이어 컨트롤러를 가져와서 순회
     for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
     {
         APlayerController* PC = It->Get();
         if (PC && PC->PlayerState)
         {
-            // 플레이어의 점수 출력
             UE_LOG(LogTemp, Warning, TEXT("플레이어: %s, 최종 버튼 개수: %f"), *PC->GetName(), PC->PlayerState->GetScore());
         }
     }
