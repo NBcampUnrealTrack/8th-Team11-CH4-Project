@@ -76,7 +76,17 @@ void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
 		{
 			if (AlivePlayer.Contains(MGPC))
 			{
-				AlivePlayer.Remove(MGPC);
+				AMGPlayerCharacter* MGPlayerChar = Cast<AMGPlayerCharacter>(MGPC->GetCharacter());
+				if (IsValid(MGPlayerChar))
+				{
+					UMGCharacterComp_PassBomb* MGRule = Cast<UMGCharacterComp_PassBomb>(MGPlayerChar->GetRule());
+					if (IsValid(MGRule))
+					{
+						MGRule->MulticastRPC_RetireCharacter();
+					}
+				}
+
+				//AlivePlayer.Remove(MGPC);
 			}
 		}
 	}

@@ -211,7 +211,7 @@ void AMGBombActor::ExplodeBomb()
 		if (CurrentGameMode)
 		{
 			// 나중에 GameMode에 만들 탈락 처리 함수를 호출하면서 현재 폭탄 주인을 인자로 넘기기 
-			// CurrentGameMode->EliminatePlayer(BombHolder);
+			CurrentGameMode->EliminatePlayer(BombHolder);
 		}
 	}
 
