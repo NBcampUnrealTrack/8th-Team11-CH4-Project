@@ -24,10 +24,6 @@ protected:
 		bool bFromSweep, 
 		const FHitResult& SweepResult);
 
-	// 깃발 숨기기 멀티캐스트 함수
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_HideFlag();
-
 private:
 	// 콜리전 스피어 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
