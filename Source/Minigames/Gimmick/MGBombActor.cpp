@@ -13,10 +13,10 @@
 
 AMGBombActor::AMGBombActor() :
 	PassTriggerRadius(100.f),
-	bCanPass(true),
-	PassCooldownTime(0.5f),
 	BombHolder(nullptr),
-	ExplodeTime(15.f)
+	PassCooldownTime(0.5f),
+	ExplodeTime(15.f),
+	bCanPass(true)
 {
 	PrimaryActorTick.bCanEverTick = false;
 
