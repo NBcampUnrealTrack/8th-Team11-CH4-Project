@@ -393,10 +393,10 @@ void AMGPlayerCharacter::MulticastRPC_SetRule_Implementation(TSubclassOf<UActorC
 	CurrentRule->RegisterComponent();
 }
 
-bool AMGPlayerCharacter::SetHasFlag(bool HasFlag)
+bool AMGPlayerCharacter::SetHasFlag(bool bHasFlag)
 {
-	FlagState = HasFlag;
-	return FlagState;
+	bFlagState = bHasFlag;
+	return bFlagState;
 }
 
 void AMGPlayerCharacter::ClientRPCPlayMeleeAttackMontage_Implementation(AMGPlayerCharacter* InTargetCharacter)
