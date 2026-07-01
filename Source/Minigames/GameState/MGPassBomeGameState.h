@@ -16,7 +16,4 @@ class MINIGAMES_API AMGPassBomeGameState : public AMGGameStateBase
 
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-public:
-	//UPROPERTY(Replicated, BlueprintReadOnly, Category = "Minigame")
-	//TObjectPtr<> BombPC;
 };

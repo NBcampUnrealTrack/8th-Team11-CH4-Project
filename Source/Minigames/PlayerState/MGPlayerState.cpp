@@ -4,8 +4,9 @@
 #include "Minigames.h"				// 커스텀 Log
 
 AMGPlayerState::AMGPlayerState()
-	: TotalScore(0),
-    MGScore(0)      // 초기화 빠짐
+	: TotalScore(0)
+    , MGScore(0)
+    , Rank(0)
 {
 	bReplicates = true;
 }
