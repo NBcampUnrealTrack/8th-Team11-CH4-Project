@@ -61,6 +61,15 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UMGInteractionOverlapComponent> InteractionComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MGPlayerCharacter|Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UMGFlagActorComponent> FlagActorComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MGPlayerCharacter|Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UStaticMeshComponent> FlagMeshComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MGPlayerCharacter|Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UStaticMeshComponent> FlagEffectMeshComponent;
+
 #pragma endregion
 
 #pragma region Input
@@ -73,7 +82,7 @@ private:
 	void HandleLandMineInput(const FInputActionValue& InValue);
 
 	UFUNCTION(Server, Unreliable) // 한 두번 정도는 씹혀도 되기 때문.
-		void ServerRPCUpdateAimValue(const float& InAimPitchValue);
+	void ServerRPCUpdateAimValue(const float& InAimPitchValue);
 
 	void HandleMeleeAttackInput(const FInputActionValue& InValue);
 
@@ -178,27 +187,14 @@ public:
 
 #pragma endregion
 
-#pragma region FlagState
-
-	//맵이 넘어가면 깃발 뺏기 게임이 끝나므로 계속 값을 가지고 있을 필요 없을 것 같아 캐릭터 재생성시 제거되도록 여기 구현
+#pragma region RuleComponent
 public:
-
-	bool SetHasFlag(bool bHasFlag);
-
-	FORCEINLINE bool GetHasFlag() const
-	{
-		return bFlagState;
-	}
-
-private:
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerRPCTakeFlag();
-
-private:
-
-	UPROPERTY(Replicated)
-	bool bFlagState = false;
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_SetRule(TSubclassOf<UActorComponent> RuleComp);
+public:
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Rule")
+	TObjectPtr<UActorComponent> CurrentRule;
 
 #pragma endregion
+
 };
