@@ -125,6 +125,16 @@ void AMGBombActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME(ThisClass, BombHolder);
 }
 
+// Timer가 있다면 반드시 EndPlay에서 안전하게 ClearTimer 로직 추가
+void AMGBombActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearTimer(ExplodeTimer);
+	GetWorld()->GetTimerManager().ClearTimer(PassCooldownTimer);
+
+	// 상속받은 EndPlay의 Super는 마지막에
+	Super::EndPlay(EndPlayReason);
+}
+
 void AMGBombActor::AttachToHolder(ACharacter* TargetHolder)
 {
 	if (!TargetHolder)	// TargetHolder가 유효하지 않으면
