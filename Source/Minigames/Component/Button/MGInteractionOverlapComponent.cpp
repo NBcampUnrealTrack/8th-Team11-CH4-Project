@@ -1,7 +1,7 @@
 #include "Component/Button/MGInteractionOverlapComponent.h"
 
 #include "Components/CapsuleComponent.h"
-#include "Component/Button/MGInteractable.h"
+#include "Gimmick/Button/MGInteractable.h"
 
 void UMGInteractionOverlapComponent::BeginPlay()
 {
