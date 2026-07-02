@@ -1,17 +1,21 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameModeBase.h"
+#include "GameMode/MGGameModeBase.h"
 #include "MGButtonGameState.h" 
 #include "MGButtonGameModeBase.generated.h"
 
+class AMGFlagPlayerState;
+
 UCLASS()
-class MINIGAMES_API AMGButtonGameModeBase : public AGameModeBase
+class MINIGAMES_API AMGButtonGameModeBase : public AMGGameModeBase
 {
     GENERATED_BODY()
 
 public:
     AMGButtonGameModeBase();
+
+    virtual void GiveScore(class AMGFlagPlayerState* PS, int32 Rank);
 
 protected:
     virtual void BeginPlay() override;
@@ -27,12 +31,11 @@ protected:
     FTimerHandle GameTimerHandle;
 
     UPROPERTY(EditAnywhere, Category = "Game Settings")
-    int32 ReadyDuration = 10; // 게임 준비 시간
+    int32 ReadyDuration = 10;
 
     UPROPERTY(EditAnywhere, Category = "Game Settings")
-    int32 GameDuration = 30; // 게임 진행 시간
+    int32 GameDuration = 30;
 
-    // 현재 상태와 남은 시간 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Settings")
     int32 TimeRemaining;
 

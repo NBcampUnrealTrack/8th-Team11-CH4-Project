@@ -3,7 +3,7 @@
 
 AMGButtonGameState::AMGButtonGameState()
 {
-    bReplicates = true; // 필수 설정
+    bReplicates = true;
     CurrentPhase = EGamePhase::WaitingToStart;
     TimeRemaining = 0;
 }
