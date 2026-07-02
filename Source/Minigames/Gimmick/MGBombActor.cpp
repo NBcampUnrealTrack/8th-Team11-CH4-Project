@@ -15,8 +15,7 @@ AMGBombActor::AMGBombActor() :
 	PassTriggerRadius(100.f),
 	bCanPass(true),
 	PassCooldownTime(0.5f),
-	BombHolder(nullptr),
-	ExplodeTime(15.f)
+	BombHolder(nullptr)
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -160,7 +159,7 @@ void AMGBombActor::ResetPassCooldown()
 	bCanPass = true;
 }
 
-void AMGBombActor::ActivateBomb(ACharacter* InitialHolder)
+void AMGBombActor::ActivateBomb(ACharacter* InitialHolder, float ExplodeTime)
 {
 	if (!HasAuthority())
 	{
@@ -206,11 +205,10 @@ void AMGBombActor::ExplodeBomb()
 
 	if (BombHolder)
 	{
-		// AGameModeBase* 를 일단 사용중인데 AMGBombGameModeBase* 등으로 변경 필요함 ❗❗❗❗❗❗❗❗❗❗
 		AMGPassBombGameMode* CurrentGameMode = Cast<AMGPassBombGameMode>(GetWorld()->GetAuthGameMode());
 		if (CurrentGameMode)
 		{
-			// 나중에 GameMode에 만들 탈락 처리 함수를 호출하면서 현재 폭탄 주인을 인자로 넘기기 
+			// 탈락 처리 함수를 호출하면서 현재 폭탄 주인을 인자로 넘기기 
 			CurrentGameMode->EliminatePlayer(BombHolder);
 		}
 	}

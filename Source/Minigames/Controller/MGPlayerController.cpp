@@ -13,7 +13,7 @@
 void AMGPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	if (IsLocalController() == false)
 	{
 		return;

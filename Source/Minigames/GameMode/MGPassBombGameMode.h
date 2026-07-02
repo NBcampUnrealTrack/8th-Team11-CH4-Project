@@ -21,11 +21,16 @@ public:
 
 	void EliminatePlayer(ACharacter* TargetPlayer);
 
-protected:
-	FTimerHandle BombTimerHandle;
+	UFUNCTION()
+	void NextRound();
 
+protected:
+	// 폭탄 카운트다운이 시작된 후 터질 때까지 걸리는 시간
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Minigame|Rule")
-	int32 BombTime;
+	int32 ExplodeTime;
+
+	// 라운드 전환 타이머
+	FTimerHandle RoundTimerHandle;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Minigame|Rule")
 	TSubclassOf<class AMGBombActor> BombActorClass;

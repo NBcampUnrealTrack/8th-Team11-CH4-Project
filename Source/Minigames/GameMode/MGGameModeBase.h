@@ -37,12 +37,14 @@ public:
 	void OnCharacterDead(AMGPlayerController* InController);
 
 	void GiveScore(AMGPlayerState* PS, int32 Rank);
+
+protected:
+	void NotifyToAllPlayer(const FString& NotificationString);
 	
 private:
 	UFUNCTION()
 	void OnMainTimerElapsed();
 
-	void NotifyToAllPlayer(const FString& NotificationString);
 
 public:
 	FTimerHandle MainTimerHandle;
