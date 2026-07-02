@@ -13,9 +13,9 @@
 
 AMGBombActor::AMGBombActor() :
 	PassTriggerRadius(100.f),
-	bCanPass(true),
+	BombHolder(nullptr),
 	PassCooldownTime(0.5f),
-	BombHolder(nullptr)
+	bCanPass(true)
 {
 	PrimaryActorTick.bCanEverTick = false;
 

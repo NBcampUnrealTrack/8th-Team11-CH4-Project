@@ -8,11 +8,6 @@
 class AMGPlayerState;
 class AMGPlayerController;
 
-UENUM(BlueprintType)
-enum class EMinigameType : uint8
-{
-	PASSBOME UMETA(DisplayName = "PassTheBomb")
-};
 /**
  *
  */
@@ -23,6 +18,8 @@ class MINIGAMES_API AMGGameModeBase : public AGameModeBase
 
 public:
 	AMGGameModeBase();
+
+	virtual void PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage) override;
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
@@ -37,6 +34,8 @@ public:
 	void OnCharacterDead(AMGPlayerController* InController);
 
 	void GiveScore(AMGPlayerState* PS, int32 Rank);
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 protected:
 	void NotifyToAllPlayer(const FString& NotificationString);
