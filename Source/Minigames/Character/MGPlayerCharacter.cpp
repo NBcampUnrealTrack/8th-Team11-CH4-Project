@@ -397,14 +397,6 @@ void AMGPlayerCharacter::TakeBuff(float InBuffValue)
 	}
 }
 
-void AMGPlayerCharacter::MulticastRPC_SetRule_Implementation(TSubclassOf<UActorComponent> RuleComp)
-{
-	if (CurrentRule != nullptr)
-	{
-		CurrentRule->DestroyComponent();
-	}
-}
-
 bool AMGPlayerCharacter::SetHasFlag(bool bHasFlag)
 {
 	bFlagState = bHasFlag;
