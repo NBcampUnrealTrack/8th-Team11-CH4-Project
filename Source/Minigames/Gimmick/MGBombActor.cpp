@@ -7,16 +7,15 @@
 #include "GameFramework/Character.h"		// Character
 #include "Net/UnrealNetwork.h"				// Replication
 #include "Components/CapsuleComponent.h"	// Socket이 없을 때 CapsuleComponent의 중앙으로 Attach
-#include "GameMode/MGGameModeBase.h"		// Explode를 GameMode에 알려줘야함
+#include "GameMode/MGPassBombGameMode.h"		// Explode를 GameMode에 알려줘야함
 
 #include "DrawDebugHelpers.h"				// Debug용
 
 AMGBombActor::AMGBombActor() :
 	PassTriggerRadius(100.f),
-	bCanPass(true),
-	PassCooldownTime(0.5f),
 	BombHolder(nullptr),
-	ExplodeTime(15.f)
+	PassCooldownTime(0.5f),
+	bCanPass(true)
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -160,7 +159,7 @@ void AMGBombActor::ResetPassCooldown()
 	bCanPass = true;
 }
 
-void AMGBombActor::ActivateBomb(ACharacter* InitialHolder)
+void AMGBombActor::ActivateBomb(ACharacter* InitialHolder, float ExplodeTime)
 {
 	if (!HasAuthority())
 	{
@@ -183,12 +182,13 @@ void AMGBombActor::ActivateBomb(ACharacter* InitialHolder)
 			(GetNetMode() == ENetMode::NM_Client) ? *FString::Printf(TEXT("Client%02d"), UE::GetPlayInEditorID()) : ((GetNetMode() == ENetMode::NM_Standalone) ? TEXT("StandAlone") : TEXT("Server")),
 			ExplodeTime);
 
-		GEngine->AddOnScreenDebugMessage(
-			-1,                 // 고유 Key (-1은 기존 메시지를 지우지 않고 계속 새로 쌓음)
-			5.0f,               // 화면에 메시지가 머무르는 시간 (5초)
-			FColor::Cyan,       // 글자 색상
-			DebugMessage        // 출력할 문자열
-		);
+		UE_LOG(LogMGNet, Warning, TEXT("%s"), *DebugMessage);
+		//GEngine->AddOnScreenDebugMessage(
+		//	-1,                 // 고유 Key (-1은 기존 메시지를 지우지 않고 계속 새로 쌓음)
+		//	5.0f,               // 화면에 메시지가 머무르는 시간 (5초)
+		//	FColor::Cyan,       // 글자 색상
+		//	DebugMessage        // 출력할 문자열
+		//);
 	}
 }
 
@@ -205,12 +205,11 @@ void AMGBombActor::ExplodeBomb()
 
 	if (BombHolder)
 	{
-		// AGameModeBase* 를 일단 사용중인데 AMGBombGameModeBase* 등으로 변경 필요함 ❗❗❗❗❗❗❗❗❗❗
-		AGameModeBase* CurrentGameMode = GetWorld()->GetAuthGameMode();
+		AMGPassBombGameMode* CurrentGameMode = Cast<AMGPassBombGameMode>(GetWorld()->GetAuthGameMode());
 		if (CurrentGameMode)
 		{
-			// 나중에 GameMode에 만들 탈락 처리 함수를 호출하면서 현재 폭탄 주인을 인자로 넘기기 
-			// CurrentGameMode->EliminatePlayer(BombHolder);
+			// 탈락 처리 함수를 호출하면서 현재 폭탄 주인을 인자로 넘기기 
+			CurrentGameMode->EliminatePlayer(BombHolder);
 		}
 	}
 

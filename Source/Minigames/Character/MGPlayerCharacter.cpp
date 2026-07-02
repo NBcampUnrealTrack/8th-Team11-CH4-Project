@@ -4,10 +4,12 @@
 #include "MGPlayerCharacter.h"
 
 #include "EnhancedInputSubsystems.h"
+#include "Components/StaticMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
+#include "Component/MGFlagActorComponent.h"
 #include "Minigames.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Gimmick/MGLandMine.h"
@@ -65,7 +67,20 @@ AMGPlayerCharacter::AMGPlayerCharacter()
 	HPTextWidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 
-	InteractionComponent =CreateDefaultSubobject<UMGInteractionOverlapComponent>(TEXT("InteractionComponent"));
+	InteractionComponent = CreateDefaultSubobject<UMGInteractionOverlapComponent>(TEXT("InteractionComponent"));
+
+	//깃발뺏기 관련 컴포넌트 설정
+	FlagActorComponent = CreateDefaultSubobject<UMGFlagActorComponent>(TEXT("FlagActorComponent"));
+
+	FlagMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FlagMeshComponent"));
+	FlagMeshComponent->SetupAttachment(GetRootComponent());
+	FlagMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	FlagMeshComponent->SetVisibility(false);
+
+	FlagEffectMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FlagEffectMeshComponent"));
+	FlagEffectMeshComponent->SetupAttachment(FlagMeshComponent);
+	FlagEffectMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	FlagEffectMeshComponent->SetVisibility(false);
 }
 
 void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -112,6 +127,12 @@ void AMGPlayerCharacter::BeginPlay()
 	}
 
 	StatusComponent->OnOutOfCurrentHP.AddUObject(this, &ThisClass::OnDeath);
+
+	if (IsValid(FlagActorComponent))
+	{
+		FlagActorComponent->RegisterFlagMeshes(FlagMeshComponent, FlagEffectMeshComponent);
+	}
+
 }
 
 void AMGPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -120,7 +141,6 @@ void AMGPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 
 	DOREPLIFETIME(ThisClass, CurrentAimPitch);
 	DOREPLIFETIME(ThisClass, bCanAttack);
-	DOREPLIFETIME(ThisClass, bFlagState);
 }
 
 void AMGPlayerCharacter::Tick(float DeltaTime)
@@ -208,7 +228,10 @@ void AMGPlayerCharacter::HandleTakeFlagInput(const FInputActionValue& InValue)
 {
 	if (IsLocallyControlled() == true)
 	{
-		ServerRPCTakeFlag();
+		if (IsValid(FlagActorComponent))
+		{
+			FlagActorComponent->ServerRPCTakeFlag();
+		}
 	}
 }
 
@@ -272,7 +295,6 @@ void AMGPlayerCharacter::OnDeath()
 		PlayerController->OnCharacterDead();
 	}
 }
-
 
 void AMGPlayerCharacter::DrawDebugMeleeAttack(const FColor& DrawColor, FVector TraceStart, FVector TraceEnd, FVector Forward)
 {
@@ -395,56 +417,6 @@ void AMGPlayerCharacter::TakeBuff(float InBuffValue)
 		StatusComponent->SetMaxHP(StatusComponent->GetMaxHP() + InBuffValue);
 		StatusComponent->SetCurrentHP(StatusComponent->GetCurrentHP() + InBuffValue);
 	}
-}
-
-bool AMGPlayerCharacter::SetHasFlag(bool bHasFlag)
-{
-	bFlagState = bHasFlag;
-	return bFlagState;
-}
-
-void AMGPlayerCharacter::ServerRPCTakeFlag_Implementation()
-{
-	if (bFlagState == true) return;
-
-	TArray<FHitResult> OutHitResults;
-	FCollisionQueryParams Params(NAME_None, false, this);
-
-	// 뺏기 범위 설정
-	const float StealRange = 1500.f;
-	const FVector Start = GetActorLocation();
-	const FVector End = Start;
-
-	// 스윕으로 다른 플레이어 캐릭터 탐색.
-	bool bIsHitDetected = GetWorld()->SweepMultiByChannel(OutHitResults, 
-															Start, 
-															End, 
-															FQuat::Identity, 
-															ECC_Pawn, 
-															FCollisionShape::MakeSphere(StealRange), 
-															Params);
-
-	if (bIsHitDetected == true)
-	{
-		for (auto const& OutHitResult : OutHitResults)
-		{
-			AMGPlayerCharacter* TargetCharacter = Cast<AMGPlayerCharacter>(OutHitResult.GetActor());
-
-			if (IsValid(TargetCharacter) == true && TargetCharacter->GetHasFlag() == true)
-			{
-				TargetCharacter->SetHasFlag(false);
-
-				this->SetHasFlag(true);
-
-				break;
-			}
-		}
-	}
-}
-
-bool AMGPlayerCharacter::ServerRPCTakeFlag_Validate()
-{
-	return true;
 }
 
 void AMGPlayerCharacter::ClientRPCPlayMeleeAttackMontage_Implementation(AMGPlayerCharacter* InTargetCharacter)
