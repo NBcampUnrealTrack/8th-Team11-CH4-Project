@@ -1,6 +1,7 @@
 #include "Gimmick/Button/MGButtonSpawner.h"
 
 #include "Gimmick/Button/MGButtonActor.h"
+#include "Gimmick/Button/MGMovingPlatform.h"
 
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -176,6 +177,18 @@ void AMGButtonSpawner::SpawnButtons()
             Button->AttachToComponent(
                 Platform->GetRootComponent(),
                 FAttachmentTransformRules::KeepWorldTransform);
+
+ 
+            if (AMGMovingPlatform* MovingPlatform = Cast<AMGMovingPlatform>(Platform))
+            {
+                const FVector WorldXY(SpawnLocation.X, SpawnLocation.Y, 0.f);
+                const float TopZ = Button->GetButtonTopWorldZ();
+
+                MovingPlatform->AddStandCollisionAtWorldTop(
+                    WorldXY,
+                    TopZ,
+                    FVector(10.f, 10.f, 5.f)); // 버튼 발판 크기에 맞게 조정 가능
+            }
 
             SpawnedLocations.Add(SpawnLocation);
         }

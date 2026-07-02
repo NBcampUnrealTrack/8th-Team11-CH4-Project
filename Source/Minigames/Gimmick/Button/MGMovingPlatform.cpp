@@ -1,19 +1,17 @@
-#include "Gimmick/Button/MGMovingPlatform.h"
+Ôªø#include "Gimmick/Button/MGMovingPlatform.h"
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
-#include "Components/InterpToMovementComponent.h"
 
 #include "GameFramework/GameStateBase.h"
+#include "Net/UnrealNetwork.h"
 
 AMGMovingPlatform::AMGMovingPlatform()
 {
-    PrimaryActorTick.bCanEverTick = false;
-    //PrimaryActorTick.bCanEverTick = true; //«√∑ß∆˚ ¿ßƒ° µø±‚»≠ »Æ¿ŒøÎ
+    PrimaryActorTick.bCanEverTick = true;
 
     bReplicates = true;
 
-    // Ω∫∆˜≥ ∞° GetAllActorsWithTag(TEXT("MovingPlatform"))∑Œ √£¿ª ºˆ ¿÷∞‘ ≈¬±◊ ∫Œø©
     Tags.Add(TEXT("MovingPlatform"));
 
     PlatformMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlatformMesh"));
@@ -28,16 +26,59 @@ AMGMovingPlatform::AMGMovingPlatform()
     SpawnArea->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     SpawnArea->ComponentTags.Add(TEXT("SpawnArea"));
 
-    InterpMovement = CreateDefaultSubobject<UInterpToMovementComponent>(TEXT("InterpMovement"));
-    // UpdatedComponent¥¬ ¡ˆ¡§ æ» «ÿµµ RootComponent(PlatformMesh)∑Œ ¿⁄µø ø¨∞·µ 
-    InterpMovement->SetIsReplicated(true);   // ∏ÌΩ√¿˚¿∏∑Œ «— π¯ ¥ı ∫∏¿Â
-    InterpMovement->Duration = 4.f;
-    InterpMovement->BehaviourType = EInterpToBehaviourType::PingPong;
+    StandCollisions.Reserve(MaxStandCollisions);
+    for (int32 i = 0; i < MaxStandCollisions; ++i)
+    {
+        const FName BoxName = *FString::Printf(TEXT("StandCollision%d"), i);
 
-    // ±‚∫ª ¿Ãµø ∞Ê∑Œ (Ω√¿€ ¿ßƒ° ±‚¡ÿ ªÛ¥Î¡¬«•, Z∑Œ 200 ¿ß±Ó¡ˆ ø’∫π)
-    // -> Ω«¡¶ ∞™¿∫ ∞¢ Blueprint/¿ŒΩ∫≈œΩ∫¿« Details ∆–≥Œø°º≠ ¿⁄¿Ø∑”∞‘ µ§æÓΩ·µµ µ 
-    InterpMovement->AddControlPointPosition(FVector::ZeroVector, true);
-    InterpMovement->AddControlPointPosition(FVector(0.f, 0.f, 200.f), true);
+        UBoxComponent* Box = CreateDefaultSubobject<UBoxComponent>(BoxName);
+        Box->SetupAttachment(PlatformMesh);
+        Box->SetMobility(EComponentMobility::Movable);
+        Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Box->SetCollisionResponseToAllChannels(ECR_Ignore);
+        Box->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+        Box->CanCharacterStepUpOn = ECB_Yes;
+
+        StandCollisions.Add(Box);
+    }
+
+}
+
+void AMGMovingPlatform::BeginPlay()
+{
+    Super::BeginPlay();
+
+    StartLocation = GetActorLocation();
+}
+
+void AMGMovingPlatform::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+
+    const AGameStateBase* GameState = GetWorld()->GetGameState();
+    if (!GameState)
+    {
+        return;
+    }
+
+    const float ServerTime = GameState->GetServerWorldTimeSeconds();
+    const float CycleTime = FMath::Fmod(ServerTime, Duration * 2.f);
+
+    const float Alpha =
+        (CycleTime <= Duration)
+        ? (CycleTime / Duration)
+        : (2.f - CycleTime / Duration);
+
+    const FVector NewLocation = StartLocation + MoveOffset * Alpha;
+
+    SetActorLocation(NewLocation);
+}
+
+void AMGMovingPlatform::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(AMGMovingPlatform, StandCollisionInfos);
 }
 
 FVector AMGMovingPlatform::GetSurfaceExtent() const
@@ -56,27 +97,73 @@ FVector AMGMovingPlatform::GetSurfaceTopLocation() const
     return GetActorLocation();
 }
 
-/* //«√∑ß∆˚ ¿ßƒ° »Æ¿Œ ∑Œ±◊
-void AMGMovingPlatform::Tick(float DeltaSeconds)
+void AMGMovingPlatform::AddStandCollisionAt(const FVector& RelativeLocation, const FVector& Extent)
 {
-    Super::Tick(DeltaSeconds);
 
     if (!HasAuthority())
-        return;
-
-    DebugTimer += DeltaSeconds;
-
-    if (DebugTimer >= 0.5f)
     {
-        DebugTimer = 0.f;
+        return;
+    }
 
-        float ServerTime =
-            GetWorld()->GetGameState()->GetServerWorldTimeSeconds();
+    if (StandCollisionInfos.Num() >= MaxStandCollisions)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[%s] StandCollision limit (%d) exceeded, ignoring"),
+            *GetName(), MaxStandCollisions);
+        return;
+    }
 
-        MulticastDebugPlatform(GetActorLocation(), ServerTime);
+    FStandCollisionInfo Info;
+    Info.RelativeLocation = RelativeLocation;
+    Info.Extent = Extent;
+
+    StandCollisionInfos.Add(Info);  
+
+    ApplyStandCollisionInfo(StandCollisionInfos.Num() - 1);
+}
+
+void AMGMovingPlatform::AddStandCollisionAtWorldTop(
+    const FVector& WorldXY,
+    float WorldTopZ,
+    const FVector& Extent)
+{
+    const FVector WorldCenter(WorldXY.X, WorldXY.Y, WorldTopZ - Extent.Z);
+    const FVector RelativeLocation =
+        PlatformMesh->GetComponentTransform().InverseTransformPosition(WorldCenter);
+
+    AddStandCollisionAt(RelativeLocation, Extent);
+}
+
+void AMGMovingPlatform::OnRep_StandCollisionInfos()
+{
+    for (int32 i = 0; i < StandCollisionInfos.Num(); ++i)
+    {
+        ApplyStandCollisionInfo(i);
     }
 }
 
+void AMGMovingPlatform::ApplyStandCollisionInfo(int32 Index)
+{
+    if (!StandCollisions.IsValidIndex(Index) ||
+        !StandCollisionInfos.IsValidIndex(Index))
+    {
+        return;
+    }
+
+    UBoxComponent* Box = StandCollisions[Index];
+    if (!Box)
+    {
+        return;
+    }
+
+    const FStandCollisionInfo& Info = StandCollisionInfos[Index];
+
+    Box->SetRelativeLocation(Info.RelativeLocation);
+    Box->SetBoxExtent(Info.Extent);
+    Box->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
+
+/* //ÌîåÎû´Ìèº ÏúÑÏπò ÌôïÏù∏ Î°úÍ∑∏
 void AMGMovingPlatform::MulticastDebugPlatform_Implementation(
     const FVector& ServerLocation,
     float ServerTime)

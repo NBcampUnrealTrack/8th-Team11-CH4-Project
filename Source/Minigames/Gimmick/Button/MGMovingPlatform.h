@@ -6,7 +6,18 @@
 
 class UStaticMeshComponent;
 class UBoxComponent;
-class UInterpToMovementComponent;
+
+USTRUCT()
+struct FStandCollisionInfo
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FVector RelativeLocation = FVector::ZeroVector;
+
+    UPROPERTY()
+    FVector Extent = FVector(10.f, 10.f, 5.f);
+};
 
 UCLASS()
 class MINIGAMES_API AMGMovingPlatform : public AActor
@@ -16,34 +27,58 @@ class MINIGAMES_API AMGMovingPlatform : public AActor
 public:
     AMGMovingPlatform();
 
-    // 버튼 스포너가 플랫폼 표면 크기 참조용
+    virtual void BeginPlay() override;
+    virtual void Tick(float DeltaSeconds) override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
     UFUNCTION(BlueprintCallable, Category = "Platform")
     FVector GetSurfaceExtent() const;
 
-    // 버튼 스포너가 플랫폼 위 좌표 참조용
     UFUNCTION(BlueprintCallable, Category = "Platform")
     FVector GetSurfaceTopLocation() const;
+
+    void AddStandCollisionAt(const FVector& RelativeLocation, const FVector& Extent);
+    void AddStandCollisionAtWorldTop(
+        const FVector& WorldXY,
+        float WorldTopZ,
+        const FVector& Extent);
+
+    static constexpr int32 MaxStandCollisions = 3;
 
 protected:
     UPROPERTY(VisibleAnywhere, Category = "Platform")
     TObjectPtr<UStaticMeshComponent> PlatformMesh;
 
-    // AMGButtonSpawner::GetSpawnArea 에서 "SpawnArea" 태그로 찾는 박스
     UPROPERTY(VisibleAnywhere, Category = "Platform")
     TObjectPtr<UBoxComponent> SpawnArea;
 
-    // 이동 담당 컴포넌트 (C++에서 자동 부착, 값은 각 인스턴스 Details에서 조절)
-    UPROPERTY(VisibleAnywhere, Category = "Movement")
-    TObjectPtr<UInterpToMovementComponent> InterpMovement;
+    UPROPERTY(EditAnywhere, Category = "Movement")
+    FVector MoveOffset = FVector(0.f, 0.f, 200.f);
 
-/* //플랫폼 위치 확인용 로그
-Public: 
-    UFUNCTION(NetMulticast, Unreliable)
-    void MulticastDebugPlatform(const FVector& ServerLocation, float ServerTime);
+    UPROPERTY(EditAnywhere, Category = "Movement", meta = (ClampMin = "0.1"))
+    float Duration = 4.f;
 
-    virtual void Tick(float DeltaSeconds) override;
 private:
-    float DebugTimer = 0.f;
-    */
+    FVector StartLocation = FVector::ZeroVector;
+
+    UPROPERTY()
+    TArray<TObjectPtr<UBoxComponent>> StandCollisions;
+
+    UPROPERTY(ReplicatedUsing = OnRep_StandCollisionInfos)
+    TArray<FStandCollisionInfo> StandCollisionInfos;
+
+    UFUNCTION()
+    void OnRep_StandCollisionInfos();
+
+    void ApplyStandCollisionInfo(int32 Index);
+
+    /* //플랫폼 위치 확인용 로그
+    public:
+        UFUNCTION(NetMulticast, Unreliable)
+        void MulticastDebugPlatform(const FVector& ServerLocation, float ServerTime);
+
+    private:
+        float DebugTimer = 0.f;
+        */
 
 };

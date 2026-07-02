@@ -4,6 +4,7 @@
 #include "PlayerState/MGPlayerState.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Net/UnrealNetwork.h"
+#include "TimerManager.h"
 
 AMGButtonActor::AMGButtonActor()
 {
@@ -12,8 +13,12 @@ AMGButtonActor::AMGButtonActor()
 
     BaseMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMesh"));
     SetRootComponent(BaseMesh);
+    BaseMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    BaseMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+
     ButtonMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ButtonMesh"));
     ButtonMesh->SetupAttachment(BaseMesh);
+    ButtonMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AMGButtonActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -37,6 +42,12 @@ void AMGButtonActor::BeginPlay()
 
     DynamicMaterial = ButtonMesh->CreateDynamicMaterialInstance(0);
     ApplyVisual();
+
+    GetWorldTimerManager().SetTimerForNextTick(this, &AMGButtonActor::ApplyVisual);
+
+    FTimerHandle ReapplyHandle;
+    GetWorldTimerManager().SetTimer(
+        ReapplyHandle, this, &AMGButtonActor::ApplyVisual, 0.5f, false);
 }
 
 void AMGButtonActor::BeginInteract_Implementation(AActor* Interactor)
@@ -73,6 +84,23 @@ void AMGButtonActor::EndInteract_Implementation(AActor* Interactor)
 
     bPressed = false;
     ApplyVisual();
+}
+
+float AMGButtonActor::GetButtonTopWorldZ() const
+{
+    if (!ButtonMesh)
+    {
+        return GetActorLocation().Z;
+    }
+
+    const FVector WorldOrigin =
+        BaseMesh->GetComponentTransform().TransformPosition(ButtonOriginLocation);
+
+    const float MeshHalfHeight = ButtonMesh->GetStaticMesh()
+        ? ButtonMesh->GetStaticMesh()->GetBounds().BoxExtent.Z * ButtonMesh->GetComponentScale().Z
+        : 0.f;
+
+    return WorldOrigin.Z + MeshHalfHeight;
 }
 
 void AMGButtonActor::OnRep_Pressed()

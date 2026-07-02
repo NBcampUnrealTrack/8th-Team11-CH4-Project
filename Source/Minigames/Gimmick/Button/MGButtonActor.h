@@ -22,6 +22,7 @@ protected:
 public:
     virtual void BeginInteract_Implementation(AActor* Interactor) override;
     virtual void EndInteract_Implementation(AActor* Interactor) override;
+    float GetButtonTopWorldZ() const;
 
 private:
     void ApplyVisual();
