@@ -187,14 +187,4 @@ public:
 
 #pragma endregion
 
-#pragma region RuleComponent
-public:
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastRPC_SetRule(TSubclassOf<UActorComponent> RuleComp);
-public:
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Rule")
-	TObjectPtr<UActorComponent> CurrentRule;
-
-#pragma endregion
-
 };
