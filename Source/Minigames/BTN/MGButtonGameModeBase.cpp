@@ -66,16 +66,14 @@ void AMGButtonGameModeBase::AdvanceTimer()
         }
     }
 }
-
 void AMGButtonGameModeBase::EndGamePhase()
 {
-    UE_LOG(LogTemp, Warning, TEXT("!!! EndGamePhase 함수 진입 !!!"));
+    UE_LOG(LogTemp, Warning, TEXT("EndGamePhase 함수 진입"));
 
     TArray<AMGFlagPlayerState*> PlayerStates;
-
-    for (AMGPlayerController* PC : AllPlayerControllers)
+    for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
     {
-        if (IsValid(PC) && PC->PlayerState)
+        if (APlayerController* PC = It->Get())
         {
             if (AMGFlagPlayerState* PS = Cast<AMGFlagPlayerState>(PC->PlayerState))
             {
@@ -84,28 +82,37 @@ void AMGButtonGameModeBase::EndGamePhase()
         }
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("수집된 플레이어 수: %d"), PlayerStates.Num());
-
     if (PlayerStates.Num() > 0)
     {
-        // 순위 정렬
+        // 순위 결정
         PlayerStates.Sort([](const AMGFlagPlayerState& A, const AMGFlagPlayerState& B) {
-            return A.MGScore > B.MGScore;
+            return A.GetScore() > B.GetScore();
             });
 
-        // 점수 부여
         int32 CurrentRank = 1;
         for (int32 i = 0; i < PlayerStates.Num(); ++i)
         {
-            if (i > 0 && PlayerStates[i]->MGScore < PlayerStates[i - 1]->MGScore)
+            if (i > 0 && PlayerStates[i]->GetScore() < PlayerStates[i - 1]->GetScore())
             {
                 CurrentRank = i + 1;
             }
-            GiveScore(PlayerStates[i], CurrentRank);
+
+            float ScoreBeforeBonus = PlayerStates[i]->GetScore();
+
+            Super::GiveScore(Cast<AMGPlayerState>(PlayerStates[i]), CurrentRank);
+
+            // 등수 별 점수 
+            float ScoreAfterBonus = PlayerStates[i]->GetScore();
+            float BonusPoints = ScoreAfterBonus - ScoreBeforeBonus;
+
+            UE_LOG(LogTemp, Log, TEXT("플레이어: %s | 소유권 점수: %f | 등수: %d등 | 획득한 등수 보너스: %f"),
+                *PlayerStates[i]->GetPlayerName(),
+                ScoreBeforeBonus,
+                CurrentRank,
+                BonusPoints);
         }
     }
 
-    // 3게임 상태 변경
     if (AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>())
     {
         MGGameState->MatchState = EMatchState::Ending;
@@ -115,13 +122,11 @@ void AMGButtonGameModeBase::EndGamePhase()
 // 점수 부여 함수
 void AMGButtonGameModeBase::GiveScore(AMGFlagPlayerState* PS, int32 Rank)
 {
-    // 부모 클래스의 점수 부여 로직을 그대로 사용
-    if (AMGGameModeBase* ParentGM = Cast<AMGGameModeBase>(GetWorld()->GetAuthGameMode()))
-    {
-        ParentGM->GiveScore(PS, Rank);
-    }
-}
+    Super::GiveScore(PS, Rank);
 
+    UE_LOG(LogTemp, Log, TEXT("플레이어: %s, 등수: %d, 최종 합산 점수: %f"),
+        *PS->GetPlayerName(), Rank, PS->GetScore());
+}
 // 점수 집계 테스트
 void AMGButtonGameModeBase::CalculateFinalScores()
 {
