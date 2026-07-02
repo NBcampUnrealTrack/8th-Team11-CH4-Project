@@ -300,7 +300,8 @@ void AMGGameModeBase::NotifyToAllPlayer(const FString& NotificationString)
 // EndPlay에서 사용중인 모든 타이머를 안전하게 제거
 void AMGGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
-
 	GetWorld()->GetTimerManager().ClearTimer(MainTimerHandle);
+
+	// 상속받은 EndPlay의 Super는 마지막에
+	Super::EndPlay(EndPlayReason);
 }
