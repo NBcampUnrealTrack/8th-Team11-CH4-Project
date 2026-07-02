@@ -9,11 +9,12 @@
 #include "Kismet/GameplayStatics.h"
 #include "UI/UW_GameResult.h"
 #include "Components/TextBlock.h"
+#include "GameMode/MGLobbyGameModeBase.h" 
 
 void AMGPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	if (IsLocalController() == false)
 	{
 		return;
@@ -82,5 +83,26 @@ void AMGPlayerController::ClientRPCShowGameResultWidget_Implementation(int32 InR
 				bShowMouseCursor = true;
 			}
 		}
+	}
+}
+
+
+void AMGPlayerController::Ready()
+{
+	ServerRPCSetReady(true);
+}
+
+void AMGPlayerController::Unready()
+{
+	ServerRPCSetReady(false);
+}
+
+void AMGPlayerController::ServerRPCSetReady_Implementation(bool bReady)
+{
+	// Server RPC라 서버에서 실행 → 게임모드 접근 가능
+	AMGLobbyGameModeBase* GM = Cast<AMGLobbyGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (IsValid(GM))
+	{
+		GM->OnPlayerReady(this, bReady);
 	}
 }

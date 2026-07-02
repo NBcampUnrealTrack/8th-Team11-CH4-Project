@@ -3,31 +3,81 @@
 #include "GameMode/MGPassBombGameMode.h"
 #include "Controller/MGPlayerController.h"
 #include "Character/MGPlayerCharacter.h"
-#include "PlayerState/MGPlayerState.h"
-#include "Component/PassBomb/MGCharacterComp_PassBomb.h"
+#include "PlayerState/MGPassBombPlayerState.h"
 #include "Gimmick/MGBombActor.h"
 
 void AMGPassBombGameMode::StartMinigame()
 {
 	Super::StartMinigame();
 
-	BombTime = 15.f;
-
-	// 액터컴포넌트 부착
-	for (const auto MGPC : AllPlayerControllers)
-	{
-		ACharacter* PlayerChar = MGPC->GetCharacter();
-		if (IsValid(PlayerChar))
-		{
-			AMGPlayerCharacter* MGPlayerChar = Cast<AMGPlayerCharacter>(PlayerChar);
-			if (IsValid(MGPlayerChar))
-			{
-				MGPlayerChar->MulticastRPC_SetRule(UMGCharacterComp_PassBomb::StaticClass());
-			}
-		}
-	}
+	ExplodeTime = 5.f;
 
 	AlivePlayer = AllPlayerControllers;
+
+	NextRound();
+}
+
+void AMGPassBombGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
+{
+	AController* PC = TargetPlayer->GetController();
+	if (IsValid(PC))
+	{
+		AMGPlayerController* MGPC = Cast<AMGPlayerController>(PC);
+		if (IsValid(MGPC))
+		{
+			if (AlivePlayer.Contains(MGPC))
+			{
+				AMGPassBombPlayerState* MGPS = MGPC->GetPlayerState<AMGPassBombPlayerState>();
+				if (IsValid(MGPS))
+				{
+					MGPS->MulticastRPC_RetireCharacter();
+				}
+
+				//TODO: 중간순위 점수 추가
+				//MGPC->AddScore()
+
+				AlivePlayer.Remove(MGPC);
+			}
+			
+			
+			// 플레이어명 임시 지정, 이후 변경필요
+			FString UserName;
+			UserName = MGPC->GetPlayerState<AMGPassBombPlayerState>()->GetPlayerName();
+
+			NotifyToAllPlayer(FString::Printf(TEXT("%s(이)가 탈락했습니다!"), *UserName));
+			GetWorldTimerManager().SetTimer(
+				RoundTimerHandle,
+				this,
+				&ThisClass::NextRound,
+				5.f,
+				false
+			);
+		}
+	}
+}
+
+void AMGPassBombGameMode::NextRound()
+{
+	if (AlivePlayer.Num() <= 1)
+	{
+		// 플레이어명 임시 지정, 이후 변경필요
+		FString UserName;
+		UserName = AlivePlayer[0]->GetPlayerState<AMGPassBombPlayerState>()->GetPlayerName();
+
+		NotifyToAllPlayer(FString::Printf(TEXT("%s 승리!"), *UserName));
+
+		//TODO: 승리자 점수 추가
+		//AlivePlayer[0]->AddScore()
+
+		EndMinigame();
+		return;
+	}
+	NotifyToAllPlayer(TEXT(""));
 
 	// 술래 후보자
 	TArray<AMGPlayerController*> BombNominee;
@@ -57,27 +107,6 @@ void AMGPassBombGameMode::StartMinigame()
 	if (BombNominee.IsValidIndex(BombIndex))
 	{
 		BombActor = GetWorld()->SpawnActor<AMGBombActor>(BombActorClass);
-		BombActor->ActivateBomb(BombNominee[BombIndex]->GetCharacter());
-	}
-}
-
-void AMGPassBombGameMode::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
-{
-	AController* PC = TargetPlayer->GetController();
-	if (IsValid(PC))
-	{
-		AMGPlayerController* MGPC = Cast<AMGPlayerController>(PC);
-		if (IsValid(MGPC))
-		{
-			if (AlivePlayer.Contains(MGPC))
-			{
-				AlivePlayer.Remove(MGPC);
-			}
-		}
+		BombActor->ActivateBomb(BombNominee[BombIndex]->GetCharacter(), ExplodeTime);
 	}
 }

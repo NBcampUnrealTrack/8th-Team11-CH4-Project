@@ -67,6 +67,7 @@ AMGPlayerCharacter::AMGPlayerCharacter()
 	HPTextWidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 
+	InteractionComponent = CreateDefaultSubobject<UMGInteractionOverlapComponent>(TEXT("InteractionComponent"));
 	InteractionComponent =CreateDefaultSubobject<UMGInteractionOverlapComponent>(TEXT("InteractionComponent"));
 	
 	//깃발뺏기 관련 컴포넌트 설정
