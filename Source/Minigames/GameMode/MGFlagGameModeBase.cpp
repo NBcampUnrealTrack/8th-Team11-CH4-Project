@@ -28,6 +28,14 @@ void AMGFlagGameModeBase::StartMinigame()
 	SpawnFlag();
 }
 
+void AMGFlagGameModeBase::EndMinigame()
+{
+	Super::EndMinigame();
+	
+	DetermineWinner();
+	GetWorld()->GetTimerManager().ClearTimer(GameTimerHandle);
+}
+
 void AMGFlagGameModeBase::OnGameTimerElapsed()
 {
 	--RemainGameTime;
@@ -38,22 +46,11 @@ void AMGFlagGameModeBase::OnGameTimerElapsed()
 	
 	if (RemainGameTime == 0)
 	{
-		EndGame();
+		EndMinigame();
 	}
 }
 
-void AMGFlagGameModeBase::EndGame()
-{
-	DeterMineWinner();
-	GetWorld()->GetTimerManager().ClearTimer(GameTimerHandle);
-	if (AMGFlagGameStateBase* FlagGameState = GetGameState<AMGFlagGameStateBase>())
-	{
-		// TODO: Round 수정
-		FlagGameState->MatchState = EMatchState::Ending;
-	}
-}
-
-void AMGFlagGameModeBase::DeterMineWinner()
+void AMGFlagGameModeBase::DetermineWinner()
 {
 	TArray<AMGFlagPlayerState*> FlagPlayerStates;
 
