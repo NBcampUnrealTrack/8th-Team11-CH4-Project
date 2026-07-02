@@ -25,7 +25,7 @@ public:
 	void Multicast_OnExplode();
 
 	// 폭탄의 ExplodeTimer를 관리, GameMode에서 최초로 폭탄을 넘기는 함수
-	void ActivateBomb(ACharacter* InitialHolder);
+	void ActivateBomb(ACharacter* InitialHolder, float ExplodeTime);
 
 	// Replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -85,10 +85,6 @@ public:
 	// 다시 Pass하기 위한 쿨타임 시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
 	float PassCooldownTime;
-
-	// 폭탄 카운트다운이 시작된 후 터질 때까지 걸리는 시간
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
-	float ExplodeTime;
 
 private:
 	// 폭탄을 Pass할 수 있는지 여부

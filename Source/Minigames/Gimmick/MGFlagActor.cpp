@@ -2,6 +2,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Character/MGPlayerCharacter.h"
+#include <Component/MGFlagActorComponent.h>
 
 AMGFlagActor::AMGFlagActor()
 {
@@ -49,22 +50,18 @@ void AMGFlagActor::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 	}
 
 	AMGPlayerCharacter* PlayerCharacter = Cast<AMGPlayerCharacter>(OtherActor);
+	UMGFlagActorComponent* FlagComp = PlayerCharacter->GetComponentByClass<UMGFlagActorComponent>();
 
-	if (PlayerCharacter)
+	if (PlayerCharacter && FlagComp)
 	{
-		// 플레이어 캐릭터의 깃발 보유 여부 변경
-		PlayerCharacter->SetHasFlag(true);
+		// 깃발이 없는 경우에만 획득
+		// ToDo: 깃발 액터 1개만 배치하기로 확정되면 If문 커버 삭제
+		if (!FlagComp->GetHasFlag())
+		{
+			FlagComp->SetHasFlag(true);
 
-		// 서버에서 브로드캐스트
-		Multicast_HideFlag();
+			// 서버에서 삭제
+			Destroy();
+		}
 	}
-}
-
-void AMGFlagActor::Multicast_HideFlag_Implementation()
-{
-	// 깃발 숨김
-	SetActorHiddenInGame(true);
-
-	// 콜리전 비활성화
-	SetActorEnableCollision(false);
 }

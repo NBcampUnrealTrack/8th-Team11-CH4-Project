@@ -4,19 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameState/MGGameStateBase.h"
-#include "MGPassBomeGameState.generated.h"
+#include "MGPassBombGameState.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class MINIGAMES_API AMGPassBomeGameState : public AMGGameStateBase
+class MINIGAMES_API AMGPassBombGameState : public AMGGameStateBase
 {
 	GENERATED_BODY()
 
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-public:
-	//UPROPERTY(Replicated, BlueprintReadOnly, Category = "Minigame")
-	//TObjectPtr<> BombPC;
 };
