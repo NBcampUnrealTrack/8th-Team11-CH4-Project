@@ -17,6 +17,8 @@ class MINIGAMES_API AMGPassBombGameMode : public AMGGameModeBase
 public:
 	virtual void StartMinigame() override;
 
+	virtual void EndMinigame() override;
+
 	virtual void BeginPlay() override;
 
 	void EliminatePlayer(ACharacter* TargetPlayer);

@@ -61,6 +61,11 @@ void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
 	}
 }
 
+void AMGPassBombGameMode::EndMinigame()
+{
+	Super::EndMinigame();
+}
+
 void AMGPassBombGameMode::NextRound()
 {
 	if (AlivePlayer.Num() <= 1)
