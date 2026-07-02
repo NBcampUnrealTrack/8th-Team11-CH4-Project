@@ -397,6 +397,14 @@ void AMGPlayerCharacter::TakeBuff(float InBuffValue)
 	}
 }
 
+void AMGPlayerCharacter::MulticastRPC_SetRule_Implementation(TSubclassOf<UActorComponent> RuleComp)
+{
+	if (CurrentRule != nullptr)
+	{
+		CurrentRule->DestroyComponent();
+	}
+}
+
 bool AMGPlayerCharacter::SetHasFlag(bool bHasFlag)
 {
 	bFlagState = bHasFlag;
@@ -416,13 +424,13 @@ void AMGPlayerCharacter::ServerRPCTakeFlag_Implementation()
 	const FVector End = Start;
 
 	// 스윕으로 다른 플레이어 캐릭터 탐색.
-	bool bIsHitDetected = GetWorld()->SweepMultiByChannel(OutHitResults,
-		Start,
-		End,
-		FQuat::Identity,
-		ECC_Pawn,
-		FCollisionShape::MakeSphere(StealRange),
-		Params);
+	bool bIsHitDetected = GetWorld()->SweepMultiByChannel(OutHitResults, 
+															Start, 
+															End, 
+															FQuat::Identity, 
+															ECC_Pawn, 
+															FCollisionShape::MakeSphere(StealRange), 
+															Params);
 
 	if (bIsHitDetected == true)
 	{

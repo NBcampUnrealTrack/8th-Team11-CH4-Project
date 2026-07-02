@@ -6,6 +6,8 @@
 #include "MGGameModeBase.h"
 #include "MGFlagGameModeBase.generated.h"
 
+class AMGFlagActor;
+
 UCLASS()
 class MINIGAMES_API AMGFlagGameModeBase : public AMGGameModeBase
 {
@@ -19,6 +21,9 @@ public:
 protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 RemainGameTime = 120;
+	
 private:
 	UFUNCTION()
 	void OnGameTimerElapsed();
@@ -28,7 +33,11 @@ private:
 	
 	void DeterMineWinner();
 	
-	FTimerHandle GameTimerHandle;
+	void SpawnFlag();
 	
-	int32 RemainGameTime = 120;
+	FTimerHandle GameTimerHandle;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AMGFlagActor> FlagClass;
+
 };
