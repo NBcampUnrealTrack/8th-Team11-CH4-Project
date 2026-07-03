@@ -15,6 +15,13 @@ struct FSpeedEffect
 {
 	GENERATED_BODY()
 
+	// 고유 Key
+	UPROPERTY()
+	FGuid UniqueID;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FName BuffName = NAME_None;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float Amount = 0.0f;
 
