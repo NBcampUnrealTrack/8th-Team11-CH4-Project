@@ -31,6 +31,9 @@ public:
 
 	virtual void EndMinigame();		//오버라이드 시 Super호출 필수
 
+	// 로비에서 Seamless를 통해 돌아오는 플레이어들을 처리하기 위한 함수 
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
+	
 	void OnCharacterDead(AMGPlayerController* InController);
 
 	void GiveScore(AMGPlayerState* PS, int32 Rank);
@@ -49,12 +52,10 @@ public:
 	FTimerHandle MainTimerHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 WaitingTime = 15;
+	int32 WaitingTime = 10;
 
-	int32 RemainWaitingTimeForPlaying = 15;
-
-	int32 MinimumPlayerCountForPlaying = 2;
-
+	int32 RemainWaitingTimeForPlaying = 10;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 EndingTime = 15;
 

@@ -20,7 +20,7 @@ public class Minigames : ModuleRules
 		PublicIncludePaths.AddRange(new string[]
 		{
 			"Minigames",
-		});
+        });
 
 	}
 }

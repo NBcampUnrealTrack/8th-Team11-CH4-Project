@@ -18,6 +18,8 @@ public:
 
 	virtual void StartMinigame() override;
 	
+	virtual void EndMinigame() override;
+
 protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
@@ -28,12 +30,11 @@ private:
 	UFUNCTION()
 	void OnGameTimerElapsed();
 	
-	// TODO: virtual 로 수정하기
-	void EndGame();
-	
-	void DeterMineWinner();
+	void DetermineWinner();
 	
 	void SpawnFlag();
+	
+	void UpdateFlagHoldingTime();
 	
 	FTimerHandle GameTimerHandle;
 
