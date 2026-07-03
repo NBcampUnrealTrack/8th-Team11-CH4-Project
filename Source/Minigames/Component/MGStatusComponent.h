@@ -9,6 +9,8 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnCurrentHPChangedDelegate, float /*InCurre
 DECLARE_MULTICAST_DELEGATE(FOnOutOfCurrentHPDelegate);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMaxHPChangedDelegate, float /*InMaxHP*/);
 
+class UMGEffectDataAsset;
+
 // Speed 구조체
 USTRUCT(BlueprintType)
 struct FSpeedEffect
@@ -20,13 +22,9 @@ struct FSpeedEffect
 	FGuid UniqueID;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	FName BuffName = NAME_None;
+	const UMGEffectDataAsset* BuffData = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	float Amount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	float Duration = 0.0f;
+	FTimerHandle TimerHandle;
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -83,7 +81,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Status|Speed")
 	void SetNormalSpeed(float InSpeed);
 
-	void AddNormalSpeedforDuration(float Amount, float Duration);
+	void AddEffectforDuration(const UMGEffectDataAsset* InEffectData);
 
 protected:
 	UFUNCTION()
@@ -93,7 +91,7 @@ protected:
 	void UpdateSpeed();
 
 	// 타이머가 끝났을 때 호출될 함수, 속도를 기존 속도로 갱신
-	void OnSpeedEffectExpired(float Amount);
+	void OnSpeedEffectExpired(FGuid ExpiredEffectID);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status|Speed")
@@ -106,8 +104,6 @@ protected:
 private:
 	UPROPERTY()
 	TArray<FSpeedEffect> ActiveSpeedEffects; // 활성화된 속도 효과 리스트
-
-	TArray<FTimerHandle> SpeedTimerHandler;  // 각 속도 효과에 대한 타이머 핸들을 관리하는 배열
 
 #pragma endregion
 
