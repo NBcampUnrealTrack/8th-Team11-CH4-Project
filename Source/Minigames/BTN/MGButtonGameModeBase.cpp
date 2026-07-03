@@ -28,13 +28,17 @@ void AMGButtonGameModeBase::StartReadyPhase()
     GetWorldTimerManager().SetTimer(GameTimerHandle, this, &AMGButtonGameModeBase::AdvanceTimer, 1.0f, true);
 }
 
-// 게임 시작
 void AMGButtonGameModeBase::StartPlayingPhase()
 {
     CurrentPhase = EGamePhase::Playing;
     TimeRemaining = GameDuration;
 
     UE_LOG(LogTemp, Warning, TEXT("게임 시작 (%d초) "), TimeRemaining);
+
+    if (AMGButtonGameState* GS = GetGameState<AMGButtonGameState>())
+    {
+        GS->OnGamePhaseChanged.Broadcast(CurrentPhase);
+    }
 }
 
 // 타이머 갱신 로직
@@ -46,7 +50,12 @@ void AMGButtonGameModeBase::AdvanceTimer()
     if (AMGButtonGameState* GS = GetGameState<AMGButtonGameState>())
     {
         GS->TimeRemaining = TimeRemaining;
-        GS->CurrentPhase = CurrentPhase;
+
+        if (GS->CurrentPhase != CurrentPhase)
+        {
+            GS->CurrentPhase = CurrentPhase;
+            GS->OnGamePhaseChanged.Broadcast(CurrentPhase); // 클라이언트에 알림
+        }
     }
 
     if (CurrentPhase == EGamePhase::WaitingToStart)
@@ -66,6 +75,7 @@ void AMGButtonGameModeBase::AdvanceTimer()
         }
     }
 }
+
 void AMGButtonGameModeBase::EndGamePhase()
 {
     UE_LOG(LogTemp, Warning, TEXT("EndGamePhase 함수 진입"));
@@ -127,16 +137,5 @@ void AMGButtonGameModeBase::GiveScore(AMGFlagPlayerState* PS, int32 Rank)
     UE_LOG(LogTemp, Log, TEXT("플레이어: %s, 등수: %d, 최종 합산 점수: %f"),
         *PS->GetPlayerName(), Rank, PS->GetScore());
 }
-// 점수 집계 테스트
-void AMGButtonGameModeBase::CalculateFinalScores()
-{
-    for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-    {
-        APlayerController* PC = It->Get();
-        if (PC && PC->PlayerState)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("플레이어: %s, 최종 버튼 개수: %f"), *PC->GetName(), PC->PlayerState->GetScore());
-        }
-    }
-}
+
 
