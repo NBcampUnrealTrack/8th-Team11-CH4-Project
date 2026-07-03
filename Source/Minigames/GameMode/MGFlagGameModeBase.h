@@ -34,6 +34,8 @@ private:
 	
 	void SpawnFlag();
 	
+	void UpdateFlagHoldingTime();
+	
 	FTimerHandle GameTimerHandle;
 
 	UPROPERTY(EditDefaultsOnly)
