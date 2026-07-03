@@ -250,7 +250,9 @@ void AMGGameModeBase::OnMainTimerElapsed()
 					break;
 				}
 				default:
+				{
 					break;
+				}
 				}
 
 				// Return To Lobby Debug Begin -----------------
