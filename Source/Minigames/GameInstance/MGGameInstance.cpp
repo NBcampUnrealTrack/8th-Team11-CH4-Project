@@ -8,11 +8,6 @@ UMGGameInstance::UMGGameInstance()
 	CurrentRoundState = ERoundState::Lobby;
 }
 
-//void UMGGameInstance::Init()
-//{
-//	Super::Init();
-//}
-
 FString UMGGameInstance::GetLevelURLForRound(int32 RoundIndex) const
 {
 	if (MinigameSequence.IsValidIndex(RoundIndex) == false)
