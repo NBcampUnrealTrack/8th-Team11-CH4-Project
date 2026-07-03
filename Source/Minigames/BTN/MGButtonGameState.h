@@ -4,6 +4,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "MGButtonGameState.generated.h"
 
+
 UENUM(BlueprintType)
 enum class EGamePhase : uint8
 {
@@ -13,6 +14,8 @@ enum class EGamePhase : uint8
     GameOver        // 게임 종료 및 집계
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGamePhaseChanged, EGamePhase, NewPhase);
+
 UCLASS()
 class MINIGAMES_API AMGButtonGameState : public AGameStateBase
 {
@@ -20,6 +23,9 @@ class MINIGAMES_API AMGButtonGameState : public AGameStateBase
 
 public:
     AMGButtonGameState();
+
+    UPROPERTY(BlueprintAssignable, Category = "Game")
+    FOnGamePhaseChanged OnGamePhaseChanged;
 
     UFUNCTION()
     void OnRep_CurrentPhase();

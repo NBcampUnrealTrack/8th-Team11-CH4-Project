@@ -43,7 +43,7 @@ bool AMGButton::SetButtonOwner(APlayerState* NewOwnerState)
         return false;
     }
 
-    //  시스템 고유 ID 를 비교
+    // 시스템 고유 ID 비교
     if (CurrentOwnerState != nullptr)
     {
         if (CurrentOwnerState->GetUniqueId() == NewOwnerState->GetUniqueId())
@@ -53,18 +53,22 @@ bool AMGButton::SetButtonOwner(APlayerState* NewOwnerState)
         }
     }
 
-    if (HasAuthority())
+    if (!HasAuthority())
     {
-        // 이전 소유권자 개수 감소
-        if (CurrentOwnerState != nullptr)
-        {
-            float OldScore = CurrentOwnerState->GetScore();
-            CurrentOwnerState->SetScore(FMath::Max(0.f, OldScore - 1.f));
-        }
-
-        // 새 소유권자 개수 증가
-        NewOwnerState->SetScore(NewOwnerState->GetScore() + 1.f);
+        Server_SetButtonOwner(NewOwnerState);
+        return true;
     }
+
+
+    // 이전 소유권자 개수 감소
+    if (CurrentOwnerState != nullptr)
+    {
+        float OldScore = CurrentOwnerState->GetScore();
+        CurrentOwnerState->SetScore(FMath::Max(0.f, OldScore - 1.f));
+    }
+
+    // 새 소유권자 개수 증가
+    NewOwnerState->SetScore(NewOwnerState->GetScore() + 1.f);
 
     // 소유권 이전
     CurrentOwnerState = NewOwnerState;
@@ -73,21 +77,30 @@ bool AMGButton::SetButtonOwner(APlayerState* NewOwnerState)
     UE_LOG(LogTemp, Warning, TEXT("성공 버튼: %s ➔ 새 주인: %s"),
         *GetName(), *NewOwnerState->GetPlayerName());
 
-    // 버튼 색상 변경 이벤트 호출 
+    // 버튼 색상 변경 이벤트 호출 (서버 기준)
     OnButtonColorChanged(NewOwnerState);
 
     return true;
 }
 
-void AMGButton::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+// 서버 RPC
+void AMGButton::Server_SetButtonOwner_Implementation(APlayerState* NewOwnerState)
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-    DOREPLIFETIME(AMGButton, CurrentOwnerState);
+    SetButtonOwner(NewOwnerState);
 }
 
-// 플레이어가 버튼 근처로 들어왔을 때 실행
-void AMGButton::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+// Replication
+void AMGButton::OnRep_CurrentOwnerState()
+{
+    GetWorldTimerManager().SetTimerForNextTick([this]()
+        {
+            OnButtonColorChanged(CurrentOwnerState);
+        });
+}
+
+// 충돌 진입
+void AMGButton::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
     if (ACharacter* OverlappedCharacter = Cast<ACharacter>(OtherActor))
     {
@@ -95,19 +108,12 @@ void AMGButton::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
     }
 }
 
-// 플레이어가 버튼에서 멀어졌을 때 실행
-void AMGButton::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+// 충돌 종료
+void AMGButton::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
     if (ACharacter* OverlappedCharacter = Cast<ACharacter>(OtherActor))
     {
         UE_LOG(LogTemp, Log, TEXT("%s 가 버튼 범위를 벗어났습니다."), *OverlappedCharacter->GetName());
     }
-}
-// 서버로부터 클라이언트 점수 전달
-void AMGButton::OnRep_CurrentOwnerState()
-{
-    GetWorldTimerManager().SetTimerForNextTick([this]()
-        {
-            OnButtonColorChanged(CurrentOwnerState);
-        });
 }
