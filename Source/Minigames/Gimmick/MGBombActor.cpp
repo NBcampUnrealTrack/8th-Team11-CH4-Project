@@ -8,6 +8,7 @@
 #include "Net/UnrealNetwork.h"				// Replication
 #include "Components/CapsuleComponent.h"	// Socket이 없을 때 CapsuleComponent의 중앙으로 Attach
 #include "GameMode/MGPassBombGameMode.h"		// Explode를 GameMode에 알려줘야함
+#include "Kismet/GameplayStatics.h"
 
 #include "DrawDebugHelpers.h"				// Debug용
 
@@ -233,6 +234,7 @@ void AMGBombActor::ExplodeBomb()
 
 void AMGBombActor::Multicast_OnExplode_Implementation()
 {
-	// UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
 	MG_LOG_NET(LogMGNet, Log, TEXT("Explosion Niagara Effect and Sound"));
+
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation(), GetActorRotation(), FVector::OneVector * ExplosionScale);
 }

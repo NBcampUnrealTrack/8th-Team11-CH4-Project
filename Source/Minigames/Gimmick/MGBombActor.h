@@ -73,6 +73,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
 	FName AttachSocketName;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Bomb")
+	TObjectPtr<UParticleSystem> ExplosionFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Bomb")
+	float ExplosionScale = 1.f;
+
 	// Debug 할지 여부
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
 	bool bShowDebug = true;
