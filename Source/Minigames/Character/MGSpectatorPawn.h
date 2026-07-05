@@ -19,7 +19,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-	void DeathCamFollowCharacter(APlayerController* PC, ACharacter* Character, float time);
+	void DeathCamFollowCharacter(APlayerController* PC, ACharacter* Character, FName PelvisName, float FollowingTime);
 
 protected:
 	UFUNCTION()
@@ -37,6 +37,8 @@ protected:
 
 	UPROPERTY()
 	USkeletalMeshComponent* FollowingMesh;
+
+	FName MeshPelvisName;
 
 	FTimerHandle DeathTimeHandle;
 };

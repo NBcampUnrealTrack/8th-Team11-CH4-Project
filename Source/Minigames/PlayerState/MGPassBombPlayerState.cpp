@@ -7,7 +7,6 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Character/MGSpectatorPawn.h"
-
 #include "Minigames.h"
 
 void AMGPassBombPlayerState::BeginPlay()
@@ -40,7 +39,7 @@ void AMGPassBombPlayerState::MulticastRPC_RetireCharacter_Implementation()
 			// 캐릭터의 입력을 막고 관찰자 모드로 전환
 			MGPC->DisableInput(GetPlayerController());
 			MG_LOG_NET(LogMGNet, Log, TEXT("SpectatorPawnName: %s"), *Spectator->GetName());
-			Spectator->DeathCamFollowCharacter(GetPlayerController(), MGPC, 3.f);
+			Spectator->DeathCamFollowCharacter(GetPlayerController(), MGPC, CharacterPelvisName, 3.f);
 		}
 	}
 }
