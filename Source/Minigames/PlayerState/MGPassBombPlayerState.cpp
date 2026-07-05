@@ -12,7 +12,9 @@
 void AMGPassBombPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
-	if (IsValid(GetPlayerController()))
+
+	// 해당 액터는 자기 자신에게만 하나 생성함.
+	if (IsValid(GetPlayerController()) && GetPlayerController()->IsLocalController())
 	{
 		Spectator = GetWorld()->SpawnActor<AMGSpectatorPawn>(SpectatorClass);
 	}
@@ -38,8 +40,10 @@ void AMGPassBombPlayerState::MulticastRPC_RetireCharacter_Implementation()
 		{
 			// 캐릭터의 입력을 막고 관찰자 모드로 전환
 			MGPC->DisableInput(GetPlayerController());
-			MG_LOG_NET(LogMGNet, Log, TEXT("SpectatorPawnName: %s"), *Spectator->GetName());
-			Spectator->DeathCamFollowCharacter(GetPlayerController(), MGPC, CharacterPelvisName, 3.f);
+			if (IsValid(Spectator))
+			{
+				Spectator->DeathCamFollowCharacter(GetPlayerController(), MGPC, CharacterPelvisName, 3.f);
+			}
 		}
 	}
 }
