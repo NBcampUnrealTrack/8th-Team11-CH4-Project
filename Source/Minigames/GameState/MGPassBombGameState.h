@@ -16,4 +16,8 @@ class MINIGAMES_API AMGPassBombGameState : public AMGGameStateBase
 
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+public:
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "GameFlow|PassBomb")
+	TArray<TObjectPtr<class AMGPlayerController>> AlivePlayers;
 };

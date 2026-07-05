@@ -4,7 +4,10 @@
 #include "Controller/MGPlayerController.h"
 #include "Character/MGPlayerCharacter.h"
 #include "PlayerState/MGPassBombPlayerState.h"
+#include "GameState/MGPassBombGameState.h"
 #include "Gimmick/MGBombActor.h"
+
+#include "Minigames.h"
 
 void AMGPassBombGameMode::StartMinigame()
 {
@@ -12,7 +15,10 @@ void AMGPassBombGameMode::StartMinigame()
 
 	ExplodeTime = 5.f;
 
-	AlivePlayer = AllPlayerControllers;
+	AMGPassBombGameState* MGGS = GetGameState<AMGPassBombGameState>();
+	checkf(IsValid(MGGS), TEXT("GameState is Invalid."));
+	MGGS->AlivePlayers = AllPlayerControllers;
+	MG_LOG_NET(LogMGNet, Log, TEXT("AlivePlayer_Count: %d"), MGGS->AlivePlayers.Num());
 
 	NextRound();
 }
@@ -28,13 +34,15 @@ void AMGPassBombGameMode::BeginPlay()
 
 void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
 {
+	AMGPassBombGameState* MGGS = GetGameState<AMGPassBombGameState>();
 	AController* PC = TargetPlayer->GetController();
+
 	if (IsValid(PC))
 	{
 		AMGPlayerController* MGPC = Cast<AMGPlayerController>(PC);
 		if (IsValid(MGPC))
 		{
-			if (AlivePlayer.Contains(MGPC))
+			if (MGGS->AlivePlayers.Contains(MGPC))
 			{
 				AMGPassBombPlayerState* MGPS = MGPC->GetPlayerState<AMGPassBombPlayerState>();
 				if (IsValid(MGPS))
@@ -45,7 +53,7 @@ void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
 				//TODO: 중간순위 점수 추가
 				//MGPC->AddScore()
 
-				AlivePlayer.Remove(MGPC);
+				MGGS->AlivePlayers.Remove(MGPC);
 			}
 			
 			
@@ -54,6 +62,7 @@ void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
 			UserName = MGPC->GetPlayerState<AMGPassBombPlayerState>()->GetPlayerName();
 
 			NotifyToAllPlayer(FString::Printf(TEXT("%s(이)가 탈락했습니다!"), *UserName));
+			MG_LOG_NET(LogMGNet, Log, TEXT("AlivePlayer_Count: %d"), MGGS->AlivePlayers.Num());
 			GetWorldTimerManager().SetTimer(
 				RoundTimerHandle,
 				this,
@@ -72,16 +81,17 @@ void AMGPassBombGameMode::EndMinigame()
 
 void AMGPassBombGameMode::NextRound()
 {
-	if (AlivePlayer.Num() <= 1)
+	AMGPassBombGameState* MGGS = GetGameState<AMGPassBombGameState>();
+	if (MGGS->AlivePlayers.Num() <= 1)
 	{
 		// 플레이어명 임시 지정, 이후 변경필요
 		FString UserName;
-		UserName = AlivePlayer[0]->GetPlayerState<AMGPassBombPlayerState>()->GetPlayerName();
+		UserName = MGGS->AlivePlayers[0]->GetPlayerState<AMGPassBombPlayerState>()->GetPlayerName();
 
 		NotifyToAllPlayer(FString::Printf(TEXT("%s 승리!"), *UserName));
 
 		//TODO: 승리자 점수 추가
-		//AlivePlayer[0]->AddScore()
+		//MGGS->AlivePlayers[0]->AddScore()
 
 		EndMinigame();
 		return;
@@ -93,7 +103,7 @@ void AMGPassBombGameMode::NextRound()
 
 	// 점수가 가장 높은 사람들을 후보로 지명
 	int32 MaxScore = -1;
-	for (const auto MGPC : AlivePlayer)
+	for (const auto MGPC : MGGS->AlivePlayers)
 	{
 		const AMGPlayerState* MGPS = MGPC->GetPlayerState<AMGPlayerState>();
 		if (IsValid(MGPS) == true)
