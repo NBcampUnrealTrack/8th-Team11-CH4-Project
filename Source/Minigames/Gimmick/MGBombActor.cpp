@@ -34,6 +34,9 @@ AMGBombActor::AMGBombActor() :
 	bReplicates = true;
 
 	AttachSocketName = NAME_None;
+
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
 }
 
 void AMGBombActor::BeginPlay()
@@ -178,6 +181,8 @@ void AMGBombActor::ActivateBomb(ACharacter* InitialHolder, float ExplodeTime)
 	}
 
 	SetBombHolder(InitialHolder);
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
 
 	GetWorldTimerManager().SetTimer(
 		ExplodeTimer,
@@ -229,7 +234,10 @@ void AMGBombActor::ExplodeBomb()
 
 	// 따로 RPC를 설정하지 않아도 자동으로 레플리케이션
 	// Destroy();			// Multicast 함수 호출 직후에 Destroy를 할 경우 패킷이 보내지지 않을 수 있음
-	SetLifeSpan(0.1f);		// Multicast가 될 수 있도록 약간의 딜레이 후 Destroy
+	// SetLifeSpan(0.1f);		// Multicast가 될 수 있도록 약간의 딜레이 후 Destroy
+
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
 }
 
 void AMGBombActor::Multicast_OnExplode_Implementation()

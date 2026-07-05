@@ -20,6 +20,10 @@ void AMGPassBombGameMode::StartMinigame()
 void AMGPassBombGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+	FActorSpawnParameters SpawnParam;
+	SpawnParam.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	BombActor = GetWorld()->SpawnActor<AMGBombActor>(BombActorClass,FTransform::Identity,SpawnParam);
 }
 
 void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
@@ -111,7 +115,6 @@ void AMGPassBombGameMode::NextRound()
 	int32 BombIndex = FMath::RandRange(0, BombNominee.Num() - 1);
 	if (BombNominee.IsValidIndex(BombIndex))
 	{
-		BombActor = GetWorld()->SpawnActor<AMGBombActor>(BombActorClass);
 		BombActor->ActivateBomb(BombNominee[BombIndex]->GetCharacter(), ExplodeTime);
 	}
 }
