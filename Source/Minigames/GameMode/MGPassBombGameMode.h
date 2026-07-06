@@ -39,4 +39,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Minigame|Rule")
 	TObjectPtr<class AMGBombActor> BombActor;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Minigame")
+	TArray<TObjectPtr<class AMGPlayerController>> AlivePlayers;
 };

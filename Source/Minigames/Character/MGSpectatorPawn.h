@@ -19,7 +19,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-	void DeathCamFollowCharacter(APlayerController* PC, ACharacter* Character, FName PelvisName, float FollowingTime);
+	void DeathCamFollowCharacter(ACharacter* Character, FName PelvisName);
 
 	void SpectateOtherPlayer(int32 idx);
 

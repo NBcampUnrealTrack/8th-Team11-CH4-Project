@@ -40,12 +40,12 @@ void AMGSpectatorPawn::Tick(float DeltaTime)
 	}
 }
 
-void AMGSpectatorPawn::DeathCamFollowCharacter(APlayerController* PC, ACharacter* Character, FName PelvisName, float FollowingTime)
+void AMGSpectatorPawn::DeathCamFollowCharacter(ACharacter* Character, FName PelvisName)
 {
-	if (PC->IsLocalController() == false)
-	{
-		return;
-	}
+	const float FollowingTime = 3.f;
+	const float CamBlendTime = 0.5;
+
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 	MG_LOG_NET(LogMGNet, Log, TEXT("SpectatorPawn: %s"), *GetName());
 
 	SetActorTickEnabled(true);
@@ -69,7 +69,7 @@ void AMGSpectatorPawn::DeathCamFollowCharacter(APlayerController* PC, ACharacter
 	}
 
 	AMGPlayerController* MGPC = Cast<AMGPlayerController>(PC);
-	PC->SetViewTargetWithBlend(this, 0.5f, EViewTargetBlendFunction::VTBlend_EaseOut, 1.f);
+	PC->SetViewTargetWithBlend(this, CamBlendTime, EViewTargetBlendFunction::VTBlend_EaseOut, 1.f);
 
 	GetWorld()->GetTimerManager().SetTimer(
 		DeathTimeHandle,
@@ -83,12 +83,17 @@ void AMGSpectatorPawn::DeathCamFollowCharacter(APlayerController* PC, ACharacter
 void AMGSpectatorPawn::SpectateOtherPlayer(int32 idx)
 {
 	AMGGameStateBase* GS = GetWorld()->GetGameState<AMGGameStateBase>();
-	
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 	if (IsValid(GS))
 	{
-		if (GS->AlivePlayers.IsValidIndex(idx) == true)
+		if (GS->AliveCharacters.IsValidIndex(idx) == true)
 		{
-			
+			ACharacter* Character = GS->AliveCharacters[idx];
+			if (IsValid(Character))
+			{
+				CamArm->AttachToComponent(Character->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+				PC->SetViewTarget(this);
+			}
 		}
 	}
 }
@@ -97,4 +102,11 @@ void AMGSpectatorPawn::OnDeathTimerEnd()
 {
 	SetActorTickEnabled(false);
 	FollowingMesh = nullptr;
+
+	AMGGameStateBase* MGGS = GetWorld()->GetGameState<AMGGameStateBase>();
+	if (IsValid(MGGS))
+	{
+		int32 idx = FMath::RandRange(0, MGGS->AliveCharacters.Num() - 1);
+		SpectateOtherPlayer(idx);
+	}
 }

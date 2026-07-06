@@ -26,13 +26,15 @@ void AMGPassBombPlayerState::MulticastRPC_RetireCharacter_Implementation()
 
 	if (IsValid(MGPC))
 	{
+		const FVector ImpulseVec(0, 0, 10000.f);
+
 		// 탈락 로그 출력
 		MG_LOG_NET(LogMGNet, Log, TEXT("%s has retired."), *MGPC->GetName());
 
 		// 탈락 대상자의 탈락효과 부여 (래그돌화, 폭발로 위로 튀어오름)
 		MGPC->GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 		MGPC->GetMesh()->SetSimulatePhysics(true);
-		MGPC->GetMesh()->AddImpulse(FVector(0, 0, 10000.f),NAME_None,true);
+		MGPC->GetMesh()->AddImpulse(ImpulseVec,NAME_None,true);
 		MGPC->GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
 
 		// 탈락 대상자의 컨트롤러
@@ -42,7 +44,7 @@ void AMGPassBombPlayerState::MulticastRPC_RetireCharacter_Implementation()
 			MGPC->DisableInput(GetPlayerController());
 			if (IsValid(Spectator))
 			{
-				Spectator->DeathCamFollowCharacter(GetPlayerController(), MGPC, CharacterPelvisName, 3.f);
+				Spectator->DeathCamFollowCharacter(MGPC, CharacterPelvisName);
 			}
 		}
 	}
