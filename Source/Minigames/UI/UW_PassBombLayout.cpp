@@ -11,3 +11,12 @@ void UUW_PassBombLayout::UpdateBombHolderText(const FString& NewHolderName)
 		BombHolderText->SetText(FText::FromString(NewHolderName));
 	}
 }
+
+void UUW_PassBombLayout::UpdateBombTimerText(int32 RemainTime)
+{
+	if (IsValid(BombTimerText))
+	{
+		FString TimeString = FString::Printf(TEXT("%d"), RemainTime);
+		BombTimerText->SetText(FText::FromString(TimeString));
+	}
+}
