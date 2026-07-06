@@ -117,3 +117,10 @@ void AMGButton::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherA
         UE_LOG(LogTemp, Log, TEXT("%s 가 버튼 범위를 벗어났습니다."), *OverlappedCharacter->GetName());
     }
 }
+
+void AMGButton::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(AMGButton, CurrentOwnerState);
+}
