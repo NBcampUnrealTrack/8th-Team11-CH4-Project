@@ -8,6 +8,7 @@
 #include "Net/UnrealNetwork.h"				// Replication
 #include "Components/CapsuleComponent.h"	// Socket이 없을 때 CapsuleComponent의 중앙으로 Attach
 #include "GameMode/MGPassBombGameMode.h"		// Explode를 GameMode에 알려줘야함
+#include "Kismet/GameplayStatics.h"
 
 #include "DrawDebugHelpers.h"				// Debug용
 
@@ -33,6 +34,9 @@ AMGBombActor::AMGBombActor() :
 	bReplicates = true;
 
 	AttachSocketName = NAME_None;
+
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
 }
 
 void AMGBombActor::BeginPlay()
@@ -125,6 +129,16 @@ void AMGBombActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME(ThisClass, BombHolder);
 }
 
+// Timer가 있다면 반드시 EndPlay에서 안전하게 ClearTimer 로직 추가
+void AMGBombActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearTimer(ExplodeTimer);
+	GetWorld()->GetTimerManager().ClearTimer(PassCooldownTimer);
+
+	// 상속받은 EndPlay의 Super는 마지막에
+	Super::EndPlay(EndPlayReason);
+}
+
 void AMGBombActor::AttachToHolder(ACharacter* TargetHolder)
 {
 	if (!TargetHolder)	// TargetHolder가 유효하지 않으면
@@ -167,6 +181,8 @@ void AMGBombActor::ActivateBomb(ACharacter* InitialHolder, float ExplodeTime)
 	}
 
 	SetBombHolder(InitialHolder);
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
 
 	GetWorldTimerManager().SetTimer(
 		ExplodeTimer,
@@ -218,11 +234,15 @@ void AMGBombActor::ExplodeBomb()
 
 	// 따로 RPC를 설정하지 않아도 자동으로 레플리케이션
 	// Destroy();			// Multicast 함수 호출 직후에 Destroy를 할 경우 패킷이 보내지지 않을 수 있음
-	SetLifeSpan(0.1f);		// Multicast가 될 수 있도록 약간의 딜레이 후 Destroy
+	// SetLifeSpan(0.1f);		// Multicast가 될 수 있도록 약간의 딜레이 후 Destroy
+
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
 }
 
 void AMGBombActor::Multicast_OnExplode_Implementation()
 {
-	// UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
 	MG_LOG_NET(LogMGNet, Log, TEXT("Explosion Niagara Effect and Sound"));
+
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation(), GetActorRotation(), FVector::OneVector * ExplosionScale);
 }

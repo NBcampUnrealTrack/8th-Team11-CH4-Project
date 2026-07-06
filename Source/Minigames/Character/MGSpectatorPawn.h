@@ -19,7 +19,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-	void DeathCamFollowCharacter(APlayerController* PC, ACharacter* Character, float time);
+	void DeathCamFollowCharacter(ACharacter* Character, FName PelvisName);
+
+	void SpectateOtherPlayer(int32 idx);
 
 protected:
 	UFUNCTION()
@@ -30,13 +32,15 @@ protected:
 	TObjectPtr<USceneComponent> RootComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	TObjectPtr<class UCameraComponent> DeathCam;
+	TObjectPtr<class UCameraComponent> Cam;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	TObjectPtr<class USpringArmComponent> DeathCamArm;
+	TObjectPtr<class USpringArmComponent> CamArm;
 
 	UPROPERTY()
 	USkeletalMeshComponent* FollowingMesh;
+
+	FName MeshPelvisName;
 
 	FTimerHandle DeathTimeHandle;
 };

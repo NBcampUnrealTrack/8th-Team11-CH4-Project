@@ -14,10 +14,10 @@ UCLASS()
 class MINIGAMES_API UMGGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
-	
+
 public:
 	UMGGameInstance();
-	
+
 	UFUNCTION(BlueprintPure, Category = "Game Flow")
 	FString GetLevelURLForRound(int32 RoundIndex) const;
 
