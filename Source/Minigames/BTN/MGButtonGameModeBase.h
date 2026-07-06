@@ -2,10 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameMode/MGGameModeBase.h"
-#include "MGButtonGameState.h" 
+#include "MGButtonGameState.h"
 #include "MGButtonGameModeBase.generated.h"
-
-class AMGFlagPlayerState;
 
 UCLASS()
 class MINIGAMES_API AMGButtonGameModeBase : public AMGGameModeBase
@@ -15,19 +13,16 @@ class MINIGAMES_API AMGButtonGameModeBase : public AMGGameModeBase
 public:
     AMGButtonGameModeBase();
 
-    virtual void GiveScore(class AMGFlagPlayerState* PS, int32 Rank);
-
 protected:
     virtual void BeginPlay() override;
 
-    // 게임 진행 함수 
+    // 게임 진행 함수
     void StartReadyPhase();
     void StartPlayingPhase();
     void AdvanceTimer();
-    void EndGamePhase();
-    void CalculateFinalScores();
+    virtual void EndMinigame() override;
 
-    // 타이머  
+    // 타이머
     FTimerHandle GameTimerHandle;
 
     UPROPERTY(EditAnywhere, Category = "Game Settings")

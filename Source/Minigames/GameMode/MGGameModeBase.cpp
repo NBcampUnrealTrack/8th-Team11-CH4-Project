@@ -7,7 +7,8 @@
 #include "GameState/MGGameStateBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "PlayerState/MGFlagPlayerState.h"
-#include "GameInstance/MGGameInstance.h"				// GameInstance
+#include "GameInstance/MGGameInstance.h"
+#include "Type/MGPlayerColor.h"
 
 #include "Minigames.h"				// 커스텀 Log
 
@@ -57,6 +58,36 @@ void AMGGameModeBase::PostLogin(APlayerController* NewPlayer)
 		AllPlayerControllers.Add(NewPlayerController);
 
 		NewPlayerController->NotificationText = FText::FromString(TEXT("Connected to the game server."));
+	}
+}
+
+
+void AMGGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
+{
+	Super::HandleSeamlessTravelPlayer(C);
+	
+	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
+	if (IsValid(MGGameState) == false)
+	{
+		return;
+	}
+
+	AMGPlayerController* NewPlayerController = Cast<AMGPlayerController>(C);
+	if (IsValid(NewPlayerController) == true)
+	{
+		AllPlayerControllers.AddUnique(NewPlayerController);
+
+		NewPlayerController->NotificationText = FText::FromString(TEXT("Connected to the game server."));
+	
+		AMGPlayerState* PS = NewPlayerController->GetPlayerState<AMGPlayerState>();
+		UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
+		if (IsValid(PS) && IsValid(GI))
+		{
+			if (const EMGPlayerColor* FoundColor = GI->PlayerColors.Find(PS->GetUniqueId()))
+			{
+				PS->PlayerColor = *FoundColor;
+			}
+		}
 	}
 }
 

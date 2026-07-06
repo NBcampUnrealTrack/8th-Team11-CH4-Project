@@ -8,11 +8,11 @@ UCLASS()
 class MINIGAMES_API AMGButton : public AActor
 {
     GENERATED_BODY()
-    
-public:	
+
+public:
     AMGButton();
 
-    // 플레이어가 근처에서 키를 누르면 호출될 함수
+    // 플레이어가 근처에서 키를 누르면 호출될 함수 (소유권 변경)
     UFUNCTION(BlueprintCallable, Category = "Gameplay|Button")
     bool SetButtonOwner(class APlayerState* NewOwnerState);
 
@@ -34,10 +34,13 @@ protected:
 
     // 플레이어가 버튼 근처에 진입/퇴장 시 호출할 함수 
     UFUNCTION()
-    void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+    void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+        bool bFromSweep, const FHitResult& SweepResult);
 
     UFUNCTION()
-    void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+    void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
     // 버튼 색상 변경 이벤트 호출
     UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay|Button")
@@ -52,8 +55,7 @@ private:
     UFUNCTION()
     void OnRep_CurrentOwnerState();
 
-    // 서버에서 소유권 추적
-    UPROPERTY()
-    class APlayerState* LastOwnerState = nullptr;
-
+    // 서버 RPC (클라이언트 요청 처리용)
+    UFUNCTION(Server, Reliable)
+    void Server_SetButtonOwner(class APlayerState* NewOwnerState);
 };
