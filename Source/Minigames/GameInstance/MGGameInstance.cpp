@@ -2,16 +2,13 @@
 
 #include "GameInstance/MGGameInstance.h"
 
+#include "Type/MGPlayerColor.h"						// 플레이어 컬러
+
 UMGGameInstance::UMGGameInstance()
 {
 	// GameInstance 최초 생성시 
 	CurrentRoundState = ERoundState::Lobby;
 }
-
-//void UMGGameInstance::Init()
-//{
-//	Super::Init();
-//}
 
 FString UMGGameInstance::GetLevelURLForRound(int32 RoundIndex) const
 {

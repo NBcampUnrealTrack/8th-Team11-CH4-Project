@@ -10,6 +10,7 @@
 #include "UI/UW_GameResult.h"
 #include "Components/TextBlock.h"
 #include "GameMode/MGLobbyGameModeBase.h" 
+#include "Type/MGPlayerColor.h"
 
 void AMGPlayerController::BeginPlay()
 {
@@ -97,12 +98,32 @@ void AMGPlayerController::Unready()
 	ServerRPCSetReady(false);
 }
 
+void AMGPlayerController::ChangeColor(uint8 ColorIndex)
+{
+	if (ColorIndex < static_cast<uint8>(EMGPlayerColor::Red) || static_cast<uint8>(EMGPlayerColor::Gray) < ColorIndex)
+	{
+		return;
+	}
+
+	ServerRPCSetColor(static_cast<EMGPlayerColor>(ColorIndex));
+}
+
+void AMGPlayerController::ServerRPCSetColor_Implementation(EMGPlayerColor NewColor)
+{
+	// Server RPC라 서버에서 실행 → 게임모드 접근 가능
+	AMGLobbyGameModeBase* LGM = Cast<AMGLobbyGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (IsValid(LGM))
+	{
+		LGM->OnPlayerChangeColor(this, NewColor);
+	}
+}
+
 void AMGPlayerController::ServerRPCSetReady_Implementation(bool bReady)
 {
 	// Server RPC라 서버에서 실행 → 게임모드 접근 가능
-	AMGLobbyGameModeBase* GM = Cast<AMGLobbyGameModeBase>(UGameplayStatics::GetGameMode(this));
-	if (IsValid(GM))
+	AMGLobbyGameModeBase* LGM = Cast<AMGLobbyGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (IsValid(LGM))
 	{
-		GM->OnPlayerReady(this, bReady);
+		LGM->OnPlayerReady(this, bReady);
 	}
 }

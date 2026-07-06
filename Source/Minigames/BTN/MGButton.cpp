@@ -98,6 +98,13 @@ void AMGButton::OnRep_CurrentOwnerState()
         });
 }
 
+void AMGButton::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(AMGButton, CurrentOwnerState);
+}
+
 // 충돌 진입
 void AMGButton::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
