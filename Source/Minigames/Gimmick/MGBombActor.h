@@ -9,6 +9,9 @@
 // BombHolder가 바뀔 때, 누구로 바뀌었는지를 위젯 등에게 알려주기 위한 델리게이트
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBombHolderChanged, class ACharacter* /*NewHolder*/);
 
+// RemainTime이 줄어들 때, 일정 시간 간격으로 동기화를 위한 델리게이트
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBombTimeChanged, int32 /*RemainTime*/);
+
 UCLASS()
 class MINIGAMES_API AMGBombActor : public AActor
 {
@@ -32,6 +35,16 @@ public:
 
 	// 폭탄의 ExplodeTimer를 관리, GameMode에서 최초로 폭탄을 넘기는 함수
 	void ActivateBomb(ACharacter* InitialHolder, float ExplodeTime);
+
+	// BombRemainTime 값이 바뀌었을 때 호출될 OnRep 함수
+	UFUNCTION()
+	void OnRep_BombRemainTime();
+
+	// OnRep_BombRemainTime() 내부에서 남은 시간을 Client HUD에 Broadcast 할 델리게이트
+	FOnBombTimeChanged OnBombTimeChanged;
+
+	// 1초마다 BombRemainTime 값을 줄이는 타이머 함수
+	void TickBombTimer();
 
 	// Replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -100,6 +113,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
 	float PassCooldownTime;
 
+	UPROPERTY(ReplicatedUsing = OnRep_BombRemainTime)
+	int32 BombRemainTime;
+
+
 private:
 	// 폭탄을 Pass할 수 있는지 여부
 	bool bCanPass;
@@ -109,4 +126,7 @@ private:
 
 	// 폭탄 활성화 시간 관리 Timer
 	FTimerHandle ExplodeTimer;
+
+	// 폭탄이 터질때까지 남은 시간을 동기화 하는 Timer
+	FTimerHandle BombCountdownTimerHandler;
 };

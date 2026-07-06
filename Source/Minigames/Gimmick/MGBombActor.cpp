@@ -62,6 +62,16 @@ void AMGBombActor::BeginPlay()
 	}
 }
 
+// Replication에 필요한 기본 함수
+void AMGBombActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// 현재 MGBombActor를 가지고 있는 Character 포인터
+	DOREPLIFETIME(AMGBombActor, BombHolder);
+	DOREPLIFETIME(AMGBombActor, BombRemainTime);
+}
+
 void AMGBombActor::OnTriggerOverlap(
 	UPrimitiveComponent* OverlappedComponent, 
 	AActor* OtherActor, 
@@ -137,13 +147,27 @@ void AMGBombActor::OnRep_BombHolder()
 	}
 }
 
-// Replication에 필요한 기본 함수
-void AMGBombActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void AMGBombActor::TickBombTimer()
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	if (BombRemainTime > 0)
+	{
+		--BombRemainTime;			// BombRemainTime 값 변경 = 클라이언트에서 OnRep 함수 실행
+		OnRep_BombRemainTime();		// 서버는 직접 호출
+	}
 
-	// 현재 MGBombActor를 가지고 있는 Character 포인터
-	DOREPLIFETIME(AMGBombActor, BombHolder);
+	// 0초가 되면 Clear Timer
+	if (BombRemainTime <= 0)
+	{
+		GetWorldTimerManager().ClearTimer(BombCountdownTimerHandler);
+	}
+}
+
+void AMGBombActor::OnRep_BombRemainTime()
+{
+	if (OnBombTimeChanged.IsBound())
+	{
+		OnBombTimeChanged.Broadcast(BombRemainTime);
+	}
 }
 
 // Timer가 있다면 반드시 EndPlay에서 안전하게 ClearTimer 로직 추가
@@ -205,6 +229,18 @@ void AMGBombActor::ActivateBomb(ACharacter* InitialHolder, float ExplodeTime)
 	SetBombHolder(InitialHolder);
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
+
+	BombRemainTime = FMath::CeilToInt(ExplodeTime);
+	OnRep_BombRemainTime();		// 서버도 최초 갱신
+
+	// 1초마다 TickBombTimer 함수를 반복(true) 실행하는 타이머 작동
+	GetWorldTimerManager().SetTimer(
+		BombCountdownTimerHandler,
+		this,
+		&AMGBombActor::TickBombTimer,
+		1.0f,
+		true
+	);
 
 	GetWorldTimerManager().SetTimer(
 		ExplodeTimer,
