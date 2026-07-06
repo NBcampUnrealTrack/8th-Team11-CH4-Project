@@ -9,6 +9,7 @@
 #include "Components/CapsuleComponent.h"	// Socket이 없을 때 CapsuleComponent의 중앙으로 Attach
 #include "GameMode/MGPassBombGameMode.h"		// Explode를 GameMode에 알려줘야함
 #include "Kismet/GameplayStatics.h"
+#include "UI/MGPassBombHUD.h"				// Bomb HUD
 
 #include "DrawDebugHelpers.h"				// Debug용
 
@@ -47,6 +48,17 @@ void AMGBombActor::BeginPlay()
 	if (HasAuthority())
 	{
 		PassTrigger->OnComponentBeginOverlap.AddDynamic(this, &AMGBombActor::OnTriggerOverlap);
+	}
+
+	// Dedicated Server - Client 구조에서 0번 PC = 플레이어 본인
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (IsValid(PC))
+	{
+		AMGPassBombHUD* BombHUD = Cast<AMGPassBombHUD>(PC->GetHUD());
+		if (IsValid(BombHUD))	// 서버는 HUD가 없기 때문에 캐스팅 실패, 클라이언트만 실행됨
+		{
+			BombHUD->BindWithBombActor(this);
+		}
 	}
 }
 
@@ -131,7 +143,7 @@ void AMGBombActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	// 현재 MGBombActor를 가지고 있는 Character 포인터
-	DOREPLIFETIME(ThisClass, BombHolder);
+	DOREPLIFETIME(AMGBombActor, BombHolder);
 }
 
 // Timer가 있다면 반드시 EndPlay에서 안전하게 ClearTimer 로직 추가
@@ -154,9 +166,14 @@ void AMGBombActor::AttachToHolder(ACharacter* TargetHolder)
 	USkeletalMeshComponent* MeshComp = TargetHolder->GetMesh();
 	UCapsuleComponent* CapsuleComp = TargetHolder->GetCapsuleComponent();
 
+	if (!IsValid(MeshComp) || !IsValid(CapsuleComp))
+	{
+		return;
+	}
+
 	// 변수 'AttachSocketName'이 NAME_Nome이 아니고 (= 에디터에서 BombActor의 AttachSocketName에 값 입력)
 	// && 스켈레탈 메쉬가 존재하고 && 'AttachSocketName'변수 이름의 소켓이 실제로 존재할 때
-	if (!AttachSocketName.IsNone() && MeshComp && MeshComp->DoesSocketExist(AttachSocketName))
+	if (!AttachSocketName.IsNone() && MeshComp->DoesSocketExist(AttachSocketName))
 	{
 		this->AttachToComponent(
 			MeshComp,
@@ -243,11 +260,12 @@ void AMGBombActor::ExplodeBomb()
 
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
+	BombHolder = nullptr;		// BombHolder 초기화
 }
 
 void AMGBombActor::Multicast_OnExplode_Implementation()
 {
 	MG_LOG_NET(LogMGNet, Log, TEXT("Explosion Niagara Effect and Sound"));
-
+	// TODO : 나이아가라 이펙트 생성, 사운드 재생 등
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation(), GetActorRotation(), FVector::OneVector * ExplosionScale);
 }
