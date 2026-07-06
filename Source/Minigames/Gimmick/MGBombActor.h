@@ -6,6 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "MGBombActor.generated.h"
 
+// BombHolder가 바뀔 때, 누구로 바뀌었는지를 위젯 등에게 알려주기 위한 델리게이트
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBombHolderChanged, class ACharacter* /*NewHolder*/);
+
 UCLASS()
 class MINIGAMES_API AMGBombActor : public AActor
 {
@@ -19,6 +22,9 @@ public:
 	// BombHolder 값이 바뀌었을 때 호출될 OnRep 함수
 	UFUNCTION()
 	void OnRep_BombHolder();
+
+	// OnRep_BombHolder() 내부에서 Broadcast 할 델리게이트
+	FOnBombHolderChanged OnBombHolderChanged;
 
 	// 폭탄이 터질 때 실행될 함수, [폭발 나이아가라 이펙트, 사운드] 등
 	UFUNCTION(NetMulticast, Unreliable)

@@ -100,8 +100,8 @@ void AMGBombActor::SetBombHolder(ACharacter* NewHolder)
 		return;	// Authority가 없거나 || NewHolder와 (현재)BombHolder가 같다면 조기종료
 	}
 
-	BombHolder = NewHolder;
-	AttachToHolder(NewHolder);
+	BombHolder = NewHolder; // BombHolder 값 변경 시, 레플리케이션으로 클라이언트들에 OnRep_BombHolder() 자동 호출
+	OnRep_BombHolder();	// OnRep 함수가 AttachToHolder 이외에 다른 기능이 추가됨에 따라 직접 호출로 변경
 
 	// 폭탄을 옮겼으면 
 	bCanPass = false;						// 폭탄을 들고 있지 않기 때문에 false
@@ -118,6 +118,11 @@ void AMGBombActor::SetBombHolder(ACharacter* NewHolder)
 void AMGBombActor::OnRep_BombHolder()
 {
 	AttachToHolder(BombHolder);
+
+	if (OnBombHolderChanged.IsBound())
+	{	// 클라이언트 UI 등에 Broadcast
+		OnBombHolderChanged.Broadcast(BombHolder);
+	}
 }
 
 // Replication에 필요한 기본 함수
