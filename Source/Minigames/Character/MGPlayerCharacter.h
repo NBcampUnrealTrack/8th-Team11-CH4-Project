@@ -45,6 +45,8 @@ public:
 
 	float GetCurrentAimPitch() const { return CurrentAimPitch; }
 
+	UMGStatusComponent* GetMGStatusComponent() const { return StatusComponent; }
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Components")
 	TObjectPtr<USpringArmComponent> SpringArm;
