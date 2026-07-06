@@ -15,6 +15,7 @@ UMGStatusComponent::UMGStatusComponent()
 	: CurrentHP(100.f)
 	, MaxHP(100.f)
 	, OriginSpeed(600.0f)
+	, NormalSpeed(OriginSpeed)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
