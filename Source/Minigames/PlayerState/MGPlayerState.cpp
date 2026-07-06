@@ -4,8 +4,6 @@
 #include "Minigames.h"				// 커스텀 Log
 
 AMGPlayerState::AMGPlayerState()
-	: MGScore(0)
-    , TotalScore(0)
 {
 	bReplicates = true;
 }
@@ -13,35 +11,24 @@ AMGPlayerState::AMGPlayerState()
 void AMGPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
+    
+    DOREPLIFETIME(ThisClass, PlayerColor);
 	DOREPLIFETIME(ThisClass, TotalScore);
 	DOREPLIFETIME(ThisClass, MGScore);
 	DOREPLIFETIME(ThisClass, Rank);
-
 }
 
-// MGScore 갱신 테스트
 void AMGPlayerState::CopyProperties(APlayerState* PlayerState)
 {
     Super::CopyProperties(PlayerState);
-
-    // 새로 만들어질 객체 = PlayerState
-
+    
     if (AMGPlayerState* NewPlayerState = Cast<AMGPlayerState>(PlayerState))
     {
-        // 이전 PlayerState의 커스텀 변수 값을 새 PlayerState로 복사
-        NewPlayerState->SetMGScore(this->GetMGScore());
+        NewPlayerState->TotalScore = this->TotalScore;
+        NewPlayerState->PlayerColor = this->PlayerColor;
 
-        // 트래블 직후 복사 완료를 확인하는 로그 추가
-        MG_LOG_NET(LogMGNet, Warning, TEXT("[After Travel - CopyProperties] Copied MGScore : %d"), NewPlayerState->GetMGScore());
+        UE_LOG(LogTemp, Warning, TEXT("[After Travel - CopyProperties] Copied TotalScore : %d"), NewPlayerState->TotalScore);
     }
-}
-
-void AMGPlayerState::Client_LogScoreBeforeTravel_Implementation(int32 AddedScore, int32 InTotalScore)
-{
-    // 이 함수는 오직 해당 PlayerState의 주인이 되는 클라이언트에서만 실행됩니다.
-    MG_LOG_NET(LogMGNet, Warning, TEXT("[Before Travel] Player : %s | Added : %d | Total MGScore : %d"),
-        *GetPlayerName(), AddedScore, InTotalScore);
 }
 
 FLinearColor AMGPlayerState::GetPlayerLinearColor() const
@@ -77,7 +64,15 @@ FLinearColor AMGPlayerState::GetPlayerLinearColor() const
 
     case EMGPlayerColor::Gray:
         return FLinearColor::Gray;
+        
+    default:
+        return FLinearColor::Black;
     }
+}
 
-    return FLinearColor::Black;
+void AMGPlayerState::OnRep_PlayerColor()
+{
+    // TestLog
+    // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White,
+    //     FString::Printf(TEXT("[Player %d] Color: %d"), GetPlayerId(), (uint8)PlayerColor));
 }

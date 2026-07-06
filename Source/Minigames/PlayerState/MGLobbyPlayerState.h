@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "Type/MGPlayerColor.h"
 #include "MGLobbyPlayerState.generated.h"
 
 /**
@@ -22,7 +23,13 @@ public:
 	UPROPERTY(ReplicatedUsing = OnRep_IsReady, VisibleAnywhere, BlueprintReadOnly)
 	bool bIsReady = false;
 	
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, VisibleAnywhere, BlueprintReadOnly)
+	EMGPlayerColor PlayerColor;
+	
 private:
 	UFUNCTION()
-	void OnRep_IsReady();   // 클라에서 bIsReady 변경 시 UI 갱신용
+	void OnRep_IsReady();
+
+	UFUNCTION()
+	void OnRep_PlayerColor();
 };
