@@ -17,6 +17,8 @@ class MINIGAMES_API AMGPassBombGameMode : public AMGGameModeBase
 public:
 	virtual void StartMinigame() override;
 
+	virtual void EndMinigame() override;
+
 	virtual void BeginPlay() override;
 
 	void EliminatePlayer(ACharacter* TargetPlayer);
@@ -38,5 +40,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Minigame|Rule")
 	TObjectPtr<class AMGBombActor> BombActor;
 
-	TArray<TObjectPtr<class AMGPlayerController>> AlivePlayer;
+	UPROPERTY(BlueprintReadOnly, Category = "Minigame")
+	TArray<TObjectPtr<class AMGPlayerController>> AlivePlayers;
 };

@@ -30,6 +30,8 @@ public:
 	// Replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -70,6 +72,12 @@ public:
 	// 폭탄을 붙일 SocketName
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
 	FName AttachSocketName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Bomb")
+	TObjectPtr<UParticleSystem> ExplosionFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Bomb")
+	float ExplosionScale = 1.f;
 
 	// Debug 할지 여부
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")

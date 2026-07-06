@@ -15,5 +15,9 @@ void AMGButtonGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
     DOREPLIFETIME(AMGButtonGameState, TimeRemaining);
 }
 
-void AMGButtonGameState::OnRep_CurrentPhase() {}
+void AMGButtonGameState::OnRep_CurrentPhase()
+{
+    OnGamePhaseChanged.Broadcast(CurrentPhase);
+}
+
 void AMGButtonGameState::OnRep_TimeRemaining() {}

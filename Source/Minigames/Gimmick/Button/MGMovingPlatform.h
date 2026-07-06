@@ -59,6 +59,15 @@ protected:
     float Duration = 4.f;
 
 private:
+    void CreateStandCollisionComponents();
+
+    float ComputePingPongAlpha(float ServerTime) const;
+
+    UFUNCTION()
+    void OnRep_StandCollisionInfos();
+    void ApplyStandCollisionInfo(int32 Index);
+
+private:
     FVector StartLocation = FVector::ZeroVector;
 
     UPROPERTY()
@@ -67,18 +76,11 @@ private:
     UPROPERTY(ReplicatedUsing = OnRep_StandCollisionInfos)
     TArray<FStandCollisionInfo> StandCollisionInfos;
 
-    UFUNCTION()
-    void OnRep_StandCollisionInfos();
-
-    void ApplyStandCollisionInfo(int32 Index);
-
     /* //ÇÃ·§Æû À§Ä¡ È®ÀÎ¿ë ·Î±×
     public:
         UFUNCTION(NetMulticast, Unreliable)
         void MulticastDebugPlatform(const FVector& ServerLocation, float ServerTime);
-
     private:
         float DebugTimer = 0.f;
         */
-
 };

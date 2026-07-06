@@ -25,4 +25,7 @@ public:
 protected:
 	UPROPERTY()
 	class AMGSpectatorPawn* Spectator;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FName CharacterPelvisName;
 };

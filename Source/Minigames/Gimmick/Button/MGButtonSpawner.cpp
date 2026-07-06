@@ -9,7 +9,6 @@
 AMGButtonSpawner::AMGButtonSpawner()
 {
     PrimaryActorTick.bCanEverTick = false;
-
     bReplicates = true;
 }
 
@@ -17,12 +16,98 @@ void AMGButtonSpawner::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (!HasAuthority())
+    if (HasAuthority())
+    {
+        SpawnButtons();
+    }
+}
+
+void AMGButtonSpawner::SpawnButtons()
+{
+    TArray<AActor*> Platforms;
+    UGameplayStatics::GetAllActorsWithTag(GetWorld(), TEXT("SpawnPlatform"), Platforms);
+
+    if (Platforms.IsEmpty())
     {
         return;
     }
 
-    SpawnButtons();
+    for (const auto& Pair : BuildSpawnCounts(Platforms))
+    {
+        SpawnButtonsOnPlatform(Pair.Key, Pair.Value);
+    }
+}
+
+TMap<AActor*, int32> AMGButtonSpawner::BuildSpawnCounts(const TArray<AActor*>& Platforms) const
+{
+    TMap<AActor*, int32> SpawnCounts;
+
+    int32 Remaining = FMath::Min(TotalButtonCount, Platforms.Num() * MaxButtonsPerPlatform);
+
+    for (AActor* Platform : Platforms)
+    {
+        if (Remaining-- <= 0)
+        {
+            break;
+        }
+        SpawnCounts.Add(Platform, 1);
+    }
+
+    while (Remaining > 0)
+    {
+        int32& Count = SpawnCounts.FindOrAdd(Platforms[FMath::RandRange(0, Platforms.Num() - 1)]);
+        if (Count < MaxButtonsPerPlatform)
+        {
+            ++Count;
+            --Remaining;
+        }
+    }
+
+    return SpawnCounts;
+}
+
+void AMGButtonSpawner::SpawnButtonsOnPlatform(AActor* Platform, int32 ButtonCount)
+{
+    UBoxComponent* SpawnArea = GetSpawnArea(Platform);
+    if (!SpawnArea)
+    {
+        return;
+    }
+
+    AMGMovingPlatform* MovingPlatform = Cast<AMGMovingPlatform>(Platform);
+    TArray<FVector> SpawnedLocations;
+
+    for (int32 i = 0; i < ButtonCount; ++i)
+    {
+        FVector SpawnLocation;
+        if (!FindSpawnLocation(SpawnArea, SpawnedLocations, SpawnLocation))
+        {
+            continue;
+        }
+
+        FActorSpawnParameters Params;
+        Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+        AMGButtonActor* Button = GetWorld()->SpawnActor<AMGButtonActor>(
+            ButtonClass, SpawnLocation, FRotator::ZeroRotator, Params);
+
+        if (!Button)
+        {
+            continue;
+        }
+
+        Button->AttachToComponent(Platform->GetRootComponent(), FAttachmentTransformRules::KeepWorldTransform);
+
+        if (MovingPlatform)
+        {
+            MovingPlatform->AddStandCollisionAtWorldTop(
+                FVector(SpawnLocation.X, SpawnLocation.Y, 0.f),
+                Button->GetButtonTopWorldZ(),
+                ButtonStandCollisionExtent);
+        }
+
+        SpawnedLocations.Add(SpawnLocation);
+    }
 }
 
 UBoxComponent* AMGButtonSpawner::GetSpawnArea(AActor* Platform) const
@@ -37,7 +122,6 @@ UBoxComponent* AMGButtonSpawner::GetSpawnArea(AActor* Platform) const
             return Box;
         }
     }
-
     return nullptr;
 }
 
@@ -53,144 +137,27 @@ bool AMGButtonSpawner::FindSpawnLocation(
 
     for (int32 Try = 0; Try < MaxTry; ++Try)
     {
-        FVector Candidate;
+        const FVector Candidate(
+            Origin.X + FMath::FRandRange(-Extent.X, Extent.X),
+            Origin.Y + FMath::FRandRange(-Extent.Y, Extent.Y),
+            Origin.Z);
 
-        Candidate.X = Origin.X + FMath::FRandRange(-Extent.X, Extent.X);
-        Candidate.Y = Origin.Y + FMath::FRandRange(-Extent.Y, Extent.Y);
-        Candidate.Z = Origin.Z;
-
-        bool bValid = true;
+        bool bTooClose = false;
 
         for (const FVector& Pos : ExistingLocations)
         {
             if (FVector::Dist2D(Pos, Candidate) < MinDistance)
             {
-                bValid = false;
+                bTooClose = true;
                 break;
             }
         }
 
-        if (bValid)
+        if (!bTooClose)
         {
             OutLocation = Candidate;
             return true;
         }
     }
-
     return false;
-}
-
-void AMGButtonSpawner::SpawnButtons()
-{
-    TArray<AActor*> Platforms;
-
-    UGameplayStatics::GetAllActorsWithTag(
-        GetWorld(),
-        TEXT("MovingPlatform"),
-        Platforms);
-
-    if (Platforms.IsEmpty())
-    {
-        return;
-    }
-
-    // 플랫폼 수 체크
-
-    int32 MaxButtonCount = Platforms.Num() * 3;
-
-    TotalButtonCount = FMath::Min(TotalButtonCount, MaxButtonCount);
-
-    // 최소 1개씩 배정
-
-    TMap<AActor*, int32> SpawnCounts;
-
-    int32 Remaining = TotalButtonCount;
-
-    for (AActor* Platform : Platforms)
-    {
-        if (Remaining <= 0)
-            break;
-
-        SpawnCounts.Add(Platform, 1);
-        Remaining--;
-    }
-
-    // 남은 버튼 랜덤 추가
-
-    while (Remaining > 0)
-    {
-        AActor* Platform =
-            Platforms[FMath::RandRange(0, Platforms.Num() - 1)];
-
-        int32& Count = SpawnCounts.FindOrAdd(Platform);
-
-        if (Count < 3)
-        {
-            Count++;
-            Remaining--;
-        }
-    }
-
-    // Spawn
-
-    for (const auto& Pair : SpawnCounts)
-    {
-        AActor* Platform = Pair.Key;
-
-        UBoxComponent* SpawnArea = GetSpawnArea(Platform);
-
-        if (!SpawnArea)
-        {
-            continue;
-        }
-
-        TArray<FVector> SpawnedLocations;
-
-        for (int32 i = 0; i < Pair.Value; ++i)
-        {
-            FVector SpawnLocation;
-
-            if (!FindSpawnLocation(
-                SpawnArea,
-                SpawnedLocations,
-                SpawnLocation))
-            {
-                continue;
-            }
-
-            FActorSpawnParameters Params;
-            Params.SpawnCollisionHandlingOverride =
-                ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-            AMGButtonActor* Button =
-                GetWorld()->SpawnActor<AMGButtonActor>(
-                    ButtonClass,
-                    SpawnLocation,
-                    FRotator::ZeroRotator,
-                    Params);
-
-            if (!Button)
-            {
-                continue;
-            }
-
-            Button->AttachToComponent(
-                Platform->GetRootComponent(),
-                FAttachmentTransformRules::KeepWorldTransform);
-
- 
-            if (AMGMovingPlatform* MovingPlatform = Cast<AMGMovingPlatform>(Platform))
-            {
-                const FVector WorldXY(SpawnLocation.X, SpawnLocation.Y, 0.f);
-                const float TopZ = Button->GetButtonTopWorldZ();
-
-                MovingPlatform->AddStandCollisionAtWorldTop(
-                    WorldXY,
-                    TopZ,
-                    FVector(10.f, 10.f, 5.f)); // 버튼 발판 크기에 맞게 조정 가능
-            }
-
-            SpawnedLocations.Add(SpawnLocation);
-        }
-    }
 }

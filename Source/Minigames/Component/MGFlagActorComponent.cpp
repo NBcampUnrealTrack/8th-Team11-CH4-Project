@@ -1,5 +1,6 @@
 ﻿
 #include "MGFlagActorComponent.h"
+#include "Engine/OverlapResult.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
@@ -33,7 +34,7 @@ bool UMGFlagActorComponent::SetHasFlag(bool bHasFlag)
 
 	if (IsValid(FlagMeshComp))
 	{
-		FlagMeshComp->SetVisibility(bFlagState);
+		OnRep_FlagState();
 	}
 
 	AActor* Owner = GetOwner();
@@ -69,20 +70,23 @@ void UMGFlagActorComponent::ServerRPCTakeFlag_Implementation()
 	AMGPlayerCharacter* OwnerCharacter = Cast<AMGPlayerCharacter>(GetOwner());
 	if (!IsValid(OwnerCharacter)) return;
 
-	TArray<FHitResult> OutHitResults;
+	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams Params(NAME_None, false, OwnerCharacter);
 
 	const float StealRange = 1500.f;
-	const FVector Start = OwnerCharacter->GetActorLocation();
-	const FVector End = Start;
+	const FVector CheckLocation = OwnerCharacter->GetActorLocation();
 
-	bool bIsHitDetected = GetWorld()->SweepMultiByChannel(OutHitResults, Start, End, FQuat::Identity, ECC_Pawn, FCollisionShape::MakeSphere(StealRange), Params);
-
+	bool bIsHitDetected = GetWorld()->OverlapMultiByChannel(OverlapResults,
+															CheckLocation,
+															FQuat::Identity,
+															ECC_Pawn,
+															FCollisionShape::MakeSphere(StealRange),
+															Params);
 	if (bIsHitDetected == true)
 	{
-		for (auto const& OutHitResult : OutHitResults)
+		for (auto const& OverlapResult : OverlapResults)
 		{
-			AMGPlayerCharacter* TargetCharacter = Cast<AMGPlayerCharacter>(OutHitResult.GetActor());
+			AMGPlayerCharacter* TargetCharacter = Cast<AMGPlayerCharacter>(OverlapResult.GetActor());
 
 			if (IsValid(TargetCharacter))
 			{

@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerController.h"
 #include "MGPlayerController.generated.h"
 
+enum class EMGPlayerColor : uint8;
 class UUserWidget;
 class UUW_GameResult;
 
@@ -40,6 +41,14 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetReady(bool bReady);
 
+	// [임시 테스트용] 콘솔에서 "ChangeColor 0"~"ChangeColor 9" 입력 → 색 변경 검증용. 나중에 색상 버튼 UI로 대체
+	UFUNCTION(Exec)
+	void ChangeColor(uint8 ColorIndex);
+
+	// [정식] 클라 → 서버로 색 변경 요청. 나중에 색상 버튼도 이걸 호출
+	UFUNCTION(Server, Reliable)
+	void ServerRPCSetColor(EMGPlayerColor NewColor);
+	
 public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	FText NotificationText;
