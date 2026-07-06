@@ -2,6 +2,8 @@
 
 
 #include "Character/MGSpectatorPawn.h"
+#include "Controller/MGPlayerController.h"
+#include "GameState/MGGameStateBase.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Character.h"
@@ -15,12 +17,12 @@ AMGSpectatorPawn::AMGSpectatorPawn()
 	RootComp = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	SetRootComponent(RootComp);
 
-	DeathCamArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("DeathCamSpringArm"));
-	DeathCamArm->SetupAttachment(RootComponent);
-	DeathCamArm->TargetArmLength = 300.f;
+	CamArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("DeathCamSpringArm"));
+	CamArm->SetupAttachment(RootComponent);
+	CamArm->TargetArmLength = 300.f;
 
-	DeathCam = CreateDefaultSubobject<UCameraComponent>(TEXT("DeathCam"));
-	DeathCam->SetupAttachment(DeathCamArm);
+	Cam = CreateDefaultSubobject<UCameraComponent>(TEXT("DeathCam"));
+	Cam->SetupAttachment(CamArm);
 }
 
 void AMGSpectatorPawn::BeginPlay()
@@ -34,11 +36,11 @@ void AMGSpectatorPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (IsValid(FollowingMesh))
 	{
-		DeathCamArm->SetWorldLocation(FollowingMesh->GetBoneLocation(MeshPelvisName));
+		CamArm->SetWorldLocation(FollowingMesh->GetBoneLocation(MeshPelvisName));
 	}
 }
 
-void AMGSpectatorPawn::DeathCamFollowCharacter(APlayerController* PC, ACharacter* Character, FName PelvisName, float Following)
+void AMGSpectatorPawn::DeathCamFollowCharacter(APlayerController* PC, ACharacter* Character, FName PelvisName, float FollowingTime)
 {
 	if (PC->IsLocalController() == false)
 	{
@@ -57,24 +59,38 @@ void AMGSpectatorPawn::DeathCamFollowCharacter(APlayerController* PC, ACharacter
 			MeshPelvisName = PelvisName;
 			MG_LOG_NET(LogMGNet, Log, TEXT("FollowingMeshBone: %s"), *MeshPelvisName.ToString());
 			MG_LOG_NET(LogMGNet, Log, TEXT("FollowingMeshBone_InitialLoc: %s"), *FollowingMesh->GetBoneLocation(MeshPelvisName).ToString());
-			DeathCamArm->SetWorldLocation(FollowingMesh->GetBoneLocation(MeshPelvisName));
+			CamArm->SetWorldLocation(FollowingMesh->GetBoneLocation(MeshPelvisName));
 		}
 
 		FRotator DeathCamRotation;
 		DeathCamRotation = PC->GetControlRotation();
 		DeathCamRotation.Pitch = -90.f;
-		DeathCamArm->SetWorldRotation(DeathCamRotation);
+		CamArm->SetWorldRotation(DeathCamRotation);
 	}
 
+	AMGPlayerController* MGPC = Cast<AMGPlayerController>(PC);
 	PC->SetViewTargetWithBlend(this, 0.5f, EViewTargetBlendFunction::VTBlend_EaseOut, 1.f);
 
-	//GetWorld()->GetTimerManager().SetTimer(
-	//	DeathTimeHandle,
-	//	this,
-	//	&ThisClass::OnDeathTimerEnd,
-	//	time,
-	//	false
-	//);
+	GetWorld()->GetTimerManager().SetTimer(
+		DeathTimeHandle,
+		this,
+		&ThisClass::OnDeathTimerEnd,
+		FollowingTime,
+		false
+	);
+}
+
+void AMGSpectatorPawn::SpectateOtherPlayer(int32 idx)
+{
+	AMGGameStateBase* GS = GetWorld()->GetGameState<AMGGameStateBase>();
+	
+	if (IsValid(GS))
+	{
+		if (GS->AlivePlayers.IsValidIndex(idx) == true)
+		{
+			
+		}
+	}
 }
 
 void AMGSpectatorPawn::OnDeathTimerEnd()
