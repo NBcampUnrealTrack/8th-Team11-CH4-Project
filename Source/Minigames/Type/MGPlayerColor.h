@@ -6,6 +6,7 @@
 UENUM(BlueprintType)
 enum class EMGPlayerColor : uint8
 {
+    None,
     Red,
     Orange,
     Yellow,
@@ -15,5 +16,6 @@ enum class EMGPlayerColor : uint8
     Purple,
     Pink,
     White,
-    Gray
+    Gray,
+    End
 };

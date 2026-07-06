@@ -8,13 +8,14 @@
 #include "Type/MGTypes.h"
 #include "MGGameInstance.generated.h"
 
+enum class EMGPlayerColor : uint8;
+
 UCLASS()
 class MINIGAMES_API UMGGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 
 public:
-
 	UMGGameInstance();
 
 	UFUNCTION(BlueprintPure, Category = "Game Flow")
@@ -32,4 +33,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Game Flow")
 	TArray<EMinigameType> MinigameSequence;
 	
+	UPROPERTY()
+	TMap<FUniqueNetIdRepl, EMGPlayerColor> PlayerColors;
 };

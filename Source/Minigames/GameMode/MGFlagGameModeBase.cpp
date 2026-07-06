@@ -2,6 +2,10 @@
 
 
 #include "GameMode/MGFlagGameModeBase.h"
+
+#include "Character/MGPlayerCharacter.h"
+#include "Component/MGFlagActorComponent.h"
+#include "Controller/MGPlayerController.h"
 #include "GameState/MGFlagGameStateBase.h"
 #include "PlayerState/MGFlagPlayerState.h"
 #include "SpawnPoint/MGFlagSpawnPoint.h"
@@ -25,6 +29,7 @@ void AMGFlagGameModeBase::StartMinigame()
 		true
 	);
 	
+	UE_LOG(LogTemp, Warning, TEXT("StartMinigame"));
 	SpawnFlag();
 }
 
@@ -43,6 +48,8 @@ void AMGFlagGameModeBase::OnGameTimerElapsed()
 	{
 		FGS->RemainGameTime = RemainGameTime;
 	}
+	
+	UpdateFlagHoldingTime();
 	
 	if (RemainGameTime == 0)
 	{
@@ -100,6 +107,37 @@ void AMGFlagGameModeBase::SpawnFlag()
 	int32 RandPoint = FMath::RandRange(0, SpawnPoints.Num() - 1);
 	FTransform SpawnTransform = SpawnPoints[RandPoint]->GetActorTransform();
 	GetWorld()->SpawnActor<AMGFlagActor>(FlagClass, SpawnTransform);
+	
+	UE_LOG(LogTemp, Warning, TEXT("Flag spawned at %s"), *SpawnTransform.GetLocation().ToString());
+}
+
+void AMGFlagGameModeBase::UpdateFlagHoldingTime()
+{
+	for (AMGPlayerController* PC : AllPlayerControllers)
+	{
+		AMGPlayerCharacter* Character = Cast<AMGPlayerCharacter>(PC->GetPawn());
+		if (!IsValid(Character))
+		{
+			continue;
+		}
+		
+		UMGFlagActorComponent* FlagComp = Character->GetComponentByClass<UMGFlagActorComponent>();
+		if (!IsValid(FlagComp) || FlagComp->GetHasFlag() == false)
+		{
+			continue;
+		}
+		
+		AMGFlagPlayerState* FlagPS = PC->GetPlayerState<AMGFlagPlayerState>();
+		if (!IsValid(FlagPS))
+		{
+			continue;
+		}
+		
+		FlagPS->HoldingTime += 1.f;
+		
+		UE_LOG(LogTemp, Warning, TEXT("[Flag] Owner: %s | HoldingTime: %.1f"),
+			*FlagPS->GetPlayerName(), FlagPS->HoldingTime);
+	}
 }
 
 void AMGFlagGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)

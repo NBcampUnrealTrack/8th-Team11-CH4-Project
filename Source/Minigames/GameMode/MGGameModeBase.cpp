@@ -7,7 +7,8 @@
 #include "GameState/MGGameStateBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "PlayerState/MGFlagPlayerState.h"
-#include "GameInstance/MGGameInstance.h"				// GameInstance
+#include "GameInstance/MGGameInstance.h"
+#include "Type/MGPlayerColor.h"
 
 #include "Minigames.h"				// 커스텀 Log
 
@@ -60,6 +61,36 @@ void AMGGameModeBase::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
+
+void AMGGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
+{
+	Super::HandleSeamlessTravelPlayer(C);
+	
+	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
+	if (IsValid(MGGameState) == false)
+	{
+		return;
+	}
+
+	AMGPlayerController* NewPlayerController = Cast<AMGPlayerController>(C);
+	if (IsValid(NewPlayerController) == true)
+	{
+		AllPlayerControllers.AddUnique(NewPlayerController);
+
+		NewPlayerController->NotificationText = FText::FromString(TEXT("Connected to the game server."));
+	
+		AMGPlayerState* PS = NewPlayerController->GetPlayerState<AMGPlayerState>();
+		UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
+		if (IsValid(PS) && IsValid(GI))
+		{
+			if (const EMGPlayerColor* FoundColor = GI->PlayerColors.Find(PS->GetUniqueId()))
+			{
+				PS->PlayerColor = *FoundColor;
+			}
+		}
+	}
+}
+
 void AMGGameModeBase::Logout(AController* Exiting)
 {
 	Super::Logout(Exiting);
@@ -75,13 +106,19 @@ void AMGGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetWorld()->GetTimerManager().SetTimer(MainTimerHandle, this, &ThisClass::OnMainTimerElapsed, 1.f, true);
+	GetWorld()->GetTimerManager().SetTimer(
+		MainTimerHandle, 
+		this, 
+		&ThisClass::OnMainTimerElapsed, 
+		1.f, 
+		true
+	);
 
 	RemainWaitingTimeForPlaying = WaitingTime;
 
 	RemainWaitingTimeForEnding = EndingTime;
 
-	// 10초 후 SeamlessTravel 하는지 테스트용
+	// 10초 후 레벨 전환 하는 테스트용 코드
 	// FTimerHandle TestEndTimerHandle;
 	// GetWorld()->GetTimerManager().SetTimer(TestEndTimerHandle, this, &ThisClass::EndMinigame, 10.f, false);
 }
@@ -125,7 +162,8 @@ void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 		AddScore = FMath::FloorToInt(9.f / (PlayerCount - 1) * (PlayerCount - Rank)) + 1;
 	}
 
-	PS->SetScore(PS->GetScore() + AddScore);
+	PS->SetMGScore(PS->GetMGScore() + AddScore);
+	PS->TotalScore += AddScore;
 }
 
 void AMGGameModeBase::OnMainTimerElapsed()
@@ -136,8 +174,8 @@ void AMGGameModeBase::OnMainTimerElapsed()
 		return;
 	}
 
-	// 임시 Tick 디버깅 메세지
-	UE_LOG(LogTemp, Warning, TEXT("[State Check] Current Map: %s | MatchState: %d"), 
+	// Test Log
+	UE_LOG(LogTemp, Verbose, TEXT("[State Check] Current Map: %s | MatchState: %d"), 
 		*GetWorld()->GetMapName(), (int32)MGGameState->MatchState);
 
 	// TODO : Lobby -> Minigame1, 2, 3, ..., -> FinalResult Level -> Lobby Level로
@@ -150,142 +188,113 @@ void AMGGameModeBase::OnMainTimerElapsed()
 	case EMatchState::None:
 		break;
 	case EMatchState::Waiting:
-	{
-		FString NotificationString = FString::Printf(TEXT(""));
-
-		if (AllPlayerControllers.Num() < MinimumPlayerCountForPlaying)
 		{
-			NotificationString = FString::Printf(TEXT("Wait another players for playing."));
+			// Test Log
+			UE_LOG(LogTemp, Verbose, TEXT("[State Check] Current Map: %s | MatchState: %d | Players: %d | RemainWait: %d"),
+			 	*GetWorld()->GetMapName(), (int32)MGGameState->MatchState, AllPlayerControllers.Num(), RemainWaitingTimeForPlaying);
 
-			RemainWaitingTimeForPlaying = WaitingTime; // 최소인원이 안된다면 대기 시간 초기화.
-		}
-		else
-		{
-			NotificationString = FString::Printf(TEXT("Wait %d seconds for playing."), RemainWaitingTimeForPlaying);
-
+			FString NotificationString = FString::Printf(TEXT("Round starts in %d seconds..."), RemainWaitingTimeForPlaying);
 			--RemainWaitingTimeForPlaying;
-		}
-
-		if (RemainWaitingTimeForPlaying <= 0)
-		{
-			NotificationString = FString::Printf(TEXT(""));
-
-			StartMinigame();
-		}
-
-		NotifyToAllPlayer(NotificationString);
-
-		break;
-	}
-	case EMatchState::Ending:
-	{
-		// 남은 시간 알림
-		FString NotificationString = FString::Printf(TEXT("Moving to next stage in %d seconds..."), RemainWaitingTimeForEnding);
-		NotifyToAllPlayer(NotificationString);
-
-
-		// Seamless Travel Test Begin-------------------
-		// if (RemainWaitingTimeForEnding == 1)
-		// {
-		// 	if (IsValid(MGGameState))
-		// 	{
-		// 		UE_LOG(LogTemp, Warning, TEXT("=========== [Test] PlayerArray Num : %d ==========="), MGGameState->PlayerArray.Num());
-		// 
-		// 		for (APlayerState* BasePS : MGGameState->PlayerArray)
-		// 		{
-		// 			if (AMGPlayerState* MGPS = Cast<AMGPlayerState>(BasePS))
-		// 			{
-		// 				GiveScore(MGPS, 0);
-		// 			}
-		// 			else
-		// 			{
-		// 				UE_LOG(LogTemp, Error, TEXT("Cast to AMGPlayerState Failed!"));
-		// 			}
-		// 		}
-		// 	}
-		// }
-		// Seamless Travel Test End-------------------
-
-		--RemainWaitingTimeForEnding;
-
-		// 카운트다운 종료 시 맵 이동
-		if (RemainWaitingTimeForEnding <= 0)
-		{
-			MainTimerHandle.Invalidate();
-
-			// 심리스 트래블을 하더라도 초기화 되지 않는 GameInstance에 저장되어있는 현재 라운드 정보를 가져옴
-			UMGGameInstance* MGGameInstance = Cast<UMGGameInstance>(GetGameInstance());
-			FString NextMapURL = TEXT("");
-
-			if (IsValid(MGGameInstance))
+	
+			if (RemainWaitingTimeForPlaying <= 0)
 			{
-				// CurrentRoundState에 따라 다음 맵과 다음 라운드 상태를 갱신
-				switch (MGGameInstance->CurrentRoundState)
+				NotificationString = FString::Printf(TEXT(""));
+	
+				StartMinigame();
+			}
+	
+			NotifyToAllPlayer(NotificationString);
+	
+			break;
+		}
+	case EMatchState::Ending:
+		{
+			// 남은 시간 알림
+			FString NotificationString = FString::Printf(TEXT("Moving to next stage in %d seconds..."), RemainWaitingTimeForEnding);
+			NotifyToAllPlayer(NotificationString);
+	
+			--RemainWaitingTimeForEnding;
+	
+			// 카운트다운 종료 시 맵 이동
+			if (RemainWaitingTimeForEnding <= 0)
+			{
+				MainTimerHandle.Invalidate();
+	
+				// 심리스 트래블을 하더라도 초기화 되지 않는 GameInstance에 저장되어있는 현재 라운드 정보를 가져옴
+				UMGGameInstance* MGGameInstance = Cast<UMGGameInstance>(GetGameInstance());
+				FString NextMapURL = TEXT("");
+	
+				if (IsValid(MGGameInstance))
 				{
-				case ERoundState::Round1:
-				{
-					NextMapURL = MGGameInstance->GetLevelURLForRoundState(ERoundState::Round2);
-					MGGameInstance->CurrentRoundState = ERoundState::Round2;
-					break;
+					// CurrentRoundState에 따라 다음 맵과 다음 라운드 상태를 갱신
+					switch (MGGameInstance->CurrentRoundState)
+					{
+					case ERoundState::Round1:
+					{
+						NextMapURL = MGGameInstance->GetLevelURLForRoundState(ERoundState::Round2);
+						MGGameInstance->CurrentRoundState = ERoundState::Round2;
+						break;
+					}
+				
+					case ERoundState::Round2:
+					{
+						NextMapURL = MGGameInstance->GetLevelURLForRoundState(ERoundState::Round3);
+						MGGameInstance->CurrentRoundState = ERoundState::Round3;
+						break;
+					}
+					case ERoundState::Round3:
+					{
+						// FinalResult을 별도 맵에 진행할거면 그곳으로, 아니라면 바로 로비로 이동(현재)
+						NextMapURL = TEXT("/Game/Minigames/Level/L_Lobby");
+						MGGameInstance->CurrentRoundState = ERoundState::FinalResult;
+						break;
+					}
+					case ERoundState::FinalResult:
+					{
+						// 결과창에서 로비로 완전히 돌아가는 처리
+						NextMapURL = TEXT("/Game/Minigames/Level/L_Lobby");
+						MGGameInstance->CurrentRoundState = ERoundState::Lobby;
+						break;
+					}
+					default:
+						break;
+					}
+	
+					// Return To Lobby Debug Begin -----------------
+					UE_LOG(LogTemp, Warning, TEXT("[Travel Check] CurrentRoundState: %d | NextMapURL: %s"),
+						(int32)MGGameInstance->CurrentRoundState, *NextMapURL);
+	
+					// 심리스 트래블 실행 (클라이언트들은 자동으로 서버를 따라옴)
+					if (NextMapURL.IsEmpty() == false)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("[Travel Check] Executing ServerTravel..."));
+						GetWorld()->ServerTravel(NextMapURL);
+					}
+					else
+					{
+						// NextMapURL이 비어있어서 트래블이 취소되었을 때 에러 로그
+						UE_LOG(LogTemp, Error, TEXT("[Travel Check] NextMapURL is EMPTY! ServerTravel Canceled."));
+					}
+	
+					return;
+					// Return To Lobby Debug End -----------------
 				}
-			
-				case ERoundState::Round2:
-				{
-					NextMapURL = MGGameInstance->GetLevelURLForRoundState(ERoundState::Round3);
-					MGGameInstance->CurrentRoundState = ERoundState::Round3;
-					break;
-				}
-				case ERoundState::Round3:
-				{
-					// FinalResult을 별도 맵에 진행할거면 그곳으로, 아니라면 바로 로비로 이동(현재)
-					NextMapURL = TEXT("/Game/Minigames/Level/L_Lobby");
-					MGGameInstance->CurrentRoundState = ERoundState::FinalResult;
-					break;
-				}
-				case ERoundState::FinalResult:
-				{
-					// 결과창에서 로비로 완전히 돌아가는 처리
-					NextMapURL = TEXT("/Game/Minigames/Level/L_Lobby");
-					MGGameInstance->CurrentRoundState = ERoundState::Lobby;
-					break;
-				}
-				default:
-					break;
-				}
-
-				// Return To Lobby Debug Begin -----------------
-				UE_LOG(LogTemp, Warning, TEXT("[Travel Check] CurrentRoundState: %d | NextMapURL: %s"),
-					(int32)MGGameInstance->CurrentRoundState, *NextMapURL);
-
+	
 				// 심리스 트래블 실행 (클라이언트들은 자동으로 서버를 따라옴)
 				if (NextMapURL.IsEmpty() == false)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("[Travel Check] Executing ServerTravel..."));
 					GetWorld()->ServerTravel(NextMapURL);
 				}
-				else
-				{
-					// NextMapURL이 비어있어서 트래블이 취소되었을 때 에러 로그
-					UE_LOG(LogTemp, Error, TEXT("[Travel Check] NextMapURL is EMPTY! ServerTravel Canceled."));
-				}
-
+	
 				return;
-				// Return To Lobby Debug End -----------------
 			}
-
-			// 심리스 트래블 실행 (클라이언트들은 자동으로 서버를 따라옴)
-			if (NextMapURL.IsEmpty() == false)
-			{
-				GetWorld()->ServerTravel(NextMapURL);
-			}
-
-			return;
+	
+			break;
 		}
-
-		break;
-	}
 	default:
-		break;
+		{
+			break;
+		}
 	}
 }
 

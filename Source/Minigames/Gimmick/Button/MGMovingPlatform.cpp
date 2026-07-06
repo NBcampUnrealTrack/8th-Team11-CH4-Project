@@ -12,7 +12,7 @@ AMGMovingPlatform::AMGMovingPlatform()
 
     bReplicates = true;
 
-    Tags.Add(TEXT("MovingPlatform"));
+    Tags.Add(TEXT("SpawnPlatform"));
 
     PlatformMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlatformMesh"));
     SetRootComponent(PlatformMesh);
@@ -26,7 +26,13 @@ AMGMovingPlatform::AMGMovingPlatform()
     SpawnArea->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     SpawnArea->ComponentTags.Add(TEXT("SpawnArea"));
 
+    CreateStandCollisionComponents();
+}
+
+void AMGMovingPlatform::CreateStandCollisionComponents()
+{
     StandCollisions.Reserve(MaxStandCollisions);
+
     for (int32 i = 0; i < MaxStandCollisions; ++i)
     {
         const FName BoxName = *FString::Printf(TEXT("StandCollision%d"), i);
@@ -41,7 +47,6 @@ AMGMovingPlatform::AMGMovingPlatform()
 
         StandCollisions.Add(Box);
     }
-
 }
 
 void AMGMovingPlatform::BeginPlay()
@@ -62,16 +67,20 @@ void AMGMovingPlatform::Tick(float DeltaSeconds)
     }
 
     const float ServerTime = GameState->GetServerWorldTimeSeconds();
-    const float CycleTime = FMath::Fmod(ServerTime, Duration * 2.f);
-
-    const float Alpha =
-        (CycleTime <= Duration)
-        ? (CycleTime / Duration)
-        : (2.f - CycleTime / Duration);
+    const float Alpha = ComputePingPongAlpha(ServerTime);
 
     const FVector NewLocation = StartLocation + MoveOffset * Alpha;
 
     SetActorLocation(NewLocation);
+}
+
+float AMGMovingPlatform::ComputePingPongAlpha(float ServerTime) const
+{
+    const float CycleTime = FMath::Fmod(ServerTime, Duration * 2.f);
+
+    return (CycleTime <= Duration)
+        ? (CycleTime / Duration)
+        : (2.f - CycleTime / Duration);
 }
 
 void AMGMovingPlatform::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -88,18 +97,19 @@ FVector AMGMovingPlatform::GetSurfaceExtent() const
 
 FVector AMGMovingPlatform::GetSurfaceTopLocation() const
 {
-    if (PlatformMesh)
+    if (!PlatformMesh)
     {
-        const FVector Origin = PlatformMesh->Bounds.Origin;
-        const float HalfHeight = PlatformMesh->Bounds.BoxExtent.Z;
-        return FVector(Origin.X, Origin.Y, Origin.Z + HalfHeight);
+        return GetActorLocation();
     }
-    return GetActorLocation();
+
+    const FVector Origin = PlatformMesh->Bounds.Origin;
+    const float HalfHeight = PlatformMesh->Bounds.BoxExtent.Z;
+
+    return FVector(Origin.X, Origin.Y, Origin.Z + HalfHeight);
 }
 
 void AMGMovingPlatform::AddStandCollisionAt(const FVector& RelativeLocation, const FVector& Extent)
 {
-
     if (!HasAuthority())
     {
         return;
@@ -117,7 +127,7 @@ void AMGMovingPlatform::AddStandCollisionAt(const FVector& RelativeLocation, con
     Info.RelativeLocation = RelativeLocation;
     Info.Extent = Extent;
 
-    StandCollisionInfos.Add(Info);  
+    StandCollisionInfos.Add(Info);
 
     ApplyStandCollisionInfo(StandCollisionInfos.Num() - 1);
 }
