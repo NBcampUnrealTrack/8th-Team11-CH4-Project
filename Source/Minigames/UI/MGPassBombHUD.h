@@ -8,6 +8,7 @@
 
 class ACharacter;
 class AMGBombActor;
+class UUserWidget;
 
 UCLASS()
 class MINIGAMES_API AMGPassBombHUD : public AMGHUDBase
@@ -24,6 +25,8 @@ protected:
 
 	void OnBombHolderUpdated(ACharacter* NewHolder);
 
+	void OnBombTimeUpdated(int32 RemainTime);
+
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> BombWidgetClass;
@@ -31,6 +34,6 @@ public:
 private:
 	// 생성된 위젯을 메모리에 들고 있을 포인터 (가비지 컬렉션 방지)
 	UPROPERTY()
-	class UUserWidget* BombWidgetInstance;
+	UUserWidget* BombWidgetInstance;
 
 };

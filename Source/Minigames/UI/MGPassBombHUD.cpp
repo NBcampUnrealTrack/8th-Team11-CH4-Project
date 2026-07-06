@@ -45,6 +45,10 @@ void AMGPassBombHUD::BindWithBombActor(AMGBombActor* BombInstance)
 		{ // Broadcast를 기다리지 말고 현재 BombHolder로 UI 갱신
 			OnBombHolderUpdated(BombInstance->BombHolder);
 		}
+
+		BombInstance->OnBombTimeChanged.AddUObject(this, &AMGPassBombHUD::OnBombTimeUpdated);
+
+		OnBombTimeUpdated(BombInstance->BombRemainTime);
 	}
 }
 
@@ -64,6 +68,15 @@ void AMGPassBombHUD::OnBombHolderUpdated(ACharacter* NewHolder)
 		// Lobby 또는 EOS에서 Lobby 진입 전에 설정한 유저 닉네임으로 변경
 		FString PlayerName = NewHolder->GetPlayerState()->GetPlayerName();
 		MyBombWidget->UpdateBombHolderText(PlayerName);
+	}
+}
+
+void AMGPassBombHUD::OnBombTimeUpdated(int32 RemainTime)
+{
+	UUW_PassBombLayout* MyBombWidget = Cast<UUW_PassBombLayout>(BombWidgetInstance);
+	if (IsValid(MyBombWidget))
+	{
+		MyBombWidget->UpdateBombTimerText(RemainTime);
 	}
 }
 
