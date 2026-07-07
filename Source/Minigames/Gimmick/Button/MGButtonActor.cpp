@@ -27,6 +27,7 @@ void AMGButtonActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
     DOREPLIFETIME(AMGButtonActor, bPressed);
     DOREPLIFETIME(AMGButtonActor, CurrentColor);
+    DOREPLIFETIME(AMGButtonActor, bColorOverridden);
 }
 
 void AMGButtonActor::PostInitializeComponents()
@@ -71,7 +72,7 @@ void AMGButtonActor::BeginInteract_Implementation(AActor* Interactor)
 
     bPressed = true;
     CurrentColor = PlayerState->GetPlayerLinearColor();
-
+    bColorOverridden = true;
     ApplyVisual();
 }
 
@@ -121,7 +122,7 @@ void AMGButtonActor::ApplyVisual()
 
     ButtonMesh->SetRelativeLocation(TargetLocation);
 
-    if (DynamicMaterial)
+    if (DynamicMaterial && bColorOverridden)
     {
         DynamicMaterial->SetVectorParameterValue(ColorParameterName, CurrentColor);
     }
