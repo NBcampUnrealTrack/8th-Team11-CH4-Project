@@ -9,6 +9,7 @@
 #include "Components/CapsuleComponent.h"	// Socket이 없을 때 CapsuleComponent의 중앙으로 Attach
 #include "GameMode/MGPassBombGameMode.h"		// Explode를 GameMode에 알려줘야함
 #include "Kismet/GameplayStatics.h"
+#include "UI/MGPassBombHUD.h"				// Bomb HUD
 
 #include "DrawDebugHelpers.h"				// Debug용
 
@@ -48,6 +49,27 @@ void AMGBombActor::BeginPlay()
 	{
 		PassTrigger->OnComponentBeginOverlap.AddDynamic(this, &AMGBombActor::OnTriggerOverlap);
 	}
+
+	// Dedicated Server - Client 구조에서 0번 PC = 플레이어 본인
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (IsValid(PC))
+	{
+		AMGPassBombHUD* BombHUD = Cast<AMGPassBombHUD>(PC->GetHUD());
+		if (IsValid(BombHUD))	// 서버는 HUD가 없기 때문에 캐스팅 실패, 클라이언트만 실행됨
+		{
+			BombHUD->BindWithBombActor(this);
+		}
+	}
+}
+
+// Replication에 필요한 기본 함수
+void AMGBombActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// 현재 MGBombActor를 가지고 있는 Character 포인터
+	DOREPLIFETIME(AMGBombActor, BombHolder);
+	DOREPLIFETIME(AMGBombActor, BombRemainTime);
 }
 
 void AMGBombActor::OnTriggerOverlap(
@@ -100,8 +122,8 @@ void AMGBombActor::SetBombHolder(ACharacter* NewHolder)
 		return;	// Authority가 없거나 || NewHolder와 (현재)BombHolder가 같다면 조기종료
 	}
 
-	BombHolder = NewHolder;
-	AttachToHolder(NewHolder);
+	BombHolder = NewHolder; // BombHolder 값 변경 시, 레플리케이션으로 클라이언트들에 OnRep_BombHolder() 자동 호출
+	OnRep_BombHolder();	// OnRep 함수가 AttachToHolder 이외에 다른 기능이 추가됨에 따라 직접 호출로 변경
 
 	// 폭탄을 옮겼으면 
 	bCanPass = false;						// 폭탄을 들고 있지 않기 때문에 false
@@ -118,15 +140,34 @@ void AMGBombActor::SetBombHolder(ACharacter* NewHolder)
 void AMGBombActor::OnRep_BombHolder()
 {
 	AttachToHolder(BombHolder);
+
+	if (OnBombHolderChanged.IsBound())
+	{	// 클라이언트 UI 등에 Broadcast
+		OnBombHolderChanged.Broadcast(BombHolder);
+	}
 }
 
-// Replication에 필요한 기본 함수
-void AMGBombActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void AMGBombActor::TickBombTimer()
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	if (BombRemainTime > 0)
+	{
+		--BombRemainTime;			// BombRemainTime 값 변경 = 클라이언트에서 OnRep 함수 실행
+		OnRep_BombRemainTime();		// 서버는 직접 호출
+	}
 
-	// 현재 MGBombActor를 가지고 있는 Character 포인터
-	DOREPLIFETIME(ThisClass, BombHolder);
+	// 0초가 되면 Clear Timer
+	if (BombRemainTime <= 0)
+	{
+		GetWorldTimerManager().ClearTimer(BombCountdownTimerHandler);
+	}
+}
+
+void AMGBombActor::OnRep_BombRemainTime()
+{
+	if (OnBombTimeChanged.IsBound())
+	{
+		OnBombTimeChanged.Broadcast(BombRemainTime);
+	}
 }
 
 // Timer가 있다면 반드시 EndPlay에서 안전하게 ClearTimer 로직 추가
@@ -149,9 +190,14 @@ void AMGBombActor::AttachToHolder(ACharacter* TargetHolder)
 	USkeletalMeshComponent* MeshComp = TargetHolder->GetMesh();
 	UCapsuleComponent* CapsuleComp = TargetHolder->GetCapsuleComponent();
 
+	if (!IsValid(MeshComp) || !IsValid(CapsuleComp))
+	{
+		return;
+	}
+
 	// 변수 'AttachSocketName'이 NAME_Nome이 아니고 (= 에디터에서 BombActor의 AttachSocketName에 값 입력)
 	// && 스켈레탈 메쉬가 존재하고 && 'AttachSocketName'변수 이름의 소켓이 실제로 존재할 때
-	if (!AttachSocketName.IsNone() && MeshComp && MeshComp->DoesSocketExist(AttachSocketName))
+	if (!AttachSocketName.IsNone() && MeshComp->DoesSocketExist(AttachSocketName))
 	{
 		this->AttachToComponent(
 			MeshComp,
@@ -183,6 +229,18 @@ void AMGBombActor::ActivateBomb(ACharacter* InitialHolder, float ExplodeTime)
 	SetBombHolder(InitialHolder);
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
+
+	BombRemainTime = FMath::CeilToInt(ExplodeTime);
+	OnRep_BombRemainTime();		// 서버도 최초 갱신
+
+	// 1초마다 TickBombTimer 함수를 반복(true) 실행하는 타이머 작동
+	GetWorldTimerManager().SetTimer(
+		BombCountdownTimerHandler,
+		this,
+		&AMGBombActor::TickBombTimer,
+		1.0f,
+		true
+	);
 
 	GetWorldTimerManager().SetTimer(
 		ExplodeTimer,
@@ -238,11 +296,12 @@ void AMGBombActor::ExplodeBomb()
 
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
+	BombHolder = nullptr;		// BombHolder 초기화
 }
 
 void AMGBombActor::Multicast_OnExplode_Implementation()
 {
 	MG_LOG_NET(LogMGNet, Log, TEXT("Explosion Niagara Effect and Sound"));
-
+	// TODO : 나이아가라 이펙트 생성, 사운드 재생 등
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation(), GetActorRotation(), FVector::OneVector * ExplosionScale);
 }

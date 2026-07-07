@@ -9,6 +9,9 @@
 /**
  * 
  */
+
+class AMGBombActor;
+class AMGPlayerControoler;
 UCLASS()
 class MINIGAMES_API AMGPassBombGameMode : public AMGGameModeBase
 {
@@ -35,11 +38,11 @@ protected:
 	FTimerHandle RoundTimerHandle;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Minigame|Rule")
-	TSubclassOf<class AMGBombActor> BombActorClass;
+	TSubclassOf<AMGBombActor> BombActorClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Minigame|Rule")
-	TObjectPtr<class AMGBombActor> BombActor;
+	TObjectPtr<AMGBombActor> BombActor;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Minigame")
-	TArray<TObjectPtr<class AMGPlayerController>> AlivePlayers;
+	TArray<TObjectPtr<AMGPlayerController>> AlivePlayers;
 };
