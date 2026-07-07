@@ -24,9 +24,35 @@ void AMGPassBombGameMode::StartMinigame()
 	{
 		MGGS->AliveCharacters.Add(AlivePlayers[i]->GetCharacter());
 	}
+
+	for (TObjectPtr<AMGPlayerController> PC : AlivePlayers)
+	{
+		// 배열에 들어있더라도 그 사이 플레이어가 접속을 끊었을 수도 있으니 항상 IsValid 체크
+		if (IsValid(PC))
+		{
+			// TODO : 현재 0번 index를 하드코딩으로 사용하고 있으나
+			// 추후 Level Sequence가 추가된다면 Game Instance에서 Index를 관리하도록 변경
+			PC->ClientRPC_PlayCutScene(0);
+		}
+	}
 	
 	MG_LOG_NET(LogMGNet, Log, TEXT("AlivePlayer_Count: %d / AliveCharacter: %d"), AlivePlayers.Num(), MGGS->AliveCharacters.Num());
 
+
+	// TODO : 현재 CutsceneDuration를 마찬가지로 하드코딩으로 사용하고 있으나
+	// 추후 Level Sequence가 추가된다면 Game Instance에서 CutsceneDuration를 관리하도록 변경
+	float CutsceneDuration = 19.f;
+	GetWorldTimerManager().SetTimer(
+		CutSceneTimerHandler,
+		this,
+		&AMGPassBombGameMode::OnFinishedCutScene,
+		CutsceneDuration,
+		false
+	);
+}
+
+void AMGPassBombGameMode::OnFinishedCutScene()
+{
 	NextRound();
 }
 
