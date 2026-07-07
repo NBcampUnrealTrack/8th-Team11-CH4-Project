@@ -11,6 +11,8 @@
 #include "Components/TextBlock.h"
 #include "GameMode/MGLobbyGameModeBase.h" 
 #include "Type/MGPlayerColor.h"
+#include "UI/UW_LobbyLayout.h"
+#include "GameState/MGLobbyGameStateBase.h"
 
 void AMGPlayerController::BeginPlay()
 {
@@ -21,8 +23,29 @@ void AMGPlayerController::BeginPlay()
 		return;
 	}
 
-	FInputModeGameOnly GameOnly;
-	SetInputMode(GameOnly);
+	if (GetWorld()->GetGameState<AMGLobbyGameStateBase>() != nullptr)
+	{
+		if (IsValid(LobbyLayoutClass) == true)
+		{
+			if (UUW_LobbyLayout* Lobby = CreateWidget<UUW_LobbyLayout>(this, LobbyLayoutClass))
+			{
+				Lobby->AddToViewport();
+			}
+		}
+
+		// 로비: 마우스로 UI 클릭 가능하게
+		FInputModeGameAndUI InputMode;
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		SetInputMode(InputMode);
+		bShowMouseCursor = true;
+	}
+	else
+	{
+		// 미니게임
+		FInputModeGameOnly GameOnly;
+		SetInputMode(GameOnly);
+		bShowMouseCursor = false;
+	}
 
 	if (IsValid(NotificationTextUIClass) == true)
 	{
@@ -31,7 +54,7 @@ void AMGPlayerController::BeginPlay()
 		{
 			NotificationTextUI->AddToViewport(1);
 
-			NotificationTextUI->SetVisibility(ESlateVisibility::Visible);
+			NotificationTextUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		}
 	}
 }
@@ -85,17 +108,6 @@ void AMGPlayerController::ClientRPCShowGameResultWidget_Implementation(int32 InR
 			}
 		}
 	}
-}
-
-
-void AMGPlayerController::Ready()
-{
-	ServerRPCSetReady(true);
-}
-
-void AMGPlayerController::Unready()
-{
-	ServerRPCSetReady(false);
 }
 
 void AMGPlayerController::ChangeColor(uint8 ColorIndex)
