@@ -1,185 +1,154 @@
 ﻿#include "Gimmick/Button/MGButtonActor.h"
-
+#include "Character/MGPlayerCharacter.h"
 #include "Components/StaticMeshComponent.h"
+#include "PlayerState/MGPlayerState.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "GameFramework/Pawn.h"
-#include "GameFramework/PlayerState.h"
 #include "Net/UnrealNetwork.h"
+#include "TimerManager.h"
 
 AMGButtonActor::AMGButtonActor()
 {
-	PrimaryActorTick.bCanEverTick = false;
-	bReplicates = true;
-
-	BaseMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMesh"));
-	RootComponent = BaseMesh;
-
-	ButtonMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ButtonMesh"));
-	ButtonMesh->SetupAttachment(BaseMesh);
-}
-
-void AMGButtonActor::PostInitializeComponents()
-{
-	Super::PostInitializeComponents();
-
-	if (ButtonMesh)
-	{
-		ButtonOriginLocation = ButtonMesh->GetRelativeLocation();
-		DynamicMaterial = ButtonMesh->CreateAndSetMaterialInstanceDynamic(0);
-	}
-}
-
-void AMGButtonActor::BeginPlay()
-{
-	Super::BeginPlay();
-	ApplyVisual();
+    PrimaryActorTick.bCanEverTick = false;
+    bReplicates = true;
+    BaseMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMesh"));
+    SetRootComponent(BaseMesh);
+    BaseMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    BaseMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+    ButtonMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ButtonMesh"));
+    ButtonMesh->SetupAttachment(BaseMesh);
+    ButtonMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AMGButtonActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(AMGButtonActor, bPressed);
+    DOREPLIFETIME(AMGButtonActor, CurrentColor);
+    DOREPLIFETIME(AMGButtonActor, bColorOverridden);
+    DOREPLIFETIME(AMGButtonActor, CurrentOwnerState);
+}
 
-	DOREPLIFETIME(AMGButtonActor, bPressed);
-	DOREPLIFETIME(AMGButtonActor, CurrentColor);
-	DOREPLIFETIME(AMGButtonActor, bColorOverridden);
-	DOREPLIFETIME(AMGButtonActor, CurrentOwnerState);
+void AMGButtonActor::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+    ButtonOriginLocation = ButtonMesh->GetRelativeLocation();
+}
+
+void AMGButtonActor::BeginPlay()
+{
+    Super::BeginPlay();
+    DynamicMaterial = ButtonMesh->CreateDynamicMaterialInstance(0);
+    ApplyVisual();
+    GetWorldTimerManager().SetTimerForNextTick(this, &AMGButtonActor::ApplyVisual);
+    FTimerHandle ReapplyHandle;
+    GetWorldTimerManager().SetTimer(
+        ReapplyHandle, this, &AMGButtonActor::ApplyVisual, 0.5f, false);
 }
 
 void AMGButtonActor::BeginInteract_Implementation(AActor* Interactor)
 {
-	if (!HasAuthority())
-	{
-		return;
-	}
+    if (!HasAuthority())
+    {
+        return;
+    }
+    AMGPlayerCharacter* Player = Cast<AMGPlayerCharacter>(Interactor);
+    if (!Player)
+    {
+        return;
+    }
+    AMGPlayerState* PlayerState = Player->GetPlayerState<AMGPlayerState>();
+    if (!PlayerState)
+    {
+        return;
+    }
+    bPressed = true;
+    CurrentColor = PlayerState->GetPlayerLinearColor();
+    bColorOverridden = true;
+    ApplyVisual();
 
-	bPressed = true;
-	OnRep_Pressed();
-
-	APlayerState* InteractorState = nullptr;
-	if (const APawn* InteractorPawn = Cast<APawn>(Interactor))
-	{
-		InteractorState = InteractorPawn->GetPlayerState();
-	}
-
-	SetButtonOwner(InteractorState);
+    // 소유권 변경 + 점수 이전 (AMGButton에서 병합)
+    SetButtonOwner(PlayerState);
 }
 
 void AMGButtonActor::EndInteract_Implementation(AActor* Interactor)
 {
-	if (!HasAuthority())
-	{
-		return;
-	}
-
-	bPressed = false;
-	OnRep_Pressed();
-}
-
-float AMGButtonActor::GetButtonTopWorldZ() const
-{
-	if (!ButtonMesh)
-	{
-		return GetActorLocation().Z;
-	}
-	return ButtonMesh->Bounds.Origin.Z + ButtonMesh->Bounds.BoxExtent.Z;
+    if (!HasAuthority())
+    {
+        return;
+    }
+    bPressed = false;
+    ApplyVisual();
 }
 
 bool AMGButtonActor::SetButtonOwner(APlayerState* NewOwnerState)
 {
-	if (!HasAuthority())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SetButtonOwner는 서버에서만 호출해야 합니다. (%s)"), *GetName());
-		return false;
-	}
+    // 유효성 검사
+    if (!NewOwnerState)
+    {
+        UE_LOG(LogTemp, Error, TEXT("실패: NewOwnerState가 nullptr입니다!"));
+        return false;
+    }
 
-	if (!NewOwnerState)
-	{
-		UE_LOG(LogTemp, Error, TEXT("실패: NewOwnerState가 nullptr입니다! (%s)"), *GetName());
-		return false;
-	}
+    // 시스템 고유 ID 비교 - 이미 같은 주인이면 무시
+    if (CurrentOwnerState != nullptr)
+    {
+        if (CurrentOwnerState->GetUniqueId() == NewOwnerState->GetUniqueId())
+        {
+            return false;
+        }
+    }
 
-	if (CurrentOwnerState && CurrentOwnerState->GetUniqueId() == NewOwnerState->GetUniqueId())
-	{
-		UE_LOG(LogTemp, Log, TEXT("무시: 이미 이 버튼의 주인입니다. (%s)"), *NewOwnerState->GetPlayerName());
-		return false;
-	}
+    // 이전 소유권자 개수 감소
+    if (CurrentOwnerState != nullptr)
+    {
+        const float OldScore = CurrentOwnerState->GetScore();
+        CurrentOwnerState->SetScore(FMath::Max(0.f, OldScore - 1.f));
+    }
 
-	if (CurrentOwnerState)
-	{
-		const float OldScore = CurrentOwnerState->GetScore();
-		CurrentOwnerState->SetScore(FMath::Max(0.f, OldScore - 1.f));
-	}
+    // 새 소유권자 개수 증가
+    NewOwnerState->SetScore(NewOwnerState->GetScore() + 1.f);
 
-	NewOwnerState->SetScore(NewOwnerState->GetScore() + 1.f);
+    // 소유권 이전
+    CurrentOwnerState = NewOwnerState;
 
-	CurrentOwnerState = NewOwnerState;
+    UE_LOG(LogTemp, Log, TEXT("버튼 %s ➔ 새 주인: %s"),
+        *GetName(), *NewOwnerState->GetPlayerName());
 
-	UE_LOG(LogTemp, Log, TEXT("버튼 %s ➔ 새 주인: %s"), *GetName(), *NewOwnerState->GetPlayerName());
-
-	if (!bColorOverridden)
-	{
-		CurrentColor = GetColorForOwner(NewOwnerState);
-		OnRep_Color();
-	}
-
-	OnButtonColorChanged(CurrentOwnerState);
-
-	return true;
+    return true;
 }
 
-void AMGButtonActor::SetButtonColor(FLinearColor NewColor)
+float AMGButtonActor::GetButtonTopWorldZ() const
 {
-	if (!HasAuthority())
-	{
-		return;
-	}
-
-	bColorOverridden = true;
-	CurrentColor = NewColor;
-	OnRep_Color();
-}
-
-FLinearColor AMGButtonActor::GetColorForOwner_Implementation(APlayerState* OwnerState) const
-{
-	if (!OwnerState)
-	{
-		return FLinearColor::Black;
-	}
-
-	const uint32 Hash = GetTypeHash(OwnerState->GetPlayerId());
-	const float Hue = static_cast<float>(Hash % 360);
-	return FLinearColor::MakeFromHSV8(static_cast<uint8>(Hue / 360.f * 255.f), 255, 255);
-}
-
-void AMGButtonActor::ApplyVisual()
-{
-	if (ButtonMesh)
-	{
-		FVector NewLocation = ButtonOriginLocation;
-		if (bPressed)
-		{
-			NewLocation.Z -= PressDepth;
-		}
-		ButtonMesh->SetRelativeLocation(NewLocation);
-	}
-
-	if (DynamicMaterial)
-	{
-		DynamicMaterial->SetVectorParameterValue(ColorParameterName, CurrentColor);
-	}
+    if (!ButtonMesh)
+    {
+        return GetActorLocation().Z;
+    }
+    const FVector WorldOrigin =
+        BaseMesh->GetComponentTransform().TransformPosition(ButtonOriginLocation);
+    const float MeshHalfHeight = ButtonMesh->GetStaticMesh()
+        ? ButtonMesh->GetStaticMesh()->GetBounds().BoxExtent.Z * ButtonMesh->GetComponentScale().Z
+        : 0.f;
+    return WorldOrigin.Z + MeshHalfHeight;
 }
 
 void AMGButtonActor::OnRep_Pressed()
 {
-	ApplyVisual();
+    ApplyVisual();
 }
 
 void AMGButtonActor::OnRep_Color()
 {
-	ApplyVisual();
+    ApplyVisual();
 }
 
-void AMGButtonActor::OnRep_CurrentOwnerState()
+void AMGButtonActor::ApplyVisual()
 {
-	OnButtonColorChanged(CurrentOwnerState);
+    const FVector TargetLocation = bPressed
+        ? ButtonOriginLocation - FVector(0.f, 0.f, PressDepth)
+        : ButtonOriginLocation;
+    ButtonMesh->SetRelativeLocation(TargetLocation);
+    if (DynamicMaterial && bColorOverridden)
+    {
+        DynamicMaterial->SetVectorParameterValue(ColorParameterName, CurrentColor);
+    }
 }

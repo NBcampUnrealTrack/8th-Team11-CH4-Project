@@ -28,35 +28,20 @@ public:
 
 	float GetButtonTopWorldZ() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Gameplay|Button")
-	bool SetButtonOwner(APlayerState* NewOwnerState);
-
+	
 	UFUNCTION(BlueprintPure, Category = "Gameplay|Button")
 	APlayerState* GetCurrentOwner() const { return CurrentOwnerState; }
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay|Button")
-	void OnButtonColorChanged(APlayerState* NewOwnerState);
-
-	UFUNCTION(BlueprintCallable, Category = "Gameplay|Button")
-	void SetButtonColor(FLinearColor NewColor);
-
-protected:
-	
-	UFUNCTION(BlueprintNativeEvent, Category = "Gameplay|Button")
-	FLinearColor GetColorForOwner(APlayerState* OwnerState) const;
-	virtual FLinearColor GetColorForOwner_Implementation(APlayerState* OwnerState) const;
-
 private:
 	void ApplyVisual();
+
+	bool SetButtonOwner(APlayerState* NewOwnerState);
 
 	UFUNCTION()
 	void OnRep_Pressed();
 
 	UFUNCTION()
 	void OnRep_Color();
-
-	UFUNCTION()
-	void OnRep_CurrentOwnerState();
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -86,6 +71,7 @@ private:
 	UPROPERTY(Replicated)
 	bool bColorOverridden = false;
 
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentOwnerState, VisibleAnywhere, Category = "Gameplay|Button")
+
+	UPROPERTY(Replicated, VisibleAnywhere, Category = "Gameplay|Button")
 	TObjectPtr<APlayerState> CurrentOwnerState = nullptr;
 };
