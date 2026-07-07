@@ -162,8 +162,15 @@ void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 		AddScore = FMath::FloorToInt(9.f / (PlayerCount - 1) * (PlayerCount - Rank)) + 1;
 	}
 
+	const int32 PrevMGScore = PS->GetMGScore();
+	const int32 PrevTotalScore = PS->TotalScore;
+	
 	PS->SetMGScore(PS->GetMGScore() + AddScore);
 	PS->TotalScore += AddScore;
+	
+	UE_LOG(LogTemp, Log, TEXT("[GiveScore] %s | Rank %d/%d | +%d점 | MGScore %d->%d | TotalScore %d->%d"),
+		*PS->GetPlayerName(), Rank, PlayerCount, AddScore,
+		PrevMGScore, PS->GetMGScore(), PrevTotalScore, PS->TotalScore);
 }
 
 void AMGGameModeBase::OnMainTimerElapsed()

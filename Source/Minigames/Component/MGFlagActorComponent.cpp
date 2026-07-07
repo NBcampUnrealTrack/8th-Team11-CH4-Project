@@ -6,6 +6,8 @@
 #include "TimerManager.h"
 #include "Components/StaticMeshComponent.h"
 #include "Character/MGPlayerCharacter.h"
+#include "GameState/MGFlagGameStateBase.h"
+#include "PlayerState/MGFlagPlayerState.h"
 
 UMGFlagActorComponent::UMGFlagActorComponent()
 {
@@ -31,7 +33,7 @@ void UMGFlagActorComponent::RegisterFlagMeshes(UStaticMeshComponent* InFlagMesh,
 bool UMGFlagActorComponent::SetHasFlag(bool bHasFlag)
 {
 	bFlagState = bHasFlag;
-
+	
 	if (IsValid(FlagMeshComp))
 	{
 		OnRep_FlagState();
@@ -45,6 +47,14 @@ bool UMGFlagActorComponent::SetHasFlag(bool bHasFlag)
 			bIsFlagProtected = true;
 			OnRep_IsFlagProtected();
 			GetWorld()->GetTimerManager().SetTimer(FlagProtectTimerHandle, this, &ThisClass::ClearFlagProtection, 2.0f, false);
+		
+			if (AMGFlagGameStateBase* FGS = GetWorld()->GetGameState<AMGFlagGameStateBase>())
+			{
+				if (AMGPlayerCharacter* OwnerCharacter = Cast<AMGPlayerCharacter>(GetOwner()))
+				{
+					FGS->SetCurrentFlagHolder(OwnerCharacter->GetPlayerState<AMGFlagPlayerState>());
+				}
+			}
 		}
 		else
 		{
@@ -76,12 +86,15 @@ void UMGFlagActorComponent::ServerRPCTakeFlag_Implementation()
 	const float StealRange = 1500.f;
 	const FVector CheckLocation = OwnerCharacter->GetActorLocation();
 
-	bool bIsHitDetected = GetWorld()->OverlapMultiByChannel(OverlapResults,
-															CheckLocation,
-															FQuat::Identity,
-															ECC_Pawn,
-															FCollisionShape::MakeSphere(StealRange),
-															Params);
+	bool bIsHitDetected = GetWorld()->OverlapMultiByChannel(
+		OverlapResults,
+		CheckLocation,
+		FQuat::Identity,
+		ECC_Pawn,
+		FCollisionShape::MakeSphere(StealRange),
+		Params
+	);
+	
 	if (bIsHitDetected == true)
 	{
 		for (auto const& OverlapResult : OverlapResults)
