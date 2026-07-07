@@ -3,6 +3,7 @@
 
 #include "PlayerState/MGLobbyPlayerState.h"
 
+#include "GameState/MGLobbyGameStateBase.h"
 #include "Net/UnrealNetwork.h"
 
 void AMGLobbyPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -17,17 +18,25 @@ void AMGLobbyPlayerState::SetReady(bool bReady)
 {
 	bIsReady = bReady;
 
-	// TODO: 레디 상태 UI 갱신 (호스트/서버 화면용)
+	OnRep_IsReady();   // 데디에선 비용 0, 리슨 서버 보험
 }
 
 void AMGLobbyPlayerState::OnRep_IsReady()
 {
-	// TODO: 클라이언트 레디 상태 UI 갱신
+	// 클라이언트 레디 상태 UI 갱신
+	if (auto* LGS = GetWorld()->GetGameState<AMGLobbyGameStateBase>())
+	{
+		LGS->OnLobbyRosterChanged.Broadcast();
+	}
 }
 
 void AMGLobbyPlayerState::OnRep_PlayerColor()
 {
-	// TODO: 클라이언트 color 상태 UI 갱신
+	// 클라이언트 color 상태 UI 갱신
+	if (auto* LGS = GetWorld()->GetGameState<AMGLobbyGameStateBase>())
+	{
+		LGS->OnLobbyRosterChanged.Broadcast();
+	}
 	
 	// TestLog
 	// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White,
