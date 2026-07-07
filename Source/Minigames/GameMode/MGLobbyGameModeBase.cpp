@@ -234,7 +234,7 @@ void AMGLobbyGameModeBase::TravelToMinigameLevel()
 	}
 	
 	GI->CurrentRoundState = ERoundState::Round1;
-	GetWorld()->ServerTravel("/Game/Minigames/Level/L_MG_02_Flag"); // Test
+	GetWorld()->ServerTravel(URL);
 }
 
 void AMGLobbyGameModeBase::GenerateMinigameSequence()
