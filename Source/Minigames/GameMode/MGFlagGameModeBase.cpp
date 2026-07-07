@@ -29,7 +29,6 @@ void AMGFlagGameModeBase::StartMinigame()
 		true
 	);
 	
-	UE_LOG(LogTemp, Warning, TEXT("StartMinigame"));
 	SpawnFlag();
 }
 
@@ -84,6 +83,10 @@ void AMGFlagGameModeBase::DetermineWinner()
 			Rank = i + 1;
 		}
 		FlagPlayerStates[i]->Rank = Rank;
+		
+		UE_LOG(LogTemp, Log, TEXT("[Flag][최종순위] %s | HoldingTime %.1f | Rank %d"),
+	   *FlagPlayerStates[i]->GetPlayerName(), FlagPlayerStates[i]->HoldingTime, Rank);
+		
 		GiveScore(FlagPlayerStates[i], Rank);
 	}
 }
@@ -107,8 +110,6 @@ void AMGFlagGameModeBase::SpawnFlag()
 	int32 RandPoint = FMath::RandRange(0, SpawnPoints.Num() - 1);
 	FTransform SpawnTransform = SpawnPoints[RandPoint]->GetActorTransform();
 	GetWorld()->SpawnActor<AMGFlagActor>(FlagClass, SpawnTransform);
-	
-	UE_LOG(LogTemp, Warning, TEXT("Flag spawned at %s"), *SpawnTransform.GetLocation().ToString());
 }
 
 void AMGFlagGameModeBase::UpdateFlagHoldingTime()
@@ -135,7 +136,7 @@ void AMGFlagGameModeBase::UpdateFlagHoldingTime()
 		
 		FlagPS->HoldingTime += 1.f;
 		
-		UE_LOG(LogTemp, Warning, TEXT("[Flag] Owner: %s | HoldingTime: %.1f"),
+		UE_LOG(LogTemp, Verbose, TEXT("[Flag] Owner: %s | HoldingTime: %.1f"),
 			*FlagPS->GetPlayerName(), FlagPS->HoldingTime);
 	}
 }
