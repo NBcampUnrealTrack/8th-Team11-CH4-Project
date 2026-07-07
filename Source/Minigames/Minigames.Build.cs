@@ -15,7 +15,10 @@ public class Minigames : ModuleRules
 
 			// UI
 			"UMG",
-		});
+
+			// Level Sequence
+			"LevelSequence", "MovieScene",
+        });
 
 		PublicIncludePaths.AddRange(new string[]
 		{
