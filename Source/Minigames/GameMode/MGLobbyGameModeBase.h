@@ -37,7 +37,7 @@ public:
 	void OnPlayerChangeColor(AMGPlayerController* PC, EMGPlayerColor NewColor);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 MinimumPlayerCount = 2;
+	int32 MinimumPlayerCount = 1; // 게임 입장 최소 인원 Test:1, 원래: 4
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 MaxPlayerCount = 10;

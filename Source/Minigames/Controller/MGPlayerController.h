@@ -8,6 +8,7 @@
 enum class EMGPlayerColor : uint8;
 class UUserWidget;
 class UUW_GameResult;
+class UUW_LobbyLayout;
 
 /**
  *
@@ -30,14 +31,6 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientRPCReturnToTitle();
 	
-	// [임시 테스트용] 콘솔에서 "Ready" / "Unready" 입력 → 로직 검증용. 나중에 버튼으로 대체
-	UFUNCTION(Exec)
-	void Ready();
-
-	UFUNCTION(Exec)
-	void Unready();
-	
-	// [정식] 클라 → 서버로 레디 전달. 나중에 레디 버튼도 이걸 호출
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetReady(bool bReady);
 
@@ -45,7 +38,7 @@ public:
 	UFUNCTION(Exec)
 	void ChangeColor(uint8 ColorIndex);
 
-	// [정식] 클라 → 서버로 색 변경 요청. 나중에 색상 버튼도 이걸 호출
+	// [정식] 클라 → 서버로 색 변경 요청.
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetColor(EMGPlayerColor NewColor);
 	
@@ -59,4 +52,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<UUW_GameResult> GameResultUIClass;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUW_LobbyLayout> LobbyLayoutClass;
 };
