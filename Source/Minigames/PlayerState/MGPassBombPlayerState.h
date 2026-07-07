@@ -8,6 +8,8 @@
 /**
  * 
  */
+class AMGSpectatorPawn;
+
 UCLASS()
 class MINIGAMES_API AMGPassBombPlayerState : public AMGPlayerState
 {
@@ -20,12 +22,8 @@ public:
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Spectator")
-	TSubclassOf<class AMGSpectatorPawn> SpectatorClass;
+	TSubclassOf<AMGSpectatorPawn> SpectatorClass;
 
-protected:
 	UPROPERTY()
-	class AMGSpectatorPawn* Spectator;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	FName CharacterPelvisName;
+	AMGSpectatorPawn* Spectator;
 };

@@ -44,7 +44,27 @@ void AMGPassBombPlayerState::MulticastRPC_RetireCharacter_Implementation()
 			MGPC->DisableInput(GetPlayerController());
 			if (IsValid(Spectator))
 			{
-				Spectator->DeathCamFollowCharacter(MGPC, CharacterPelvisName);
+				Spectator->DeathCamFollowCharacter(MGPC);
+			}
+		}
+		else
+		{
+			APlayerController* PC = GetWorld()->GetFirstPlayerController();
+			if (IsValid(PC))
+			{
+				AMGPassBombPlayerState* MGPS = PC->GetPlayerState<AMGPassBombPlayerState>();
+				if (IsValid(MGPS))
+				{
+					AMGSpectatorPawn* MGSP = MGPS->Spectator;
+					if (IsValid(MGSP))
+					{
+						if (MGSP->GetFollowingMesh() == MGPC->GetMesh())
+						{
+							MG_LOG_NET(LogMGNet, Log, TEXT("%s: Is Calling \"SetTimerToChangeTarget\"..."), *MGSP->GetName());
+							MGSP->SetTimerToChangeTarget();
+						}
+					}
+				}
 			}
 		}
 	}
