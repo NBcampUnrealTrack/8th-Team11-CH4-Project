@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameStateBase.h"
+#include "GameState/MGGameStateBase.h"
 #include "MGButtonPlayerState.h"
 #include "MGButtonGameState.generated.h"
 
@@ -19,7 +19,7 @@ enum class EGamePhase : uint8
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGamePhaseChanged, EGamePhase, NewPhase);
 
 UCLASS()
-class MINIGAMES_API AMGButtonGameState : public AGameStateBase
+class MINIGAMES_API AMGButtonGameState : public AMGGameStateBase
 {
     GENERATED_BODY()
 

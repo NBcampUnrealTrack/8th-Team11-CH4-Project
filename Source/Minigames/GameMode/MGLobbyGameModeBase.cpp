@@ -233,8 +233,8 @@ void AMGLobbyGameModeBase::TravelToMinigameLevel()
 		return;
 	}
 
-	GI->CurrentRoundState = ERoundState::Round1;   // 로비 → 첫 라운드
-	GetWorld()->ServerTravel(URL);
+	GI->CurrentRoundState = ERoundState::Round1;
+	GetWorld()->ServerTravel("/Game/Minigames/Level/KTI"); // Test
 }
 
 void AMGLobbyGameModeBase::GenerateMinigameSequence()
