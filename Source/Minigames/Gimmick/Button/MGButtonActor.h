@@ -56,5 +56,8 @@ private:
     bool bPressed = false;
 
     UPROPERTY(ReplicatedUsing = OnRep_Color)
-    FLinearColor CurrentColor = FLinearColor::Black;
+    FLinearColor CurrentColor;
+
+    UPROPERTY(Replicated)
+    bool bColorOverridden = false;
 };
