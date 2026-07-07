@@ -9,6 +9,7 @@ enum class EMGPlayerColor : uint8;
 class UUserWidget;
 class UUW_GameResult;
 class UUW_LobbyLayout;
+class ULevelSequence;
 
 /**
  *
@@ -54,4 +55,22 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUW_LobbyLayout> LobbyLayoutClass;
+
+#pragma region CutScene
+
+protected:
+	// 블루프린트에서 만든 Level Sequence 에셋 포인터를 저장할 TArray
+	UPROPERTY(EditDefaultsOnly, Category = "Cinematic")
+	TArray<TObjectPtr<ULevelSequence>> CutSceneAssets;
+
+public:
+	// ClientRPC, 서버에서 모든 Client들에게 해당 함수를 실행하라고 명령
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_PlayCutScene(int32 MGCutSceneIndex);
+
+	UFUNCTION()
+	void OnCutSceneFinished();
+
+#pragma endregion
+
 };

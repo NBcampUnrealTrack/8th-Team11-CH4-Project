@@ -14,6 +14,11 @@
 #include "UI/UW_LobbyLayout.h"
 #include "GameState/MGLobbyGameStateBase.h"
 
+#include "LevelSequence.h"						// Level Sequence
+#include "LevelSequencePlayer.h"				// Level Sequence
+#include "MovieSceneSequencePlayer.h"			// Level Sequence
+
+
 void AMGPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -139,3 +144,53 @@ void AMGPlayerController::ServerRPCSetReady_Implementation(bool bReady)
 		LGM->OnPlayerReady(this, bReady);
 	}
 }
+
+#pragma region CutScene
+
+// ClientRPC에선 _Implementation을 붙이기
+void AMGPlayerController::ClientRPC_PlayCutScene_Implementation(int32 MGCutSceneIndex)
+{
+	if (!CutSceneAssets.IsValidIndex(MGCutSceneIndex))
+	{
+		return;
+	}	// 컷신 index가 유효한지 검사
+
+	ULevelSequence* TargetSequence = CutSceneAssets[MGCutSceneIndex];
+	if (!IsValid(TargetSequence))
+	{
+		return;
+	}	// 해당 컷신이 실제로 있는지 검사
+
+	ALevelSequenceActor* OutActor;
+	ULevelSequencePlayer* SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(
+		GetWorld(),
+		TargetSequence,
+		FMovieSceneSequencePlaybackSettings(),
+		OutActor
+	);
+
+	if (IsValid(SequencePlayer))
+	{
+		// Client 제어권 뺏기
+		// 시네마틱 모드 ON: 이동 불가, 마우스 회전 불가, UI 숨김
+		SetCinematicMode(true, false, false, true, true);
+
+		// 컷신이 끝나면 OnCutSceneFinished 함수가 자동으로 실행되도록 델리게이트 바인딩
+		SequencePlayer->OnFinished.AddDynamic(this, &AMGPlayerController::OnCutSceneFinished);
+
+		// 컷신 재생
+		SequencePlayer->Play();
+	}
+}
+
+void AMGPlayerController::OnCutSceneFinished()
+{
+	// 컷신이 끝나면 다시 Client에게 제어권을 돌려줌 
+	// 시네마틱 모드 OFF
+	SetCinematicMode(false, false, false, true, true);
+
+	// 카메라도 원래 Client 각자의 캐릭터 시점으로 안전하게 복귀
+	SetViewTarget(GetPawn());
+}
+
+#pragma endregion
