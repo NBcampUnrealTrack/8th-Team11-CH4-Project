@@ -2,6 +2,8 @@
 
 #include "GameInstance/MGGameInstance.h"
 
+#include "Type/MGPlayerColor.h"						// 플레이어 컬러
+
 UMGGameInstance::UMGGameInstance()
 {
 	// GameInstance 최초 생성시 

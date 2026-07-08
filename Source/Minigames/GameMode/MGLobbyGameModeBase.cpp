@@ -232,8 +232,8 @@ void AMGLobbyGameModeBase::TravelToMinigameLevel()
 	{
 		return;
 	}
-
-	GI->CurrentRoundState = ERoundState::Round1;   // 로비 → 첫 라운드
+	
+	GI->CurrentRoundState = ERoundState::Round1;
 	GetWorld()->ServerTravel(URL);
 }
 

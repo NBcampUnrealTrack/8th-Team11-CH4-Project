@@ -16,10 +16,15 @@ public:
 	AMGSpectatorPawn();
 
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-	void DeathCamFollowCharacter(APlayerController* PC, ACharacter* Character, float time);
+	void DeathCamFollowCharacter(ACharacter* Character);
+
+	void SpectateOtherPlayer(int32 idx);
+
+	FORCEINLINE const USkeletalMeshComponent* GetFollowingMesh() { return FollowingMesh; }
+
+	void SetTimerToChangeTarget();	// 본인 탈락, 관전대상 탈락 등에 호출되는 관전자 교체타이머 함수
 
 protected:
 	UFUNCTION()
@@ -30,13 +35,14 @@ protected:
 	TObjectPtr<USceneComponent> RootComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	TObjectPtr<class UCameraComponent> DeathCam;
+	TObjectPtr<class UCameraComponent> Cam;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	TObjectPtr<class USpringArmComponent> DeathCamArm;
+	TObjectPtr<class USpringArmComponent> CamArm;
 
 	UPROPERTY()
 	USkeletalMeshComponent* FollowingMesh;
 
+	UPROPERTY()
 	FTimerHandle DeathTimeHandle;
 };
