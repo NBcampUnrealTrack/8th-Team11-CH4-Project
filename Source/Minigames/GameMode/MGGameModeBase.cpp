@@ -105,6 +105,8 @@ void AMGGameModeBase::Logout(AController* Exiting)
 void AMGGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	bUseSeamlessTravel = true; 
 
 	GetWorld()->GetTimerManager().SetTimer(
 		MainTimerHandle, 
@@ -225,7 +227,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			// 카운트다운 종료 시 맵 이동
 			if (RemainWaitingTimeForEnding <= 0)
 			{
-				MainTimerHandle.Invalidate();
+				GetWorld()->GetTimerManager().ClearTimer(MainTimerHandle);
 	
 				// 심리스 트래블을 하더라도 초기화 되지 않는 GameInstance에 저장되어있는 현재 라운드 정보를 가져옴
 				UMGGameInstance* MGGameInstance = Cast<UMGGameInstance>(GetGameInstance());
