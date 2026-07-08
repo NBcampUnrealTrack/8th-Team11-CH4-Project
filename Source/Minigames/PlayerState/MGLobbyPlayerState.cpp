@@ -2,6 +2,7 @@
 
 
 #include "PlayerState/MGLobbyPlayerState.h"
+#include "PlayerState/MGPlayerState.h"
 
 #include "GameState/MGLobbyGameStateBase.h"
 #include "Net/UnrealNetwork.h"
@@ -43,3 +44,13 @@ void AMGLobbyPlayerState::OnRep_PlayerColor()
 	// 	FString::Printf(TEXT("[Player %d] Color: %d"), GetPlayerId(), (uint8)PlayerColor));
 }
 
+void AMGLobbyPlayerState::CopyProperties(APlayerState* PlayerState)
+{
+	Super::CopyProperties(PlayerState);
+
+	// 로비 -> 미니게임 트래블 시 배정된 색을 새 PlayerState로 전달
+	if (AMGPlayerState* NewPS = Cast<AMGPlayerState>(PlayerState))
+	{
+		NewPS->PlayerColor = this->PlayerColor;
+	}
+}
