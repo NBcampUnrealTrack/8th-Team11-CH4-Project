@@ -8,6 +8,8 @@
 enum class EMGPlayerColor : uint8;
 class UUserWidget;
 class UUW_GameResult;
+class UUW_LobbyLayout;
+class ULevelSequence;
 
 /**
  *
@@ -30,14 +32,6 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientRPCReturnToTitle();
 	
-	// [임시 테스트용] 콘솔에서 "Ready" / "Unready" 입력 → 로직 검증용. 나중에 버튼으로 대체
-	UFUNCTION(Exec)
-	void Ready();
-
-	UFUNCTION(Exec)
-	void Unready();
-	
-	// [정식] 클라 → 서버로 레디 전달. 나중에 레디 버튼도 이걸 호출
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetReady(bool bReady);
 
@@ -45,7 +39,7 @@ public:
 	UFUNCTION(Exec)
 	void ChangeColor(uint8 ColorIndex);
 
-	// [정식] 클라 → 서버로 색 변경 요청. 나중에 색상 버튼도 이걸 호출
+	// [정식] 클라 → 서버로 색 변경 요청.
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetColor(EMGPlayerColor NewColor);
 	
@@ -58,5 +52,25 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<UUW_GameResult> GameResultUIClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUW_LobbyLayout> LobbyLayoutClass;
+
+#pragma region CutScene
+
+protected:
+	// 블루프린트에서 만든 Level Sequence 에셋 포인터를 저장할 TArray
+	UPROPERTY(EditDefaultsOnly, Category = "Cinematic")
+	TArray<TObjectPtr<ULevelSequence>> CutSceneAssets;
+
+public:
+	// ClientRPC, 서버에서 모든 Client들에게 해당 함수를 실행하라고 명령
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_PlayCutScene(int32 MGCutSceneIndex);
+
+	UFUNCTION()
+	void OnCutSceneFinished();
+
+#pragma endregion
 
 };
