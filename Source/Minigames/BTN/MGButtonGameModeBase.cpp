@@ -16,6 +16,7 @@ AMGButtonGameModeBase::AMGButtonGameModeBase()
 void AMGButtonGameModeBase::BeginPlay()
 {
     Super::BeginPlay();
+
     StartReadyPhase();
 }
 
@@ -92,6 +93,15 @@ void AMGButtonGameModeBase::EndMinigame()
     Super::EndMinigame();
 
     UE_LOG(LogTemp, Warning, TEXT("EndMinigame 함수 진입"));
+
+    CurrentPhase = EGamePhase::GameOver;
+
+    if (AMGButtonGameState* GS = GetGameState<AMGButtonGameState>())
+    {
+        GS->CurrentPhase = CurrentPhase;
+        GS->OnRep_CurrentPhase();
+        GS->OnGamePhaseChanged.Broadcast(CurrentPhase);
+    }
 
     TArray<AMGButtonPlayerState*> PlayerStates;
 
