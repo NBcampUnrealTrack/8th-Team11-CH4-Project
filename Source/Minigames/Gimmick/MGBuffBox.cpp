@@ -45,13 +45,12 @@ void AMGBuffBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor
 	ParticleEffect->OnSystemFinished.AddDynamic(this, &ThisClass::OnEffectFinished);
 
 	AMGPlayerCharacter* OverlappingCharacter = Cast<AMGPlayerCharacter>(OtherActor);
-	UMGStatusComponent* StatusComp = OverlappingCharacter->FindComponentByClass<UMGStatusComponent>();
-
 	if (!IsValid(OverlappingCharacter))
 	{
 		return;
 	}
 
+	UMGStatusComponent* StatusComp = OverlappingCharacter->FindComponentByClass<UMGStatusComponent>();
 	if (!IsValid(StatusComp))
 	{
 		return;
