@@ -38,4 +38,8 @@ public:
 
 	UPROPERTY()
 	TArray<FString> ChatMessageHistory;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Player")
+	FString PlayerNickname;
+
 };

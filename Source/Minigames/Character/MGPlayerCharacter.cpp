@@ -10,7 +10,6 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "Component/MGFlagActorComponent.h"
-#include "Minigames.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Gimmick/MGLandMine.h"
 #include "Net/UnrealNetwork.h"
@@ -19,12 +18,10 @@
 #include "GameFramework/GameStateBase.h"
 #include "EngineUtils.h"
 #include "Component/MGStatusComponent.h"
-#include "Component/MGHPTextWidgetComponent.h"
+#include "Component/MGNameWidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "UI/UW_HPText.h"
 #include "Controller/MGPlayerController.h"
-#include "GameMode/MGGameModeBase.h"
 #include "GameState/MGGameStateBase.h"
 
 #include "Component/Button/MGInteractionOverlapComponent.h"
@@ -57,14 +54,11 @@ AMGPlayerCharacter::AMGPlayerCharacter()
 
 	StatusComponent = CreateDefaultSubobject<UMGStatusComponent>(TEXT("StatusComponent"));
 
-	HPTextWidgetComponent = CreateDefaultSubobject<UMGHPTextWidgetComponent>(TEXT("HPTextWidgetComponent"));
-	HPTextWidgetComponent->SetupAttachment(GetRootComponent());
-	HPTextWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
-	// HPTextWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-		// Billboard 방식으로 보이나, 주인공 캐릭터를 가리게됨. 또한 UI와 멀어져도 동일한 크기가 유지되는 문제도 있음.
-	HPTextWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
-	HPTextWidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
+	NameWidgetComponent = CreateDefaultSubobject<UMGNameWidgetComponent>(TEXT("NameWidgetComponent"));
+	NameWidgetComponent->SetupAttachment(GetRootComponent());
+	NameWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	NameWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
+	NameWidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	InteractionComponent = CreateDefaultSubobject<UMGInteractionOverlapComponent>(TEXT("InteractionComponent"));
 
@@ -160,11 +154,11 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 		ServerRPCUpdateAimValue(CurrentAimPitch);
 	}
 
-	if (IsValid(HPTextWidgetComponent) == true && HasAuthority() == false)
+	if (IsValid(NameWidgetComponent) == true && HasAuthority() == false)
 	{
-		FVector WidgetComponentLocation = HPTextWidgetComponent->GetComponentLocation();
+		FVector WidgetComponentLocation = NameWidgetComponent->GetComponentLocation();
 		FVector LocalPlayerCameraLocation = UGameplayStatics::GetPlayerCameraManager(this, 0)->GetCameraLocation();
-		HPTextWidgetComponent->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(WidgetComponentLocation, LocalPlayerCameraLocation));
+		NameWidgetComponent->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(WidgetComponentLocation, LocalPlayerCameraLocation));
 	}
 }
 
@@ -395,17 +389,6 @@ void AMGPlayerCharacter::PlayMeleeAttackMontage()
 	{
 		AnimInstance->StopAllMontages(0.f);
 		AnimInstance->Montage_Play(MeleeAttackMontage);
-	}
-}
-
-void AMGPlayerCharacter::SetHPTextWidget(UUW_HPText* InHPTextWidget)
-{
-	UUW_HPText* HPWidget = Cast<UUW_HPText>(InHPTextWidget);
-	if (IsValid(HPWidget) == true)
-	{
-		HPWidget->InitializeHPTextWidget(StatusComponent);
-		StatusComponent->OnCurrentHPChanged.AddUObject(HPWidget, &UUW_HPText::OnCurrentHPChange);
-		StatusComponent->OnMaxHPChanged.AddUObject(HPWidget, &UUW_HPText::OnMaxHPChange);
 	}
 }
 

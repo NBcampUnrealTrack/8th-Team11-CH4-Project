@@ -8,6 +8,7 @@
 class UBoxComponent;
 class UStaticMeshComponent;
 class UParticleSystemComponent;
+class UMGEffectDataAsset;
 
 UCLASS()
 class MINIGAMES_API AMGBuffBox : public AActor
@@ -35,5 +36,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = Effect)
 	TObjectPtr<UParticleSystemComponent> ParticleEffect;
+
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Effect")
+	const UMGEffectDataAsset* ItemEffectData;
 
 };
