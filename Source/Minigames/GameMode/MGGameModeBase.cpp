@@ -105,6 +105,8 @@ void AMGGameModeBase::Logout(AController* Exiting)
 void AMGGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	bUseSeamlessTravel = true; 
 
 	GetWorld()->GetTimerManager().SetTimer(
 		MainTimerHandle, 
@@ -162,8 +164,15 @@ void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 		AddScore = FMath::FloorToInt(9.f / (PlayerCount - 1) * (PlayerCount - Rank)) + 1;
 	}
 
+	const int32 PrevMGScore = PS->GetMGScore();
+	const int32 PrevTotalScore = PS->TotalScore;
+	
 	PS->SetMGScore(PS->GetMGScore() + AddScore);
 	PS->TotalScore += AddScore;
+	
+	UE_LOG(LogTemp, Log, TEXT("[GiveScore] %s | Rank %d/%d | +%d점 | MGScore %d->%d | TotalScore %d->%d"),
+		*PS->GetPlayerName(), Rank, PlayerCount, AddScore,
+		PrevMGScore, PS->GetMGScore(), PrevTotalScore, PS->TotalScore);
 }
 
 void AMGGameModeBase::OnMainTimerElapsed()
@@ -218,7 +227,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			// 카운트다운 종료 시 맵 이동
 			if (RemainWaitingTimeForEnding <= 0)
 			{
-				MainTimerHandle.Invalidate();
+				GetWorld()->GetTimerManager().ClearTimer(MainTimerHandle);
 	
 				// 심리스 트래블을 하더라도 초기화 되지 않는 GameInstance에 저장되어있는 현재 라운드 정보를 가져옴
 				UMGGameInstance* MGGameInstance = Cast<UMGGameInstance>(GetGameInstance());
