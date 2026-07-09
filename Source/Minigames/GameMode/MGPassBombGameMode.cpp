@@ -89,6 +89,8 @@ void AMGPassBombGameMode::EndMinigame()
 void AMGPassBombGameMode::NextRound()
 {
 	AMGPassBombGameState* MGGS = GetGameState<AMGPassBombGameState>();
+
+	// 최후의 1인이 남을 때까지 반복
 	if (AlivePlayers.Num() <= 1)
 	{
 		// 플레이어명 임시 지정, 이후 변경필요
@@ -97,9 +99,10 @@ void AMGPassBombGameMode::NextRound()
 
 		NotifyToAllPlayer(FString::Printf(TEXT("%s 승리!"), *UserName));
 
-		//TODO: 승리자 점수 추가
+		// TODO: 승리자 점수 추가
 		//AlivePlayers[0]->AddScore()
 
+		// 게임 종료
 		EndMinigame();
 		return;
 	}
