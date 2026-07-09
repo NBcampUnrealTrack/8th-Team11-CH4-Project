@@ -52,6 +52,11 @@ void AMGBuffBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor
 		return;
 	}
 
+	if (!IsValid(StatusComp))
+	{
+		return;
+	}
+
 	if (IsValid(ItemEffectData))
 	{
 		StatusComp->AddEffectforDuration(ItemEffectData);
