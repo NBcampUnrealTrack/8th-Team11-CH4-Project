@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "PlayerState/MGPlayerState.h"
+#include "Net/UnrealNetwork.h" // Ãß°¡
 #include "MGButtonPlayerState.generated.h"
 
 UCLASS()
@@ -12,11 +13,17 @@ class MINIGAMES_API AMGButtonPlayerState : public AMGPlayerState
 public:
     AMGButtonPlayerState();
 
-    UPROPERTY(BlueprintReadOnly, Replicated)
-    int32 FinalRank;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-    UPROPERTY(BlueprintReadOnly, Replicated)
+    UFUNCTION()
+    void OnRep_ResultData();
+
+    UPROPERTY(ReplicatedUsing = OnRep_ResultData, BlueprintReadOnly, Category = "Game")
     int32 FinalScore;
 
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    UPROPERTY(ReplicatedUsing = OnRep_ResultData, BlueprintReadOnly, Category = "Game")
+    int32 FinalRank;
+
+    UFUNCTION(BlueprintCallable, Category = "Game")
+    int32 GetButtonScore() const { return GetScore(); }
 };

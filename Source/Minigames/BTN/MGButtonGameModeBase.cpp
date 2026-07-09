@@ -109,8 +109,7 @@ void AMGButtonGameModeBase::EndMinigame()
     {
         if (APlayerController* PC = It->Get())
         {
-            if (AMGButtonPlayerState* PS =
-                Cast<AMGButtonPlayerState>(PC->PlayerState))
+            if (AMGButtonPlayerState* PS = Cast<AMGButtonPlayerState>(PC->PlayerState))
             {
                 PlayerStates.Add(PS);
             }
@@ -120,47 +119,41 @@ void AMGButtonGameModeBase::EndMinigame()
     if (PlayerStates.Num() > 0)
     {
         // 순위 결정
-        PlayerStates.Sort(
-            [](const AMGButtonPlayerState& A,
-                const AMGButtonPlayerState& B)
+        PlayerStates.Sort([](const AMGButtonPlayerState& A, const AMGButtonPlayerState& B)
             {
                 return A.GetScore() > B.GetScore();
             });
 
         int32 CurrentRank = 1;
 
+        // 순위 계산 
         for (int32 i = 0; i < PlayerStates.Num(); ++i)
         {
-            if (i > 0 &&
-                PlayerStates[i]->GetScore() <
-                PlayerStates[i - 1]->GetScore())
+            if (i > 0 && PlayerStates[i]->GetScore() < PlayerStates[i - 1]->GetScore())
             {
                 CurrentRank = i + 1;
             }
 
-            float ScoreBeforeBonus =
-                PlayerStates[i]->GetScore();
+            PlayerStates[i]->FinalRank = CurrentRank;
 
-            Super::GiveScore(
-                Cast<AMGPlayerState>(PlayerStates[i]),
-                CurrentRank);
+            float ScoreBeforeBonus = PlayerStates[i]->GetScore();
 
-            float ScoreAfterBonus =
-                PlayerStates[i]->GetScore();
+            // 점수 지급
+            Super::GiveScore(Cast<AMGPlayerState>(PlayerStates[i]), CurrentRank);
 
-            float BonusPoints =
-                ScoreAfterBonus - ScoreBeforeBonus;
+            float ScoreAfterBonus = PlayerStates[i]->GetScore();
 
-            UE_LOG(LogTemp, Log, TEXT("플레이어: %s | 소유권 점수: %f | 등수: %d등 | 획득한 등수 보너스: %f"),
+            // 최종 점수 저장
+            PlayerStates[i]->FinalScore = static_cast<int32>(ScoreAfterBonus - ScoreBeforeBonus);
+
+            UE_LOG(LogTemp, Log, TEXT("플레이어: %s | 등수: %d | 미니게임 획득 점수: %d"),
                 *PlayerStates[i]->GetPlayerName(),
-                ScoreBeforeBonus,
-                CurrentRank,
-                BonusPoints);
+                PlayerStates[i]->FinalRank,
+                PlayerStates[i]->FinalScore);
         }
     }
 
-    if (AMGGameStateBase* MGGameState =
-        GetGameState<AMGGameStateBase>())
+    if (AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>())
     {
         MGGameState->MatchState = EMatchState::Ending;
     }

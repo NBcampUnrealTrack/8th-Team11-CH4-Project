@@ -3,14 +3,18 @@
 
 AMGButtonPlayerState::AMGButtonPlayerState()
 {
-    bReplicates = true;
+    FinalScore = 0;
+    FinalRank = 0;
 }
 
-// 블루프린트 순위, 점수 동기화
 void AMGButtonPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(AMGButtonPlayerState, FinalRank);
     DOREPLIFETIME(AMGButtonPlayerState, FinalScore);
+    DOREPLIFETIME(AMGButtonPlayerState, FinalRank);
+}
+
+void AMGButtonPlayerState::OnRep_ResultData()
+{
 }
