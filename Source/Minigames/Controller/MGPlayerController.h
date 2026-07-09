@@ -42,6 +42,10 @@ public:
 	// [정식] 클라 → 서버로 색 변경 요청.
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetColor(EMGPlayerColor NewColor);
+
+	// [정식] 클라 → 서버로 해당 폰 빙의 요청. Possess는 서버에서 실행되어야함.
+	UFUNCTION(Server, Reliable)
+	void ServerRPCPossess(APawn* InPawn);
 	
 public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)

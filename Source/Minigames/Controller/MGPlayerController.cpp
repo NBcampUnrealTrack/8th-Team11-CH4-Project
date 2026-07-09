@@ -125,6 +125,14 @@ void AMGPlayerController::ChangeColor(uint8 ColorIndex)
 	ServerRPCSetColor(static_cast<EMGPlayerColor>(ColorIndex));
 }
 
+void AMGPlayerController::ServerRPCPossess_Implementation(APawn* InPawn)
+{
+	if (InPawn != nullptr)
+	{
+		Possess(InPawn);
+	}
+}
+
 void AMGPlayerController::ServerRPCSetColor_Implementation(EMGPlayerColor NewColor)
 {
 	// Server RPC라 서버에서 실행 → 게임모드 접근 가능

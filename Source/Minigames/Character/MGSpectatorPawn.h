@@ -3,11 +3,15 @@
 #pragma once
 
 #include "GameFramework/Pawn.h"
+#include "InputActionValue.h"
 #include "MGSpectatorPawn.generated.h"
 
 /**
  * 
  */
+class UInputMappingContext;
+class UInputAction;
+class AMGPlayerController;
 UCLASS()
 class MINIGAMES_API AMGSpectatorPawn : public APawn
 {
@@ -15,7 +19,11 @@ class MINIGAMES_API AMGSpectatorPawn : public APawn
 public:
 	AMGSpectatorPawn();
 
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
 	virtual void BeginPlay() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UFUNCTION(BlueprintCallable)
 	void DeathCamFollowCharacter(ACharacter* Character);
@@ -30,7 +38,17 @@ protected:
 	UFUNCTION()
 	void OnDeathTimerEnd();
 
+	virtual void OnRep_Owner() override;
+	
+private:
+	void HandleLookInput(const FInputActionValue& InValue);
+
+	void HandleSpectateInput(const FInputActionValue& InValue);
+
 protected:
+	UPROPERTY()
+	TObjectPtr<AMGPlayerController> OwnerPC;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<USceneComponent> RootComp;
 
@@ -40,9 +58,20 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<class USpringArmComponent> CamArm;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputMappingContext> InputMappingContext;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> LookAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> SpectateAction;
+
+	UPROPERTY()
+	ACharacter* FollowingCharacter;
+
 	UPROPERTY()
 	USkeletalMeshComponent* FollowingMesh;
 
-	UPROPERTY()
 	FTimerHandle DeathTimeHandle;
 };
