@@ -7,6 +7,9 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Character/MGPlayerCharacter.h"
 
+#include "Component/MGStatusComponent.h"
+#include "Data/MGEffectDataAsset.h"
+
 AMGBuffBox::AMGBuffBox()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -42,9 +45,16 @@ void AMGBuffBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor
 	ParticleEffect->OnSystemFinished.AddDynamic(this, &ThisClass::OnEffectFinished);
 
 	AMGPlayerCharacter* OverlappingCharacter = Cast<AMGPlayerCharacter>(OtherActor);
-	if (IsValid(OverlappingCharacter) == true)
+	UMGStatusComponent* StatusComp = OverlappingCharacter->FindComponentByClass<UMGStatusComponent>();
+
+	if (!IsValid(OverlappingCharacter))
 	{
-		OverlappingCharacter->TakeBuff(50.f);
+		return;
+	}
+
+	if (IsValid(ItemEffectData))
+	{
+		StatusComp->AddEffectforDuration(ItemEffectData);
 	}
 }
 
