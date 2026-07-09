@@ -89,6 +89,7 @@ void AMGGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 			}
 		}
 	}
+	NewPlayerController->ClientRPCOnSeamlessTravelCompleted();
 }
 
 void AMGGameModeBase::Logout(AController* Exiting)

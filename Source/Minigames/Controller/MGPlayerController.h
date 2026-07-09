@@ -11,6 +11,7 @@ class UUW_GameResult;
 class UUW_LobbyLayout;
 class ULevelSequence;
 
+class UMGChat;
 /**
  *
  */
@@ -73,4 +74,32 @@ public:
 
 #pragma endregion
 
+
+#pragma region Chat
+
+public:
+	void SetChatMessageString(const FString& InChatMessgeString);
+
+	UFUNCTION(Client,Reliable)
+	void ClientRPCPrintChatMessageString(const FString& InChatMessageString);
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPCPrintChatMessageString(const FString& InChatMessageString);
+
+	UFUNCTION()
+	void CreateChatWidget();
+
+	UFUNCTION(Client, Reliable)
+	void ClientRPCOnSeamlessTravelCompleted();
+
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UMGChat>ChatWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UMGChat>ChatWidgetInstance;
+
+	FString ChatMessageString;
+
+#pragma endregion
 };

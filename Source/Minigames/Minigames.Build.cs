@@ -14,7 +14,7 @@ public class Minigames : ModuleRules
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput",
 
 			// UI
-			"UMG",
+			"UMG","Slate", "SlateCore",
 
 			// Level Sequence
 			"LevelSequence", "MovieScene",

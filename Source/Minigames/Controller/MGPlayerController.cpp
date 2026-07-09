@@ -18,6 +18,10 @@
 #include "LevelSequencePlayer.h"				// Level Sequence
 #include "MovieSceneSequencePlayer.h"			// Level Sequence
 
+#include "UI/Chat/MGChat.h"
+#include "EngineUtils.h"
+#include "GameInstance/MGGameInstance.h"
+
 
 void AMGPlayerController::BeginPlay()
 {
@@ -43,6 +47,8 @@ void AMGPlayerController::BeginPlay()
 		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 		SetInputMode(InputMode);
 		bShowMouseCursor = true;
+
+		CreateChatWidget();
 	}
 	else
 	{
@@ -50,6 +56,8 @@ void AMGPlayerController::BeginPlay()
 		FInputModeGameOnly GameOnly;
 		SetInputMode(GameOnly);
 		bShowMouseCursor = false;
+		
+		CreateChatWidget();
 	}
 
 	if (IsValid(NotificationTextUIClass) == true)
@@ -191,6 +199,79 @@ void AMGPlayerController::OnCutSceneFinished()
 
 	// 카메라도 원래 Client 각자의 캐릭터 시점으로 안전하게 복귀
 	SetViewTarget(GetPawn());
+}
+
+#pragma endregion
+
+#pragma region Chat
+void AMGPlayerController::CreateChatWidget()
+{
+	if (IsLocalController() == false)
+	{
+		return;
+	}
+	if (IsValid(ChatWidgetInstance) == true)
+	{
+		ChatWidgetInstance->RemoveFromParent();
+		ChatWidgetInstance = nullptr;
+	}
+	if (IsValid(ChatWidgetClass) == true)
+	{
+		ChatWidgetInstance = CreateWidget<UMGChat>(this, ChatWidgetClass);
+		if (IsValid(ChatWidgetInstance) == true)
+		{
+			ChatWidgetInstance->AddToViewport(10);
+			UMGGameInstance* MGGameInstance = GetGameInstance<UMGGameInstance>();
+			if (IsValid(MGGameInstance) == true)
+			{
+				for (const FString& Message : MGGameInstance->ChatMessageHistory)
+				{
+					ChatWidgetInstance->AddChatMessage(Message);
+				}
+			}
+		}
+	}
+}
+
+void AMGPlayerController::SetChatMessageString(const FString& InChatMessageString)
+{
+	ChatMessageString = InChatMessageString;
+
+	if (IsLocalController() == true)
+	{
+		ServerRPCPrintChatMessageString(InChatMessageString);
+	}
+}
+
+void AMGPlayerController::ClientRPCPrintChatMessageString_Implementation(const FString& InChatMessageString)
+{
+	UMGGameInstance* MGGameInstance = GetGameInstance<UMGGameInstance>();
+
+	if (IsValid(MGGameInstance) == true)
+	{
+		MGGameInstance->ChatMessageHistory.Add(InChatMessageString);
+	}
+	if (IsValid(ChatWidgetInstance) == true)
+	{
+		ChatWidgetInstance->AddChatMessage(InChatMessageString);
+	}
+}
+
+void AMGPlayerController::ServerRPCPrintChatMessageString_Implementation(const FString& InChatMessageString)
+{
+	for (TActorIterator<AMGPlayerController> It(GetWorld()); It; ++It)
+	{
+		AMGPlayerController* MGPlayerController = *It;
+		if (IsValid(MGPlayerController) == true)
+		{
+			MGPlayerController->ClientRPCPrintChatMessageString(InChatMessageString);
+		}
+	}
+}
+
+void AMGPlayerController::ClientRPCOnSeamlessTravelCompleted_Implementation()
+{
+	CreateChatWidget();
 }
 
 #pragma endregion
