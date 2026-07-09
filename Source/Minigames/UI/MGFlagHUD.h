@@ -1,4 +1,4 @@
-// MGFlagHUD.h
+﻿// MGFlagHUD.h
 
 #pragma once
 
@@ -27,7 +27,12 @@ protected:
 	void OnRemainTimeUpdated(int32 RemainTime);
 	void OnFlagHolderUpdated(AMGFlagPlayerState* NewHolder);
 
+	void UpdateLeaderboard();
+
 private:
 	UPROPERTY()
 	UUserWidget* FlagWidgetInstance = nullptr;
+
+	FTimerHandle StealPromptTimerHandle;
+	void CheckStealPromptDistance();
 };

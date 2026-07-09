@@ -35,4 +35,7 @@ public:
 	
 	UPROPERTY()
 	TMap<FUniqueNetIdRepl, EMGPlayerColor> PlayerColors;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Player")
+	FString PlayerNickname;
 };

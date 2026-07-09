@@ -128,6 +128,8 @@ void UMGFlagActorComponent::OnRep_FlagState()
 	{
 		FlagMeshComp->SetVisibility(bFlagState);
 	}
+
+	OnFlagStateChanged.Broadcast(bFlagState);
 }
 
 void UMGFlagActorComponent::OnRep_IsFlagProtected()
@@ -136,4 +138,6 @@ void UMGFlagActorComponent::OnRep_IsFlagProtected()
 	{
 		FlagEffectMeshComp->SetVisibility(bIsFlagProtected);
 	}
+
+	OnFlagProtectionChanged.Broadcast(bIsFlagProtected);
 }
