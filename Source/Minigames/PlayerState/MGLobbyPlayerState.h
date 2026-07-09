@@ -28,6 +28,9 @@ public:
 
 	virtual void CopyProperties(APlayerState* PlayerState) override;
 	
+protected:
+	virtual void OnRep_PlayerName() override;
+	
 private:
 	UFUNCTION()
 	void OnRep_IsReady();

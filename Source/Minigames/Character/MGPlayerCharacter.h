@@ -12,7 +12,7 @@ class UInputMappingContext;
 class UInputAction;
 class UAnimMontage;
 class UMGStatusComponent;
-class UMGHPTextWidgetComponent;
+class UMGNameWidgetComponent;
 class UUW_HPText;
 class UMGInteractionOverlapComponent;
 
@@ -58,8 +58,8 @@ protected:
 	TObjectPtr<UMGStatusComponent> StatusComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Components")
-	TObjectPtr<UMGHPTextWidgetComponent> HPTextWidgetComponent;
-
+	TObjectPtr<UMGNameWidgetComponent> NameWidgetComponent;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UMGInteractionOverlapComponent> InteractionComponent;
 
@@ -183,8 +183,6 @@ protected:
 #pragma region HPWidget
 
 public:
-	void SetHPTextWidget(UUW_HPText* InHPTextWidget);
-
 	void TakeBuff(float InBuffValue);
 
 #pragma endregion
