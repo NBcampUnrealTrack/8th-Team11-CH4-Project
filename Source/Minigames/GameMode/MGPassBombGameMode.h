@@ -26,9 +26,6 @@ public:
 
 	void EliminatePlayer(ACharacter* TargetPlayer);
 
-	// 컷신 재생
-	void OnFinishedCutScene();
-
 	UFUNCTION()
 	void NextRound();
 
@@ -49,6 +46,4 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Minigame")
 	TArray<TObjectPtr<AMGPlayerController>> AlivePlayers;
 
-private:
-	FTimerHandle CutSceneTimerHandler;
 };
