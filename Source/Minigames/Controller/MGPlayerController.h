@@ -47,6 +47,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRPCPossess(APawn* InPawn);
 	
+	UFUNCTION(Server, Reliable)
+	void ServerRPCSetNickname(const FString& InNickname);
+	
 public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	FText NotificationText;

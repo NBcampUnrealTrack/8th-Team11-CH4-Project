@@ -24,7 +24,6 @@ void AMGLobbyPlayerState::SetReady(bool bReady)
 
 void AMGLobbyPlayerState::OnRep_IsReady()
 {
-	// 클라이언트 레디 상태 UI 갱신
 	if (auto* LGS = GetWorld()->GetGameState<AMGLobbyGameStateBase>())
 	{
 		LGS->OnLobbyRosterChanged.Broadcast();
@@ -33,15 +32,20 @@ void AMGLobbyPlayerState::OnRep_IsReady()
 
 void AMGLobbyPlayerState::OnRep_PlayerColor()
 {
-	// 클라이언트 color 상태 UI 갱신
 	if (auto* LGS = GetWorld()->GetGameState<AMGLobbyGameStateBase>())
 	{
 		LGS->OnLobbyRosterChanged.Broadcast();
 	}
+}
+
+void AMGLobbyPlayerState::OnRep_PlayerName()
+{
+	Super::OnRep_PlayerName();
 	
-	// TestLog
-	// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White,
-	// 	FString::Printf(TEXT("[Player %d] Color: %d"), GetPlayerId(), (uint8)PlayerColor));
+	if (auto* LGS = GetWorld()->GetGameState<AMGLobbyGameStateBase>())
+	{
+		LGS->OnLobbyRosterChanged.Broadcast();
+	}
 }
 
 void AMGLobbyPlayerState::CopyProperties(APlayerState* PlayerState)
