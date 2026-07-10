@@ -53,31 +53,25 @@ void AMGButtonActor::BeginInteract_Implementation(AActor* Interactor)
     {
         return;
     }
+
     AMGPlayerCharacter* Player = Cast<AMGPlayerCharacter>(Interactor);
     if (!Player)
     {
         return;
     }
-    APlayerState* InteractorPlayerState = Player->GetPlayerState();
-    if (!InteractorPlayerState)
+
+    AMGPlayerState* PlayerState = Player->GetPlayerState<AMGPlayerState>();
+    if (!PlayerState)
     {
         return;
     }
 
     bPressed = true;
-    UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
-    if (IsValid(GI))
-    {
-        if (const EMGPlayerColor* FoundColor = GI->PlayerColors.Find(InteractorPlayerState->GetUniqueId()))
-        {
-            CurrentColor = MGPlayerColorToLinear(*FoundColor);
-        }
-    }
+    CurrentColor = PlayerState->GetPlayerLinearColor();
     bColorOverridden = true;
     ApplyVisual();
 
-    // 소유권 변경 + 점수 이전 (AMGButton에서 병합)
-    SetButtonOwner(InteractorPlayerState);
+    SetButtonOwner(PlayerState);
 }
 
 void AMGButtonActor::EndInteract_Implementation(AActor* Interactor)
