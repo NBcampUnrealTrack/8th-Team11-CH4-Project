@@ -10,10 +10,8 @@ class UUserWidget;
 class UUW_GameResult;
 class UUW_LobbyLayout;
 class ULevelSequence;
+class UUW_FinalResult;
 
-/**
- *
- */
 UCLASS()
 class MINIGAMES_API AMGPlayerController : public APlayerController
 {
@@ -31,6 +29,12 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void ClientRPCReturnToTitle();
+	
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_SetResultCamera();
+
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_ShowFinalResult();
 	
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetReady(bool bReady);
@@ -50,6 +54,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetNickname(const FString& InNickname);
 	
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_ReadyToReturn();
+	
 public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	FText NotificationText;
@@ -63,6 +70,9 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUW_LobbyLayout> LobbyLayoutClass;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUW_FinalResult> FinalResultWidgetClass;
+	
 #pragma region CutScene
 
 public:
