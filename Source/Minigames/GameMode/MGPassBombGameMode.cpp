@@ -37,8 +37,47 @@ void AMGPassBombGameMode::BeginPlay()
 	BombActor = GetWorld()->SpawnActor<AMGBombActor>(BombActorClass,FTransform::Identity,SpawnParam);
 }
 
+// 중간 이탈자 방어 코드
+void AMGPassBombGameMode::Logout(AController* Exiting)
+{
+	AMGPlayerController* MGPC = Cast<AMGPlayerController>(Exiting);
+	if (IsValid(MGPC) && AlivePlayers.Contains(MGPC))
+	{
+		AMGPassBombGameState* MGGS = GetGameState<AMGPassBombGameState>();
+
+		// 제거 전에 캐릭터 캡처 + 폭탄 보유자였는지 확인
+		ACharacter* LeaverChar = MGPC->GetCharacter();
+		const bool bWasBombHolder =
+			IsValid(BombActor) && IsValid(BombActor->BombHolder) && (BombActor->BombHolder == LeaverChar);
+
+		AlivePlayers.Remove(MGPC);
+		if (IsValid(MGGS) && IsValid(LeaverChar))
+		{
+			MGGS->AliveCharacters.Remove(LeaverChar);
+		}
+
+		// 승리 재확인 → 아니면 폭탄 보유자였으면 재부여
+		if (TryFinishByLastManStanding() == false)
+		{
+			if (bWasBombHolder)
+			{
+				AssignBombToRandomAlive();
+			}
+		}
+	}
+
+	Super::Logout(Exiting);
+}
+
 void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
 {
+	// 이미 종료됐으면(이탈로 승자 확정 등) 잔여 폭발 무시
+	AMGGameStateBase* GS = GetGameState<AMGGameStateBase>();
+	if (IsValid(GS) && GS->MatchState == EMatchState::Ending)
+	{
+		return;
+	}
+	
 	AMGPassBombGameState* MGGS = GetGameState<AMGPassBombGameState>();
 	AController* PC = TargetPlayer->GetController();
 
@@ -55,19 +94,17 @@ void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
 					MGPS->MulticastRPC_RetireCharacter();
 				}
 
-				//TODO: 중간순위 점수 추가
-				//MGPC->AddScore()
+				const int32 Rank = AlivePlayers.Num();
+				GiveScore(MGPS, Rank);
 
 				AlivePlayers.Remove(MGPC);
-				MGGS->AliveCharacters.Remove(MGPC->GetCharacter());
+				MGGS->AliveCharacters.Remove(TargetPlayer);
 			}
-			
-			// 플레이어명 임시 지정, 이후 변경필요
-			FString UserName;
-			UserName = MGPC->GetPlayerState<AMGPassBombPlayerState>()->GetPlayerName();
 
+			FString UserName = MGPC->GetPlayerState<AMGPassBombPlayerState>()->GetPlayerName();
 			NotifyToAllPlayer(FString::Printf(TEXT("%s(이)가 탈락했습니다!"), *UserName));
 			MG_LOG_NET(LogMGNet, Log, TEXT("AlivePlayer_Count: %d / AliveCharacter: %d"), AlivePlayers.Num(), MGGS->AliveCharacters.Num());
+			
 			GetWorldTimerManager().SetTimer(
 				RoundTimerHandle,
 				this,
@@ -86,53 +123,52 @@ void AMGPassBombGameMode::EndMinigame()
 
 void AMGPassBombGameMode::NextRound()
 {
-	AMGPassBombGameState* MGGS = GetGameState<AMGPassBombGameState>();
-
-	// 최후의 1인이 남을 때까지 반복
-	if (AlivePlayers.Num() <= 1)
+	if (TryFinishByLastManStanding())
 	{
-		// 플레이어명 임시 지정, 이후 변경필요
-		FString UserName;
-		UserName = AlivePlayers[0]->GetPlayerState<AMGPassBombPlayerState>()->GetPlayerName();
-
-		NotifyToAllPlayer(FString::Printf(TEXT("%s 승리!"), *UserName));
-
-		// TODO: 승리자 점수 추가
-		//AlivePlayers[0]->AddScore()
-
-		// 게임 종료
-		EndMinigame();
 		return;
 	}
 	NotifyToAllPlayer(TEXT(""));
+	AssignBombToRandomAlive();
+}
 
-	// 술래 후보자
-	TArray<AMGPlayerController*> BombNominee;
-
-	// 점수가 가장 높은 사람들을 후보로 지명
-	int32 MaxScore = -1;
-	for (const auto MGPC : AlivePlayers)
+// 최후 1인이면 종료. 승자 확정 시 true 반환.
+bool AMGPassBombGameMode::TryFinishByLastManStanding()
+{
+	if (AlivePlayers.Num() > 1)
 	{
-		const AMGPlayerState* MGPS = MGPC->GetPlayerState<AMGPlayerState>();
-		if (IsValid(MGPS) == true)
+		return false;
+	}
+
+	// 예약된 다음 라운드 취소 (이탈로 먼저 끝나는 경우 대비)
+	GetWorldTimerManager().ClearTimer(RoundTimerHandle);
+
+	if (AlivePlayers.Num() == 1 && IsValid(AlivePlayers[0]))
+	{
+		FString UserName = AlivePlayers[0]->GetPlayerState<AMGPassBombPlayerState>()->GetPlayerName();
+		NotifyToAllPlayer(FString::Printf(TEXT("%s 승리!"), *UserName));
+
+		AMGPlayerState* WinnerPS = AlivePlayers[0]->GetPlayerState<AMGPlayerState>();
+		if (IsValid(WinnerPS))
 		{
-			if (MGPS->TotalScore > MaxScore)
-			{
-				BombNominee.Empty();
-				BombNominee.Add(MGPC);
-				MaxScore = MGPS->TotalScore;
-			}
-			else if (MGPS->TotalScore == MaxScore)
-			{
-				BombNominee.Add(MGPC);
-			}
+			GiveScore(WinnerPS, 1);
 		}
 	}
+	// Num()==0 (전원 이탈)이면 승자 없이 그냥 종료
 
-	// 후보자 무작위에게 폭탄 생성 후 부착
-	int32 BombIndex = FMath::RandRange(0, BombNominee.Num() - 1);
-	if (BombNominee.IsValidIndex(BombIndex))
+	EndMinigame();
+	return true;
+}
+
+void AMGPassBombGameMode::AssignBombToRandomAlive()
+{
+	int32 BombIndex = FMath::RandRange(0, AlivePlayers.Num() - 1);
+	if (AlivePlayers.IsValidIndex(BombIndex))
 	{
-		BombActor->ActivateBomb(BombNominee[BombIndex]->GetCharacter(), ExplodeTime);
+		AMGPlayerController* Target = AlivePlayers[BombIndex];
+		if (IsValid(Target) && IsValid(Target->GetCharacter()))
+		{
+			BombActor->ActivateBomb(Target->GetCharacter(), ExplodeTime);
+		}
 	}
 }
+

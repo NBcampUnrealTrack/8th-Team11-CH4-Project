@@ -13,12 +13,14 @@
 #include "Type/MGPlayerColor.h"
 #include "UI/UW_LobbyLayout.h"
 #include "GameState/MGLobbyGameStateBase.h"
+#include "UI/UW_FinalResult.h"
 
 #include "LevelSequence.h"						// Level Sequence
 #include "LevelSequencePlayer.h"				// Level Sequence
 #include "MovieSceneSequencePlayer.h"			// Level Sequence
 #include "GameFramework/PlayerState.h"
 #include "GameInstance/MGGameInstance.h"
+#include "GameMode/MGFinalResultGameModeBase.h"
 
 #include "UI/Chat/MGChat.h"
 #include "EngineUtils.h"
@@ -135,6 +137,44 @@ void AMGPlayerController::ClientRPCShowGameResultWidget_Implementation(int32 InR
 	}
 }
 
+void AMGPlayerController::ClientRPC_SetResultCamera_Implementation()
+{
+	TArray<AActor*> Cams;
+	UGameplayStatics::GetAllActorsWithTag(this, TEXT("ResultCamera"), Cams);
+	if (Cams.Num() == 0)
+	{
+		return;
+	}
+	
+	bAutoManageActiveCameraTarget = false;
+	SetViewTargetWithBlend(Cams[0], 0.5f);
+}
+
+void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
+{
+	if (IsLocalController() == false)
+	{
+		return;
+	}
+	if (IsValid(FinalResultWidgetClass) == false)
+	{
+		return;
+	}
+	
+	UUW_FinalResult* FinalResultUI = CreateWidget<UUW_FinalResult>(this, FinalResultWidgetClass);
+	if (IsValid(FinalResultUI) == false)
+	{
+		return;
+	}
+	
+	FinalResultUI->AddToViewport(3);
+	
+	FInputModeGameAndUI InputMode;
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	SetInputMode(InputMode);
+	bShowMouseCursor = true;
+}
+
 void AMGPlayerController::ChangeColor(uint8 ColorIndex)
 {
 	if (ColorIndex < static_cast<uint8>(EMGPlayerColor::Red) || static_cast<uint8>(EMGPlayerColor::Gray) < ColorIndex)
@@ -143,6 +183,14 @@ void AMGPlayerController::ChangeColor(uint8 ColorIndex)
 	}
 
 	ServerRPCSetColor(static_cast<EMGPlayerColor>(ColorIndex));
+}
+
+void AMGPlayerController::ServerRPC_ReadyToReturn_Implementation()
+{
+	if (AMGFinalResultGameModeBase* FGM = GetWorld()->GetAuthGameMode<AMGFinalResultGameModeBase>())
+	{
+		FGM->OnPlayerReadyToReturn(this);
+	}
 }
 
 void AMGPlayerController::ServerRPCSetNickname_Implementation(const FString& InNickname)
