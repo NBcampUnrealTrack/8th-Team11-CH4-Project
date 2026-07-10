@@ -4,10 +4,13 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Character/MGPlayerCharacter.h"
 #include "GameState/MGFlagGameStateBase.h"
 #include "PlayerState/MGFlagPlayerState.h"
+#include "Gimmick/MGFlagActor.h"
 
 UMGFlagActorComponent::UMGFlagActorComponent()
 {
@@ -21,25 +24,58 @@ void UMGFlagActorComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UMGFlagActorComponent, bFlagState);
+	DOREPLIFETIME(UMGFlagActorComponent, ReplicatedFlagMesh);
+	DOREPLIFETIME(UMGFlagActorComponent, ReplicatedFlagMaterial);
+	DOREPLIFETIME(UMGFlagActorComponent, ReplicatedNiagaraSystem);
 	DOREPLIFETIME(UMGFlagActorComponent, bIsFlagProtected);
 }
 
-void UMGFlagActorComponent::RegisterFlagMeshes(UStaticMeshComponent* InFlagMesh, UStaticMeshComponent* InFlagEffectMesh)
+void UMGFlagActorComponent::RegisterFlagMeshes(class UStaticMeshComponent* InFlagMesh, class UStaticMeshComponent* InFlagEffectMesh, class UNiagaraComponent* InFlagNiagara)
 {
 	FlagMeshComp = InFlagMesh;
 	FlagEffectMeshComp = InFlagEffectMesh;
+	FlagNiagaraComp = InFlagNiagara;
 }
 
-bool UMGFlagActorComponent::SetHasFlag(bool bHasFlag)
+bool UMGFlagActorComponent::SetHasFlag(bool bHasFlag, AMGFlagActor* InFlagActor)
 {
 	bFlagState = bHasFlag;
-	
-	if (IsValid(FlagMeshComp))
+	AActor* Owner = GetOwner();
+
+	if (IsValid(Owner) && Owner->HasAuthority())
 	{
-		OnRep_FlagState();
+		if (bHasFlag)
+		{
+			if(IsValid(InFlagActor))
+			{
+				UStaticMeshComponent* SrcMesh = InFlagActor->FindComponentByClass<UStaticMeshComponent>();
+				if (IsValid(SrcMesh))
+				{
+					ReplicatedFlagMesh = SrcMesh->GetStaticMesh();
+					ReplicatedFlagMaterial = SrcMesh->GetMaterial(0);
+				}
+
+				// [추가됨] BP에 부착된 나이아가라 컴포넌트 정보 검색 및 백업
+				UNiagaraComponent* SrcNiagara = InFlagActor->FindComponentByClass<UNiagaraComponent>();
+				if (IsValid(SrcNiagara))
+				{
+					ReplicatedNiagaraSystem = SrcNiagara->GetAsset();
+				}
+			}
+		}
+		else
+		{
+			ReplicatedFlagMesh = nullptr;
+			ReplicatedFlagMaterial = nullptr;
+			ReplicatedNiagaraSystem = nullptr;
+		}
+
+		if (IsValid(FlagMeshComp))
+		{
+			OnRep_FlagVisuals();
+		}	
 	}
 
-	AActor* Owner = GetOwner();
 	if (IsValid(Owner) && Owner->HasAuthority())
 	{
 		if (bFlagState == true)
@@ -83,7 +119,6 @@ void UMGFlagActorComponent::ServerRPCTakeFlag_Implementation()
 	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams Params(NAME_None, false, OwnerCharacter);
 
-	const float StealRange = 1500.f;
 	const FVector CheckLocation = OwnerCharacter->GetActorLocation();
 
 	bool bIsHitDetected = GetWorld()->OverlapMultiByChannel(
@@ -108,6 +143,10 @@ void UMGFlagActorComponent::ServerRPCTakeFlag_Implementation()
 
 				if (IsValid(TargetFlagComp) && TargetFlagComp->GetHasFlag() == true && TargetFlagComp->GetIsFlagProtected() == false)
 				{
+					this->ReplicatedFlagMesh = TargetFlagComp->ReplicatedFlagMesh;
+					this->ReplicatedFlagMaterial = TargetFlagComp->ReplicatedFlagMaterial;
+					this->ReplicatedNiagaraSystem = TargetFlagComp->ReplicatedNiagaraSystem;
+
 					TargetFlagComp->SetHasFlag(false);
 					this->SetHasFlag(true);
 					break;
@@ -122,6 +161,7 @@ bool UMGFlagActorComponent::ServerRPCTakeFlag_Validate()
 	return true;
 }
 
+/*
 void UMGFlagActorComponent::OnRep_FlagState()
 {
 	if (IsValid(FlagMeshComp))
@@ -131,6 +171,7 @@ void UMGFlagActorComponent::OnRep_FlagState()
 
 	OnFlagStateChanged.Broadcast(bFlagState);
 }
+*/
 
 void UMGFlagActorComponent::OnRep_IsFlagProtected()
 {
@@ -140,4 +181,37 @@ void UMGFlagActorComponent::OnRep_IsFlagProtected()
 	}
 
 	OnFlagProtectionChanged.Broadcast(bIsFlagProtected);
+}
+
+void UMGFlagActorComponent::OnRep_FlagVisuals()
+{
+	if (IsValid(ReplicatedFlagMesh) && IsValid(FlagMeshComp))
+	{
+		FlagMeshComp->SetStaticMesh(ReplicatedFlagMesh);
+		FlagMeshComp->SetMaterial(0, ReplicatedFlagMaterial);
+
+		FlagMeshComp->SetVisibility(true);
+	}
+	else
+	{
+		if (IsValid(FlagMeshComp))
+		{
+			FlagMeshComp->SetVisibility(false);
+		}
+	}
+
+	if (IsValid(FlagNiagaraComp))
+	{
+		if (bFlagState && IsValid(ReplicatedNiagaraSystem))
+		{
+			FlagNiagaraComp->SetAsset(ReplicatedNiagaraSystem);
+			FlagNiagaraComp->Activate(true);
+		}
+		else
+		{
+			FlagNiagaraComp->Deactivate();
+		}
+	}
+
+	OnFlagStateChanged.Broadcast(bFlagState);
 }

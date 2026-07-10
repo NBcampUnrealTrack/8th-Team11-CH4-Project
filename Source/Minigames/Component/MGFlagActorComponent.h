@@ -18,12 +18,14 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	// 깃발 메시와 이펙트 메시를 등록
-	void RegisterFlagMeshes(class UStaticMeshComponent* InFlagMesh, class UStaticMeshComponent* InFlagEffectMesh);
+	void RegisterFlagMeshes(class UStaticMeshComponent* InFlagMesh, class UStaticMeshComponent* InFlagEffectMesh, class UNiagaraComponent* InFlagNiagara);
 
-	bool SetHasFlag(bool bHasFlag);
+	// [기능 변경] 깃발 세팅 시 액터 포인터도 함께 받도록 변경
+	bool SetHasFlag(bool bHasFlag, class AMGFlagActor* InFlagActor = nullptr);
 
 	FORCEINLINE bool GetHasFlag() const { return bFlagState; }
 	FORCEINLINE bool GetIsFlagProtected() const { return bIsFlagProtected; }
+	const float GetStealRange() { return StealRange; }
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerRPCTakeFlag();
@@ -32,8 +34,14 @@ public:
 	FOnFlagProtectionChanged OnFlagProtectionChanged;
 
 private:
+	/*
 	UFUNCTION()
 	void OnRep_FlagState();
+	*/
+
+	// 깃발 메시 정보를 같이 넘겨줄 수 있도록 기존 OnRep_FlagState() 함수를 대체
+	UFUNCTION()
+	void OnRep_FlagVisuals();
 
 	UFUNCTION()
 	void OnRep_IsFlagProtected();
@@ -41,11 +49,13 @@ private:
 	void ClearFlagProtection();
 
 private:
-	UPROPERTY(ReplicatedUsing = OnRep_FlagState)
+	UPROPERTY(ReplicatedUsing = OnRep_FlagVisuals)
 	bool bFlagState = false;
 
 	UPROPERTY(ReplicatedUsing = OnRep_IsFlagProtected)
 	bool bIsFlagProtected = false;
+
+	const float StealRange = 1500.f;
 
 	FTimerHandle FlagProtectTimerHandle;
 
@@ -55,4 +65,18 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<class UStaticMeshComponent> FlagEffectMeshComp;
+
+	UPROPERTY()
+	TObjectPtr<class UNiagaraComponent> FlagNiagaraComp;
+
+	// 원본 에셋 외형을 반영하기 위한 액터 포인터 레플리케이션
+	UPROPERTY(ReplicatedUsing = OnRep_FlagVisuals)
+	class UStaticMesh* ReplicatedFlagMesh = nullptr;
+
+	UPROPERTY(ReplicatedUsing = OnRep_FlagVisuals)
+	class UMaterialInterface* ReplicatedFlagMaterial = nullptr;
+
+	UPROPERTY(ReplicatedUsing = OnRep_FlagVisuals)
+	class UNiagaraSystem* ReplicatedNiagaraSystem = nullptr;
+
 };

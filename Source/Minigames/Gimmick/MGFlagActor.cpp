@@ -57,7 +57,7 @@ void AMGFlagActor::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 
 		if (FlagComp)
 		{
-			FlagComp->SetHasFlag(true);
+			FlagComp->SetHasFlag(true, this);
 
 			// 서버에서 삭제
 			Destroy();
