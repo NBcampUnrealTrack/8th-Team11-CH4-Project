@@ -4,14 +4,6 @@
 #include "UI/UW_FinalResultRow.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
-#include "PlayerState/MGLobbyPlayerState.h"
-
-// UW_FinalResultRow.cpp
-
-
-#include "UI/UW_FinalResultRow.h"
-#include "Components/Image.h"
-#include "Components/TextBlock.h"
 #include "PlayerState/MGPlayerState.h"
 
 void UUW_FinalResultRow::Setup(AMGPlayerState* PS, int32 Rank)

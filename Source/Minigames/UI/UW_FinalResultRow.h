@@ -7,7 +7,6 @@
 #include "UW_FinalResultRow.generated.h"
 
 class AMGPlayerState;
-class AMGLobbyPlayerState;
 class UTextBlock;
 class UImage;
 
