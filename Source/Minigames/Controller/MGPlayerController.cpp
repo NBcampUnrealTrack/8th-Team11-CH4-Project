@@ -13,6 +13,7 @@
 #include "Type/MGPlayerColor.h"
 #include "UI/UW_LobbyLayout.h"
 #include "GameState/MGLobbyGameStateBase.h"
+#include "UI/UW_FinalResult.h"
 
 #include "LevelSequence.h"						// Level Sequence
 #include "LevelSequencePlayer.h"				// Level Sequence
@@ -137,6 +138,31 @@ void AMGPlayerController::ClientRPC_SetResultCamera_Implementation()
 	
 	bAutoManageActiveCameraTarget = false;
 	SetViewTargetWithBlend(Cams[0], 0.5f);
+}
+
+void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
+{
+	if (IsLocalController() == false)
+	{
+		return;
+	}
+	if (IsValid(FinalResultWidgetClass) == false)
+	{
+		return;
+	}
+	
+	UUW_FinalResult* FinalResultUI = CreateWidget<UUW_FinalResult>(this, FinalResultWidgetClass);
+	if (IsValid(FinalResultUI) == false)
+	{
+		return;
+	}
+	
+	FinalResultUI->AddToViewport(3);
+	
+	FInputModeGameAndUI InputMode;
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	SetInputMode(InputMode);
+	bShowMouseCursor = true;
 }
 
 void AMGPlayerController::ChangeColor(uint8 ColorIndex)

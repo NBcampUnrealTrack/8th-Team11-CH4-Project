@@ -36,7 +36,11 @@ void AMGFinalResultGameModeBase::StartMinigame()
 	
 	for (AMGPlayerController* PC : AllPlayerControllers)
 	{
-		if (IsValid(PC)) { PC->ClientRPC_SetResultCamera(); }
+		if (IsValid(PC))
+		{
+			PC->ClientRPC_SetResultCamera();
+			PC->ClientRPC_ShowFinalResult();
+		}
 	}
 }
 
