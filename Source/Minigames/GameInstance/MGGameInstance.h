@@ -6,6 +6,7 @@
 #include "Engine/GameInstance.h"
 #include "GameState/MGGameStateBase.h"
 #include "Type/MGTypes.h"
+#include "Type/MGChatType.h"
 #include "MGGameInstance.generated.h"
 
 enum class EMGPlayerColor : uint8;
@@ -37,7 +38,7 @@ public:
 	TMap<FUniqueNetIdRepl, EMGPlayerColor> PlayerColors;
 
 	UPROPERTY()
-	TArray<FString> ChatMessageHistory;
+	TArray<FMGChatType> ChatMessageHistory;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Player")
 	FString PlayerNickname;

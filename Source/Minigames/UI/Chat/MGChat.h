@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Types/SlateEnums.h"
+#include "Type/MGChatType.h"
 #include "MGChat.generated.h"
 
 class UEditableTextBox;
@@ -27,13 +28,12 @@ public:
 
 	virtual void NativeDestruct() override;
 
-	void AddChatMessage(const FString& InMessage);
-
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UMGChatLine> ChatLineClass;
+	void AddChatMessage(const FMGChatType& InChatMessage);
 
 protected:
 	UFUNCTION()
 	void OnChatInputTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
-
+	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UMGChatLine> ChatLineClass;
 };

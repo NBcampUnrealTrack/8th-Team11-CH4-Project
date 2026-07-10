@@ -22,7 +22,9 @@
 
 #include "UI/Chat/MGChat.h"
 #include "EngineUtils.h"
-#include "GameInstance/MGGameInstance.h"
+#include "PlayerState/MGPlayerState.h"
+#include "PlayerState/MGLobbyPlayerState.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 
 void AMGPlayerController::BeginPlay()
@@ -213,7 +215,7 @@ void AMGPlayerController::ClientRPC_PlayCutScene_Implementation(int32 MGCutScene
 		// Client 제어권 뺏기
 		// 시네마틱 모드 ON: 이동 불가, 마우스 회전 불가, UI 숨김
 		SetCinematicMode(true, false, false, true, true);
-
+		HideAllWidgets();
 		// 컷신이 끝나면 OnCutSceneFinished 함수가 자동으로 실행되도록 델리게이트 바인딩
 		SequencePlayer->OnFinished.AddDynamic(this, &AMGPlayerController::OnCutSceneFinished);
 
@@ -230,6 +232,8 @@ void AMGPlayerController::OnCutSceneFinished()
 
 	// 카메라도 원래 Client 각자의 캐릭터 시점으로 안전하게 복귀
 	SetViewTarget(GetPawn());
+
+	RestoreAllWidgets();
 }
 
 #pragma endregion
@@ -255,7 +259,7 @@ void AMGPlayerController::CreateChatWidget()
 			UMGGameInstance* MGGameInstance = GetGameInstance<UMGGameInstance>();
 			if (IsValid(MGGameInstance) == true)
 			{
-				for (const FString& Message : MGGameInstance->ChatMessageHistory)
+				for (const FMGChatType& Message : MGGameInstance->ChatMessageHistory)
 				{
 					ChatWidgetInstance->AddChatMessage(Message);
 				}
@@ -274,7 +278,7 @@ void AMGPlayerController::SetChatMessageString(const FString& InChatMessageStrin
 	}
 }
 
-void AMGPlayerController::ClientRPCPrintChatMessageString_Implementation(const FString& InChatMessageString)
+void AMGPlayerController::ClientRPCPrintChatMessage_Implementation(const FMGChatType& InChatMessageString)
 {
 	UMGGameInstance* MGGameInstance = GetGameInstance<UMGGameInstance>();
 
@@ -290,12 +294,29 @@ void AMGPlayerController::ClientRPCPrintChatMessageString_Implementation(const F
 
 void AMGPlayerController::ServerRPCPrintChatMessageString_Implementation(const FString& InChatMessageString)
 {
+	FMGChatType ChatMessage;
+	ChatMessage.Message = InChatMessageString;
+
+	if (IsValid(PlayerState) == true)
+	{
+		ChatMessage.SenderName = PlayerState->GetPlayerName();
+
+		UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
+		if (IsValid(GI) == true)
+		{
+			if (const EMGPlayerColor* FoundColor = GI->PlayerColors.Find(PlayerState->GetUniqueId()))
+			{
+				ChatMessage.SenderColor = *FoundColor;
+			}
+		}
+	}
+
 	for (TActorIterator<AMGPlayerController> It(GetWorld()); It; ++It)
 	{
 		AMGPlayerController* MGPlayerController = *It;
 		if (IsValid(MGPlayerController) == true)
 		{
-			MGPlayerController->ClientRPCPrintChatMessageString(InChatMessageString);
+			MGPlayerController->ClientRPCPrintChatMessage(ChatMessage);
 		}
 	}
 }
@@ -306,3 +327,32 @@ void AMGPlayerController::ClientRPCOnSeamlessTravelCompleted_Implementation()
 }
 
 #pragma endregion
+
+void AMGPlayerController::HideAllWidgets()
+{
+	SavedWidgetVisibilities.Empty();
+
+	TArray<UUserWidget*> AllWidgets;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), AllWidgets, UUserWidget::StaticClass(), true);
+
+	for (UUserWidget* Widget : AllWidgets)
+	{
+		if (IsValid(Widget) == true)
+		{
+			SavedWidgetVisibilities.Add(Widget, Widget->GetVisibility());
+			Widget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+}
+
+void AMGPlayerController::RestoreAllWidgets()
+{
+	for (const auto& Pair : SavedWidgetVisibilities)
+	{
+		if (Pair.Key.IsValid() == true)
+		{
+			Pair.Key->SetVisibility(Pair.Value);
+		}
+	}
+	SavedWidgetVisibilities.Empty();
+}
