@@ -4,6 +4,8 @@
 #include "PlayerState/MGPlayerState.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Net/UnrealNetwork.h"
+#include "GameInstance/MGGameInstance.h"
+#include "Type/MGPlayerColor.h"
 #include "TimerManager.h"
 
 AMGButtonActor::AMGButtonActor()
@@ -56,18 +58,26 @@ void AMGButtonActor::BeginInteract_Implementation(AActor* Interactor)
     {
         return;
     }
-    AMGPlayerState* PlayerState = Player->GetPlayerState<AMGPlayerState>();
-    if (!PlayerState)
+    APlayerState* InteractorPlayerState = Player->GetPlayerState();
+    if (!InteractorPlayerState)
     {
         return;
     }
+
     bPressed = true;
-    CurrentColor = PlayerState->GetPlayerLinearColor();
+    UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
+    if (IsValid(GI))
+    {
+        if (const EMGPlayerColor* FoundColor = GI->PlayerColors.Find(InteractorPlayerState->GetUniqueId()))
+        {
+            CurrentColor = MGPlayerColorToLinear(*FoundColor);
+        }
+    }
     bColorOverridden = true;
     ApplyVisual();
 
     // 소유권 변경 + 점수 이전 (AMGButton에서 병합)
-    SetButtonOwner(PlayerState);
+    SetButtonOwner(InteractorPlayerState);
 }
 
 void AMGButtonActor::EndInteract_Implementation(AActor* Interactor)

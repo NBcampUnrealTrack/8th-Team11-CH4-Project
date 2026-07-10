@@ -47,14 +47,3 @@ void AMGLobbyPlayerState::OnRep_PlayerName()
 		LGS->OnLobbyRosterChanged.Broadcast();
 	}
 }
-
-void AMGLobbyPlayerState::CopyProperties(APlayerState* PlayerState)
-{
-	Super::CopyProperties(PlayerState);
-
-	// 로비 -> 미니게임 트래블 시 배정된 색을 새 PlayerState로 전달
-	if (AMGPlayerState* NewPS = Cast<AMGPlayerState>(PlayerState))
-	{
-		NewPS->PlayerColor = this->PlayerColor;
-	}
-}
