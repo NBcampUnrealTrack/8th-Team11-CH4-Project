@@ -7,17 +7,28 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Character/MGSpectatorPawn.h"
+#include "Net/UnrealNetwork.h"
 #include "Minigames.h"
 
-void AMGPassBombPlayerState::BeginPlay()
+void AMGPassBombPlayerState::OnRep_Owner()
 {
-	Super::BeginPlay();
-
-	// 해당 액터는 자기 자신에게만 하나 생성함.
-	if (IsValid(GetPlayerController()) && GetPlayerController()->IsLocalController())
+	// 플레이어만 생성
+	if (HasAuthority() == false)
 	{
-		Spectator = GetWorld()->SpawnActor<AMGSpectatorPawn>(SpectatorClass);
+		ServerRPC_SetSpectator();
 	}
+}
+
+void AMGPassBombPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, Spectator);
+}
+
+void AMGPassBombPlayerState::ServerRPC_SetSpectator_Implementation()
+{
+	Spectator = GetWorld()->SpawnActor<AMGSpectatorPawn>(SpectatorClass);
 }
 
 void AMGPassBombPlayerState::MulticastRPC_RetireCharacter_Implementation()

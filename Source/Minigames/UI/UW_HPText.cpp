@@ -1,5 +1,6 @@
 ﻿// UW_HPText.cpp
 
+// 클래스 삭제 예정
 
 #include "UI/UW_HPText.h"
 
@@ -19,7 +20,7 @@ void UUW_HPText::NativeConstruct()
 	AMGPlayerCharacter* OwningCharacter = Cast<AMGPlayerCharacter>(OwningActor);
 	if (IsValid(OwningCharacter) == true)
 	{
-		OwningCharacter->SetHPTextWidget(this);
+		// OwningCharacter->SetHPTextWidget(this);
 	}
 }
 

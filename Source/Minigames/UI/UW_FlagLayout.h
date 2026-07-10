@@ -1,4 +1,4 @@
-// UW_FlagLayout.h
+﻿// UW_FlagLayout.h
 
 #pragma once
 
@@ -16,6 +16,15 @@ class MINIGAMES_API UUW_FlagLayout : public UUserWidget
 public:
 	void UpdateFlagHolderText(const FString& NewHolderName);
 	void UpdateFlagTimerText(int32 RemainTime);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlagUI")
+	void UpdateLeaderboardUI(const TArray<class AMGFlagPlayerState*>& FlagPlayerStates);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlagUI")
+	void UpdateFlagStateUI(bool bHasFlag, bool bIsProtected);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "FlagUI")
+	void UpdateStealPromptUI(bool bShowPrompt);
 	
 protected:
 	UPROPERTY(meta = (BindWidget))

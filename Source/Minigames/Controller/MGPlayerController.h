@@ -42,6 +42,13 @@ public:
 	// [정식] 클라 → 서버로 색 변경 요청.
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetColor(EMGPlayerColor NewColor);
+
+	// [정식] 클라 → 서버로 해당 폰 빙의 요청. Possess는 서버에서 실행되어야함.
+	UFUNCTION(Server, Reliable)
+	void ServerRPCPossess(APawn* InPawn);
+	
+	UFUNCTION(Server, Reliable)
+	void ServerRPCSetNickname(const FString& InNickname);
 	
 public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
@@ -58,11 +65,6 @@ public:
 
 #pragma region CutScene
 
-protected:
-	// 블루프린트에서 만든 Level Sequence 에셋 포인터를 저장할 TArray
-	UPROPERTY(EditDefaultsOnly, Category = "Cinematic")
-	TArray<TObjectPtr<ULevelSequence>> CutSceneAssets;
-
 public:
 	// ClientRPC, 서버에서 모든 Client들에게 해당 함수를 실행하라고 명령
 	UFUNCTION(Client, Reliable)
@@ -70,6 +72,13 @@ public:
 
 	UFUNCTION()
 	void OnCutSceneFinished();
+
+	const TArray<TObjectPtr<ULevelSequence>>& GetCutSceneAssets() const { return CutSceneAssets; }
+
+protected:
+	// 블루프린트에서 만든 Level Sequence 에셋 포인터를 저장할 TArray
+	UPROPERTY(EditDefaultsOnly, Category = "Cinematic")
+	TArray<TObjectPtr<ULevelSequence>> CutSceneAssets;
 
 #pragma endregion
 

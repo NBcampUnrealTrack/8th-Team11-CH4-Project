@@ -17,6 +17,8 @@
 #include "LevelSequence.h"						// Level Sequence
 #include "LevelSequencePlayer.h"				// Level Sequence
 #include "MovieSceneSequencePlayer.h"			// Level Sequence
+#include "GameFramework/PlayerState.h"
+#include "GameInstance/MGGameInstance.h"
 
 
 void AMGPlayerController::BeginPlay()
@@ -28,6 +30,14 @@ void AMGPlayerController::BeginPlay()
 		return;
 	}
 
+	if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
+	{
+		if (GI->PlayerNickname.IsEmpty() == false)
+		{
+			ServerRPCSetNickname(GI->PlayerNickname);
+		}
+	}
+	
 	if (GetWorld()->GetGameState<AMGLobbyGameStateBase>() != nullptr)
 	{
 		if (IsValid(LobbyLayoutClass) == true)
@@ -123,6 +133,27 @@ void AMGPlayerController::ChangeColor(uint8 ColorIndex)
 	}
 
 	ServerRPCSetColor(static_cast<EMGPlayerColor>(ColorIndex));
+}
+
+void AMGPlayerController::ServerRPCSetNickname_Implementation(const FString& InNickname)
+{
+	if (InNickname.IsEmpty() == true)
+	{
+		return;
+	}
+	
+	if (APlayerState* PS = GetPlayerState<APlayerState>())
+	{
+		PS->SetPlayerName(InNickname);
+	}
+}
+
+void AMGPlayerController::ServerRPCPossess_Implementation(APawn* InPawn)
+{
+	if (InPawn != nullptr)
+	{
+		Possess(InPawn);
+	}
 }
 
 void AMGPlayerController::ServerRPCSetColor_Implementation(EMGPlayerColor NewColor)
