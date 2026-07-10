@@ -25,11 +25,9 @@ void UMGChat::NativeDestruct()
 	}
 }
 
-void UMGChat::AddChatMessage(const FString& InMessage)
+void UMGChat::AddChatMessage(const FMGChatType& InChatMessage)
 {
-	UE_LOG(LogTemp, Warning, TEXT("AddChatMessage: %s"), *InMessage);
-
-	if (IsValid(ScrollBox_ChatLog) == false)
+	if (IsValid(ScrollBox_ChatLog) == false || IsValid(ChatLineClass) == false)
 	{
 		return;
 	}
@@ -37,12 +35,11 @@ void UMGChat::AddChatMessage(const FString& InMessage)
 	UMGChatLine* NewChatLine = CreateWidget<UMGChatLine>(this, ChatLineClass);
 	if (IsValid(NewChatLine) == true)
 	{
-		NewChatLine->SetMessage(InMessage);
+		NewChatLine->SetMessage(InChatMessage);
 		ScrollBox_ChatLog->AddChild(NewChatLine);
 		ScrollBox_ChatLog->ScrollToEnd();
 	}
 }
-
 
 void UMGChat::OnChatInputTextCommitted(const FText& Text, ETextCommit::Type CommitMethod)
 {

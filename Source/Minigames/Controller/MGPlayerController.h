@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/PlayerController.h"
+#include "Type/MGChatType.h"
 #include "MGPlayerController.generated.h"
 
 enum class EMGPlayerColor : uint8;
@@ -89,8 +90,8 @@ protected:
 public:
 	void SetChatMessageString(const FString& InChatMessgeString);
 
-	UFUNCTION(Client,Reliable)
-	void ClientRPCPrintChatMessageString(const FString& InChatMessageString);
+	UFUNCTION(Client, Reliable)
+	void ClientRPCPrintChatMessage(const FMGChatType& InChatMessage);
 
 	UFUNCTION(Server, Reliable)
 	void ServerRPCPrintChatMessageString(const FString& InChatMessageString);
@@ -111,4 +112,11 @@ protected:
 	FString ChatMessageString;
 
 #pragma endregion
+
+public:
+	void HideAllWidgets();
+	void RestoreAllWidgets();
+
+protected:
+	TMap<TWeakObjectPtr<UUserWidget>, ESlateVisibility> SavedWidgetVisibilities;
 };
