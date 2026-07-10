@@ -32,6 +32,9 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientRPCReturnToTitle();
 	
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_SetResultCamera();
+
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetReady(bool bReady);
 
@@ -49,6 +52,9 @@ public:
 	
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetNickname(const FString& InNickname);
+	
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_ReadyToReturn();
 	
 public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)

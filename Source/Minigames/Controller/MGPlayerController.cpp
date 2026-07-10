@@ -19,6 +19,7 @@
 #include "MovieSceneSequencePlayer.h"			// Level Sequence
 #include "GameFramework/PlayerState.h"
 #include "GameInstance/MGGameInstance.h"
+#include "GameMode/MGFinalResultGameModeBase.h"
 
 
 void AMGPlayerController::BeginPlay()
@@ -125,6 +126,19 @@ void AMGPlayerController::ClientRPCShowGameResultWidget_Implementation(int32 InR
 	}
 }
 
+void AMGPlayerController::ClientRPC_SetResultCamera_Implementation()
+{
+	TArray<AActor*> Cams;
+	UGameplayStatics::GetAllActorsWithTag(this, TEXT("ResultCamera"), Cams);
+	if (Cams.Num() == 0)
+	{
+		return;
+	}
+	
+	bAutoManageActiveCameraTarget = false;
+	SetViewTargetWithBlend(Cams[0], 0.5f);
+}
+
 void AMGPlayerController::ChangeColor(uint8 ColorIndex)
 {
 	if (ColorIndex < static_cast<uint8>(EMGPlayerColor::Red) || static_cast<uint8>(EMGPlayerColor::Gray) < ColorIndex)
@@ -133,6 +147,14 @@ void AMGPlayerController::ChangeColor(uint8 ColorIndex)
 	}
 
 	ServerRPCSetColor(static_cast<EMGPlayerColor>(ColorIndex));
+}
+
+void AMGPlayerController::ServerRPC_ReadyToReturn_Implementation()
+{
+	if (AMGFinalResultGameModeBase* FGM = GetWorld()->GetAuthGameMode<AMGFinalResultGameModeBase>())
+	{
+		FGM->OnPlayerReadyToReturn(this);
+	}
 }
 
 void AMGPlayerController::ServerRPCSetNickname_Implementation(const FString& InNickname)
