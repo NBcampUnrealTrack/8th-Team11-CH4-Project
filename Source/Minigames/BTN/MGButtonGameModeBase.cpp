@@ -90,8 +90,6 @@ void AMGButtonGameModeBase::AdvanceTimer()
 
 void AMGButtonGameModeBase::EndMinigame()
 {
-    Super::EndMinigame();
-
     UE_LOG(LogTemp, Warning, TEXT("EndMinigame 함수 진입"));
 
     CurrentPhase = EGamePhase::GameOver;
@@ -118,7 +116,7 @@ void AMGButtonGameModeBase::EndMinigame()
 
     if (PlayerStates.Num() > 0)
     {
-        // 순위 결정
+        // 순위 정렬
         PlayerStates.Sort([](const AMGButtonPlayerState& A, const AMGButtonPlayerState& B)
             {
                 return A.GetScore() > B.GetScore();
@@ -126,7 +124,7 @@ void AMGButtonGameModeBase::EndMinigame()
 
         int32 CurrentRank = 1;
 
-        // 순위 계산 
+        // 순위 계산
         for (int32 i = 0; i < PlayerStates.Num(); ++i)
         {
             if (i > 0 && PlayerStates[i]->GetScore() < PlayerStates[i - 1]->GetScore())
@@ -134,27 +132,44 @@ void AMGButtonGameModeBase::EndMinigame()
                 CurrentRank = i + 1;
             }
 
-            PlayerStates[i]->FinalRank = CurrentRank;
-
-            float ScoreBeforeBonus = PlayerStates[i]->GetScore();
-
             // 점수 지급
             Super::GiveScore(Cast<AMGPlayerState>(PlayerStates[i]), CurrentRank);
 
-            float ScoreAfterBonus = PlayerStates[i]->GetScore();
-
-            // 최종 점수 저장
-            PlayerStates[i]->FinalScore = static_cast<int32>(ScoreAfterBonus - ScoreBeforeBonus);
-
-            UE_LOG(LogTemp, Log, TEXT("플레이어: %s | 등수: %d | 미니게임 획득 점수: %d"),
+            UE_LOG(LogTemp, Log, TEXT("플레이어: %s | 이번 미니게임 등수: %d"),
                 *PlayerStates[i]->GetPlayerName(),
-                PlayerStates[i]->FinalRank,
-                PlayerStates[i]->FinalScore);
+                CurrentRank);
+        }
+
+        // 전체 점수 기준 정렬
+        PlayerStates.Sort([](const AMGButtonPlayerState& A, const AMGButtonPlayerState& B)
+            {
+                return A.TotalScore > B.TotalScore;
+            });
+
+        int32 OverallRank = 1;
+
+        // 전체 랭킹 계산
+        for (int32 i = 0; i < PlayerStates.Num(); ++i)
+        {
+            if (i > 0 && PlayerStates[i]->TotalScore < PlayerStates[i - 1]->TotalScore)
+            {
+                OverallRank = i + 1;
+            }
+
+            PlayerStates[i]->Rank = OverallRank;
+
+            UE_LOG(LogTemp, Log, TEXT("플레이어: %s | 전체 랭킹: %d | 누적 점수: %d"),
+                *PlayerStates[i]->GetPlayerName(),
+                OverallRank,
+                PlayerStates[i]->TotalScore);
+        }
+
+        // 버튼 점수 초기화
+        for (AMGButtonPlayerState* PS : PlayerStates)
+        {
+            PS->SetScore(0.f);
         }
     }
 
-    if (AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>())
-    {
-        MGGameState->MatchState = EMatchState::Ending;
-    }
+    Super::EndMinigame();
 }
