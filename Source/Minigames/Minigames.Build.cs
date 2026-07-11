@@ -18,6 +18,9 @@ public class Minigames : ModuleRules
 
 			// Level Sequence
 			"LevelSequence", "MovieScene",
+			
+			// Online (EOS)
+			"OnlineSubsystem", "OnlineSubsystemUtils",
         });
 
 		PublicIncludePaths.AddRange(new string[]
