@@ -88,6 +88,7 @@ void AMGGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 				PS->PlayerColor = *FoundColor;
 			}
 		}
+		NewPlayerController->ClientRPCOnSeamlessTravelCompleted();
 	}
 }
 

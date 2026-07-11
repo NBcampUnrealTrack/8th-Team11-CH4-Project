@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/PlayerController.h"
+#include "Type/MGChatType.h"
 #include "MGPlayerController.generated.h"
 
 enum class EMGPlayerColor : uint8;
@@ -11,6 +12,11 @@ class UUW_GameResult;
 class UUW_LobbyLayout;
 class ULevelSequence;
 class UUW_FinalResult;
+
+class UMGChat;
+/**
+ *
+ */
 
 UCLASS()
 class MINIGAMES_API AMGPlayerController : public APlayerController
@@ -92,4 +98,39 @@ protected:
 
 #pragma endregion
 
+
+#pragma region Chat
+
+public:
+	void SetChatMessageString(const FString& InChatMessgeString);
+
+	UFUNCTION(Client, Reliable)
+	void ClientRPCPrintChatMessage(const FMGChatType& InChatMessage);
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPCPrintChatMessageString(const FString& InChatMessageString);
+
+	UFUNCTION()
+	void CreateChatWidget();
+
+	UFUNCTION(Client, Reliable)
+	void ClientRPCOnSeamlessTravelCompleted();
+
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UMGChat>ChatWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UMGChat>ChatWidgetInstance;
+
+	FString ChatMessageString;
+
+#pragma endregion
+
+public:
+	void HideAllWidgets();
+	void RestoreAllWidgets();
+
+protected:
+	TMap<TWeakObjectPtr<UUserWidget>, ESlateVisibility> SavedWidgetVisibilities;
 };
