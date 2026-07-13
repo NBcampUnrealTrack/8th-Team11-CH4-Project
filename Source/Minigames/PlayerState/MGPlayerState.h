@@ -36,11 +36,17 @@ public:
 	int32 MGScore = 0;	// 현재 미니게임 점수
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
+	TArray<int32> RoundScores;    // 라운드별 획득 점수
+	
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
 	int32 TotalScore = 0;	// 게임 최종점수
 
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, Replicated, EditAnywhere, BlueprintReadWrite)
 	EMGPlayerColor PlayerColor = EMGPlayerColor::None;
 
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
+	bool bReadyToReturn = false;
+	
 private:
 	UFUNCTION()
 	void OnRep_PlayerColor();
