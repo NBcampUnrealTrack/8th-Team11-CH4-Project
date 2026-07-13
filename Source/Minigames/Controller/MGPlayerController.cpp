@@ -62,6 +62,9 @@ void AMGPlayerController::BeginPlay()
 		SetInputMode(InputMode);
 		bShowMouseCursor = true;
 
+		// (일반 트래블: PC가 재생성되어 BeginPlay 경로로 생성됨.
+	//  심리스 트래블: PC가 유지되어 BeginPlay가 다시 불리지 않으므로
+	//  ClientRPCOnSeamlessTravelCompleted 경로로 재생성 — 두 경로 모두 필요함)
 		CreateChatWidget();
 	}
 	else
@@ -304,13 +307,27 @@ void AMGPlayerController::CreateChatWidget()
 		if (IsValid(ChatWidgetInstance) == true)
 		{
 			ChatWidgetInstance->AddToViewport(10);
+
+			bool bVisible = false;
+
 			UMGGameInstance* MGGameInstance = GetGameInstance<UMGGameInstance>();
 			if (IsValid(MGGameInstance) == true)
 			{
+				bVisible = MGGameInstance->bChatVisible;
+
 				for (const FMGChatType& Message : MGGameInstance->ChatMessageHistory)
 				{
 					ChatWidgetInstance->AddChatMessage(Message);
 				}
+			}
+
+			if (bVisible == true)
+			{
+				ChatWidgetInstance->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			}
+			else
+			{
+				ChatWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
 	}
@@ -339,6 +356,12 @@ void AMGPlayerController::ClientRPCPrintChatMessage_Implementation(const FMGChat
 		ChatWidgetInstance->AddChatMessage(InChatMessageString);
 	}
 }
+
+bool AMGPlayerController::ServerRPCPrintChatMessageString_Validate(const FString& InChatMessageString)
+{
+	return InChatMessageString.Len() <= MaxChatLength;
+}
+
 
 void AMGPlayerController::ServerRPCPrintChatMessageString_Implementation(const FString& InChatMessageString)
 {
@@ -372,6 +395,58 @@ void AMGPlayerController::ServerRPCPrintChatMessageString_Implementation(const F
 void AMGPlayerController::ClientRPCOnSeamlessTravelCompleted_Implementation()
 {
 	CreateChatWidget();
+}
+
+void AMGPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	FInputKeyBinding& ToggleChatBinding =
+		InputComponent->BindKey(EKeys::Enter, IE_Pressed, this, &AMGPlayerController::OnEnterKeyPressed);
+	ToggleChatBinding.bConsumeInput = false;
+}
+
+void AMGPlayerController::OnEnterKeyPressed()
+{
+	if (IsValid(ChatWidgetInstance) == false)
+	{
+		return;
+	}
+
+	if (ChatWidgetInstance->GetVisibility() == ESlateVisibility::Collapsed)
+	{
+		ChatWidgetInstance->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+		if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
+		{
+			GI->bChatVisible = true;
+		}
+	}
+
+	FInputModeGameAndUI InputMode;
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	SetInputMode(InputMode);
+
+	ChatWidgetInstance->FocusChatInput();
+}
+
+void AMGPlayerController::RestoreDefaultInputMode()
+{
+	if (GetWorld()->GetGameState<AMGLobbyGameStateBase>() != nullptr)
+	{
+		FInputModeGameAndUI InputMode;
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		SetInputMode(InputMode);
+		bShowMouseCursor = true;
+	}
+	else
+	{
+		FInputModeGameOnly GameOnly;
+		SetInputMode(GameOnly);
+		bShowMouseCursor = false;
+	}
+
+	UWidgetBlueprintLibrary::SetFocusToGameViewport();
 }
 
 #pragma endregion
