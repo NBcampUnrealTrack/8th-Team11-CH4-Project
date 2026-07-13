@@ -25,8 +25,6 @@ public:
 	
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, VisibleAnywhere, BlueprintReadOnly)
 	EMGPlayerColor PlayerColor;
-
-	virtual void CopyProperties(APlayerState* PlayerState) override;
 	
 protected:
 	virtual void OnRep_PlayerName() override;
