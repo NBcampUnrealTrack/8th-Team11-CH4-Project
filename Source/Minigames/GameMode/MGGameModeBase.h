@@ -64,4 +64,20 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<TObjectPtr<AMGPlayerController>> AllPlayerControllers;
+
+#pragma region CutScene
+
+public:
+	void PlayCutScene(); // 컷신 재생
+
+	void OnFinishedCutScene(); // 컷신 재생 종료
+
+private:
+	FTimerHandle CutSceneTimerHandler;
+
+	UPROPERTY(EditAnywhere, Category = "CutScene")
+	bool bUseCutScene = true;
+
+#pragma endregion
+
 };

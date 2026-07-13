@@ -12,7 +12,9 @@ void AMGPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     
+    DOREPLIFETIME(ThisClass, bReadyToReturn);
     DOREPLIFETIME(ThisClass, PlayerColor);
+    DOREPLIFETIME(ThisClass, RoundScores);
 	DOREPLIFETIME(ThisClass, TotalScore);
 	DOREPLIFETIME(ThisClass, MGScore);
 	DOREPLIFETIME(ThisClass, Rank);
@@ -26,6 +28,7 @@ void AMGPlayerState::CopyProperties(APlayerState* PlayerState)
     {
         NewPlayerState->TotalScore = this->TotalScore;
         NewPlayerState->PlayerColor = this->PlayerColor;
+        NewPlayerState->RoundScores = this->RoundScores;
 
         UE_LOG(LogTemp, Warning, TEXT("[After Travel - CopyProperties] Copied TotalScore : %d"), NewPlayerState->TotalScore);
     }

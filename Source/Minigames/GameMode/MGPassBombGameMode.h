@@ -24,10 +24,9 @@ public:
 
 	virtual void BeginPlay() override;
 
+	virtual void Logout(AController* Exiting) override;
+	
 	void EliminatePlayer(ACharacter* TargetPlayer);
-
-	// 컷신 재생
-	void OnFinishedCutScene();
 
 	UFUNCTION()
 	void NextRound();
@@ -50,5 +49,9 @@ protected:
 	TArray<TObjectPtr<AMGPlayerController>> AlivePlayers;
 
 private:
+	bool TryFinishByLastManStanding();
+	
+	void AssignBombToRandomAlive();
+	
 	FTimerHandle CutSceneTimerHandler;
 };

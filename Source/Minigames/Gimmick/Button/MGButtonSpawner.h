@@ -26,9 +26,11 @@ private:
     void SpawnButtonsOnPlatform(AActor* Platform, int32 ButtonCount);
 
     UBoxComponent* GetSpawnArea(AActor* Platform) const;
+
     bool FindSpawnLocation(
         UBoxComponent* SpawnArea,
         const TArray<FVector>& ExistingLocations,
+        const FVector2D& ButtonHalfExtent,
         FVector& OutLocation) const;
 
 private:
@@ -46,4 +48,6 @@ private:
 
     UPROPERTY(EditAnywhere, Category = "Spawn")
     FVector ButtonStandCollisionExtent = FVector(10.f, 10.f, 5.f);
+
+    TOptional<FVector2D> CachedButtonHalfExtent;
 };

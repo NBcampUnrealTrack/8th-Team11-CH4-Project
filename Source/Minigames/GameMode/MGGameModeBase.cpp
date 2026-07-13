@@ -88,6 +88,7 @@ void AMGGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 				PS->PlayerColor = *FoundColor;
 			}
 		}
+		NewPlayerController->ClientRPCOnSeamlessTravelCompleted();
 	}
 }
 
@@ -119,16 +120,82 @@ void AMGGameModeBase::BeginPlay()
 	RemainWaitingTimeForPlaying = WaitingTime;
 
 	RemainWaitingTimeForEnding = EndingTime;
-
-	// 10초 후 레벨 전환 하는 테스트용 코드
-	// FTimerHandle TestEndTimerHandle;
-	// GetWorld()->GetTimerManager().SetTimer(TestEndTimerHandle, this, &ThisClass::EndMinigame, 10.f, false);
 }
+
+#pragma region CutScene
+
+void AMGGameModeBase::PlayCutScene()
+{
+	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
+	if (IsValid(MGGameState))
+	{
+		MGGameState->MatchState = EMatchState::PlayingCutScene;
+	}
+
+	for (TObjectPtr<AMGPlayerController> PC : AllPlayerControllers)
+	{
+		// 배열에 들어있더라도 그 사이 플레이어가 접속을 끊었을 수도 있으니 항상 IsValid 체크
+		if (!IsValid(PC))
+		{
+			bUseCutScene = false;
+			break;
+		}
+
+		const TArray<TObjectPtr<ULevelSequence>>& Assets = PC->GetCutSceneAssets();
+
+		// 컷씬 에셋이 없거나 0번 인덱스가 유효하지 않으면 컷씬 사용 안 함
+		if (Assets.Num() == 0 || Assets[0] == nullptr)
+		{
+			bUseCutScene = false;
+			break;
+		}
+	}
+
+	if (bUseCutScene)
+	{
+		for (TObjectPtr<AMGPlayerController> PC : AllPlayerControllers)
+		{
+			if (IsValid(PC))
+			{
+				// TODO : 현재는 0번 Index의 Level Sequence 사용
+				// 추후 Level Sequence가 추가된다면 Game Instance에서 Index 관리 필요
+				PC->ClientRPC_PlayCutScene(0);
+			}
+		}
+
+		// TODO : 현재 CutsceneDuration 하드코딩
+		// 추후 Level Sequence 추가 시 Game Instance에서 관리 필요
+		// 실제 Level Sequence 길이보다 1~2초 길게 설정 필요
+		const float CutsceneDuration = 23.f;
+
+		GetWorldTimerManager().SetTimer(
+			CutSceneTimerHandler,
+			this,
+			&AMGGameModeBase::OnFinishedCutScene,
+			CutsceneDuration,
+			false
+		);
+	}
+	else
+	{
+		OnFinishedCutScene();
+	}
+}
+
+void AMGGameModeBase::OnFinishedCutScene()
+{
+	StartMinigame();
+}
+
+#pragma endregion
 
 void AMGGameModeBase::StartMinigame()
 {
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
-	MGGameState->MatchState = EMatchState::Playing;
+	if (IsValid(MGGameState))
+	{
+		MGGameState->MatchState = EMatchState::Playing;
+	}
 }
 
 void AMGGameModeBase::EndMinigame()
@@ -169,6 +236,7 @@ void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 	
 	PS->SetMGScore(PS->GetMGScore() + AddScore);
 	PS->TotalScore += AddScore;
+	PS->RoundScores.Add(AddScore);
 	
 	UE_LOG(LogTemp, Log, TEXT("[GiveScore] %s | Rank %d/%d | +%d점 | MGScore %d->%d | TotalScore %d->%d"),
 		*PS->GetPlayerName(), Rank, PlayerCount, AddScore,
@@ -195,7 +263,9 @@ void AMGGameModeBase::OnMainTimerElapsed()
 	switch (MGGameState->MatchState)
 	{
 	case EMatchState::None:
-		break;
+		{
+			break;
+		}
 	case EMatchState::Waiting:
 		{
 			// Test Log
@@ -209,7 +279,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			{
 				NotificationString = FString::Printf(TEXT(""));
 	
-				StartMinigame();
+				PlayCutScene();
 			}
 	
 			NotifyToAllPlayer(NotificationString);
@@ -254,7 +324,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 					case ERoundState::Round3:
 					{
 						// FinalResult을 별도 맵에 진행할거면 그곳으로, 아니라면 바로 로비로 이동(현재)
-						NextMapURL = TEXT("/Game/Minigames/Level/L_Lobby");
+						NextMapURL = TEXT("/Game/Minigames/Level/L_FinalResult");
 						MGGameInstance->CurrentRoundState = ERoundState::FinalResult;
 						break;
 					}

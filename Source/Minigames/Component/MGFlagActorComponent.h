@@ -4,6 +4,9 @@
 #include "Components/ActorComponent.h"
 #include "MGFlagActorComponent.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnFlagStateChanged, bool bFlagState);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnFlagProtectionChanged, bool bIsFlagProtected);
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MINIGAMES_API UMGFlagActorComponent : public UActorComponent
 {
@@ -24,6 +27,9 @@ public:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerRPCTakeFlag();
+
+	FOnFlagStateChanged OnFlagStateChanged;
+	FOnFlagProtectionChanged OnFlagProtectionChanged;
 
 private:
 	UFUNCTION()
