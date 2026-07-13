@@ -17,10 +17,10 @@ public:
 
 	//-----------------------------
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effect|Logic")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Logic")
 	float SpeedAmount = 0.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effect|Logic")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Logic")
 	float Duration = 0.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effect|Logic")
