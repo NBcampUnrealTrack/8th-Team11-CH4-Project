@@ -88,7 +88,8 @@ void AMGLobbyGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 				LPS->PlayerColor = *FoundColor;
 			}
 		}
-		
+		PC->ClientRPCOnSeamlessTravelCompleted();
+
 		// TODO: 레디 버튼 기본값은 비활성화.
 		//       로그인 후 인원이 MinimumPlayerCount 이상이면 전원 레디 버튼 활성화 (Client RPC)
 	}

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/PlayerController.h"
+#include "Type/MGChatType.h"
 #include "MGPlayerController.generated.h"
 
 enum class EMGPlayerColor : uint8;
@@ -10,10 +11,13 @@ class UUserWidget;
 class UUW_GameResult;
 class UUW_LobbyLayout;
 class ULevelSequence;
+class UUW_FinalResult;
 
+class UMGChat;
 /**
  *
  */
+
 UCLASS()
 class MINIGAMES_API AMGPlayerController : public APlayerController
 {
@@ -31,6 +35,12 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void ClientRPCReturnToTitle();
+	
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_SetResultCamera();
+
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_ShowFinalResult();
 	
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetReady(bool bReady);
@@ -50,6 +60,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetNickname(const FString& InNickname);
 	
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_ReadyToReturn();
+	
 public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	FText NotificationText;
@@ -63,6 +76,9 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUW_LobbyLayout> LobbyLayoutClass;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUW_FinalResult> FinalResultWidgetClass;
+	
 #pragma region CutScene
 
 public:
@@ -82,4 +98,39 @@ protected:
 
 #pragma endregion
 
+
+#pragma region Chat
+
+public:
+	void SetChatMessageString(const FString& InChatMessgeString);
+
+	UFUNCTION(Client, Reliable)
+	void ClientRPCPrintChatMessage(const FMGChatType& InChatMessage);
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPCPrintChatMessageString(const FString& InChatMessageString);
+
+	UFUNCTION()
+	void CreateChatWidget();
+
+	UFUNCTION(Client, Reliable)
+	void ClientRPCOnSeamlessTravelCompleted();
+
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UMGChat>ChatWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UMGChat>ChatWidgetInstance;
+
+	FString ChatMessageString;
+
+#pragma endregion
+
+public:
+	void HideAllWidgets();
+	void RestoreAllWidgets();
+
+protected:
+	TMap<TWeakObjectPtr<UUserWidget>, ESlateVisibility> SavedWidgetVisibilities;
 };
