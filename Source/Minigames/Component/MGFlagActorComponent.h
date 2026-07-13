@@ -55,7 +55,7 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_IsFlagProtected)
 	bool bIsFlagProtected = false;
 
-	const float StealRange = 1500.f;
+	const float StealRange = 100.f;
 
 	FTimerHandle FlagProtectTimerHandle;
 
