@@ -5,12 +5,13 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "NiagaraComponent.h"
-#include "NiagaraSystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Character/MGPlayerCharacter.h"
 #include "GameState/MGFlagGameStateBase.h"
 #include "PlayerState/MGFlagPlayerState.h"
 #include "Gimmick/MGFlagActor.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "PlayerState/MGPlayerState.h"
 
 UMGFlagActorComponent::UMGFlagActorComponent()
 {
@@ -24,9 +25,7 @@ void UMGFlagActorComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UMGFlagActorComponent, bFlagState);
-	DOREPLIFETIME(UMGFlagActorComponent, ReplicatedFlagMesh);
-	DOREPLIFETIME(UMGFlagActorComponent, ReplicatedFlagMaterial);
-	DOREPLIFETIME(UMGFlagActorComponent, ReplicatedNiagaraSystem);
+	DOREPLIFETIME(UMGFlagActorComponent, ReplicatedFlagColor);
 	DOREPLIFETIME(UMGFlagActorComponent, bIsFlagProtected);
 }
 
@@ -39,36 +38,26 @@ void UMGFlagActorComponent::RegisterFlagMeshes(class UStaticMeshComponent* InFla
 
 bool UMGFlagActorComponent::SetHasFlag(bool bHasFlag, AMGFlagActor* InFlagActor)
 {
-	bFlagState = bHasFlag;
 	AActor* Owner = GetOwner();
 
 	if (IsValid(Owner) && Owner->HasAuthority())
 	{
 		if (bHasFlag)
 		{
-			if(IsValid(InFlagActor))
+			if (AMGPlayerCharacter* PC = Cast<AMGPlayerCharacter>(Owner))
 			{
-				UStaticMeshComponent* SrcMesh = InFlagActor->FindComponentByClass<UStaticMeshComponent>();
-				if (IsValid(SrcMesh))
+				if (AMGPlayerState* PS = PC->GetPlayerState<AMGPlayerState>())
 				{
-					ReplicatedFlagMesh = SrcMesh->GetStaticMesh();
-					ReplicatedFlagMaterial = SrcMesh->GetMaterial(0);
-				}
-
-				// [추가됨] BP에 부착된 나이아가라 컴포넌트 정보 검색 및 백업
-				UNiagaraComponent* SrcNiagara = InFlagActor->FindComponentByClass<UNiagaraComponent>();
-				if (IsValid(SrcNiagara))
-				{
-					ReplicatedNiagaraSystem = SrcNiagara->GetAsset();
+					ReplicatedFlagColor = PS->GetPlayerLinearColor();
 				}
 			}
 		}
 		else
 		{
-			ReplicatedFlagMesh = nullptr;
-			ReplicatedFlagMaterial = nullptr;
-			ReplicatedNiagaraSystem = nullptr;
+			ReplicatedFlagColor = FLinearColor::White;
 		}
+
+		bFlagState = bHasFlag;
 
 		if (IsValid(FlagMeshComp))
 		{
@@ -143,10 +132,6 @@ void UMGFlagActorComponent::ServerRPCTakeFlag_Implementation()
 
 				if (IsValid(TargetFlagComp) && TargetFlagComp->GetHasFlag() == true && TargetFlagComp->GetIsFlagProtected() == false)
 				{
-					this->ReplicatedFlagMesh = TargetFlagComp->ReplicatedFlagMesh;
-					this->ReplicatedFlagMaterial = TargetFlagComp->ReplicatedFlagMaterial;
-					this->ReplicatedNiagaraSystem = TargetFlagComp->ReplicatedNiagaraSystem;
-
 					TargetFlagComp->SetHasFlag(false);
 					this->SetHasFlag(true);
 					break;
@@ -185,26 +170,29 @@ void UMGFlagActorComponent::OnRep_IsFlagProtected()
 
 void UMGFlagActorComponent::OnRep_FlagVisuals()
 {
-	if (IsValid(ReplicatedFlagMesh) && IsValid(FlagMeshComp))
+	if (IsValid(FlagMeshComp))
 	{
-		FlagMeshComp->SetStaticMesh(ReplicatedFlagMesh);
-		FlagMeshComp->SetMaterial(0, ReplicatedFlagMaterial);
+		if (bFlagState == true)
+		{		
+			FlagMeshComp->SetVisibility(true);
 
-		FlagMeshComp->SetVisibility(true);
-	}
-	else
-	{
-		if (IsValid(FlagMeshComp))
+			UMaterialInstanceDynamic* MID = FlagMeshComp->CreateAndSetMaterialInstanceDynamic(0);
+			if (IsValid(MID))
+			{
+				MID->SetVectorParameterValue(FName("BaseColorFactor"), ReplicatedFlagColor);
+			}
+		}
+		else
 		{
 			FlagMeshComp->SetVisibility(false);
 		}
 	}
+	
 
 	if (IsValid(FlagNiagaraComp))
 	{
-		if (bFlagState && IsValid(ReplicatedNiagaraSystem))
+		if (bFlagState)
 		{
-			FlagNiagaraComp->SetAsset(ReplicatedNiagaraSystem);
 			FlagNiagaraComp->Activate(true);
 		}
 		else
