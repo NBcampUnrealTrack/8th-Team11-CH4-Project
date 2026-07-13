@@ -35,7 +35,7 @@ public:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
 	int32 MGScore = 0;	// 현재 미니게임 점수
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
 	int32 TotalScore = 0;	// 게임 최종점수
 
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, Replicated, EditAnywhere, BlueprintReadWrite)
