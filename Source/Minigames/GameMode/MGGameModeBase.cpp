@@ -88,6 +88,7 @@ void AMGGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 				PS->PlayerColor = *FoundColor;
 			}
 		}
+		NewPlayerController->ClientRPCOnSeamlessTravelCompleted();
 	}
 }
 
@@ -235,6 +236,7 @@ void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 	
 	PS->SetMGScore(PS->GetMGScore() + AddScore);
 	PS->TotalScore += AddScore;
+	PS->RoundScores.Add(AddScore);
 	
 	UE_LOG(LogTemp, Log, TEXT("[GiveScore] %s | Rank %d/%d | +%d점 | MGScore %d->%d | TotalScore %d->%d"),
 		*PS->GetPlayerName(), Rank, PlayerCount, AddScore,
@@ -261,7 +263,9 @@ void AMGGameModeBase::OnMainTimerElapsed()
 	switch (MGGameState->MatchState)
 	{
 	case EMatchState::None:
-		break;
+		{
+			break;
+		}
 	case EMatchState::Waiting:
 		{
 			// Test Log
@@ -320,7 +324,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 					case ERoundState::Round3:
 					{
 						// FinalResult을 별도 맵에 진행할거면 그곳으로, 아니라면 바로 로비로 이동(현재)
-						NextMapURL = TEXT("/Game/Minigames/Level/L_Lobby");
+						NextMapURL = TEXT("/Game/Minigames/Level/L_FinalResult");
 						MGGameInstance->CurrentRoundState = ERoundState::FinalResult;
 						break;
 					}

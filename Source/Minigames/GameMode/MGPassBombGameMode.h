@@ -24,6 +24,8 @@ public:
 
 	virtual void BeginPlay() override;
 
+	virtual void Logout(AController* Exiting) override;
+	
 	void EliminatePlayer(ACharacter* TargetPlayer);
 
 	UFUNCTION()
@@ -46,4 +48,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Minigame")
 	TArray<TObjectPtr<AMGPlayerController>> AlivePlayers;
 
+private:
+	bool TryFinishByLastManStanding();
+	
+	void AssignBombToRandomAlive();
+	
+	FTimerHandle CutSceneTimerHandler;
 };

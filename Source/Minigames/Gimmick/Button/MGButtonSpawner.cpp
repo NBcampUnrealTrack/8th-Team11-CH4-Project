@@ -79,23 +79,31 @@ void AMGButtonSpawner::SpawnButtonsOnPlatform(AActor* Platform, int32 ButtonCoun
 
     for (int32 i = 0; i < ButtonCount; ++i)
     {
-        FVector SpawnLocation;
-        if (!FindSpawnLocation(SpawnArea, SpawnedLocations, SpawnLocation))
-        {
-            continue;
-        }
-
         FActorSpawnParameters Params;
-        Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+        Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
         AMGButtonActor* Button = GetWorld()->SpawnActor<AMGButtonActor>(
-            ButtonClass, SpawnLocation, FRotator::ZeroRotator, Params);
+            ButtonClass, SpawnArea->GetComponentLocation(), FRotator::ZeroRotator, Params);
 
         if (!Button)
         {
             continue;
         }
 
+        if (!CachedButtonHalfExtent.IsSet())
+        {
+            const FVector Extent = Button->GetComponentsBoundingBox(true).GetExtent();
+            CachedButtonHalfExtent = FVector2D(Extent.X, Extent.Y);
+        }
+
+        FVector SpawnLocation;
+        if (!FindSpawnLocation(SpawnArea, SpawnedLocations, CachedButtonHalfExtent.GetValue(), SpawnLocation))
+        {
+            Button->Destroy();
+            continue;
+        }
+
+        Button->SetActorLocation(SpawnLocation);
         Button->AttachToComponent(Platform->GetRootComponent(), FAttachmentTransformRules::KeepWorldTransform);
 
         if (MovingPlatform)
@@ -128,19 +136,25 @@ UBoxComponent* AMGButtonSpawner::GetSpawnArea(AActor* Platform) const
 bool AMGButtonSpawner::FindSpawnLocation(
     UBoxComponent* SpawnArea,
     const TArray<FVector>& ExistingLocations,
+    const FVector2D& ButtonHalfExtent,
     FVector& OutLocation) const
 {
-    const FVector Origin = SpawnArea->GetComponentLocation();
-    const FVector Extent = SpawnArea->GetScaledBoxExtent();
+    const FVector ScaledExtent = SpawnArea->GetScaledBoxExtent();
+
+    const float RangeX = FMath::Max(ScaledExtent.X - ButtonHalfExtent.X, 0.f);
+    const float RangeY = FMath::Max(ScaledExtent.Y - ButtonHalfExtent.Y, 0.f);
 
     constexpr int32 MaxTry = 100;
 
     for (int32 Try = 0; Try < MaxTry; ++Try)
     {
-        const FVector Candidate(
-            Origin.X + FMath::FRandRange(-Extent.X, Extent.X),
-            Origin.Y + FMath::FRandRange(-Extent.Y, Extent.Y),
-            Origin.Z);
+        const FVector LocalOffset(
+            FMath::FRandRange(-RangeX, RangeX),
+            FMath::FRandRange(-RangeY, RangeY),
+            0.f);
+
+        const FVector Candidate = SpawnArea->GetComponentLocation()
+            + SpawnArea->GetComponentQuat().RotateVector(LocalOffset);
 
         bool bTooClose = false;
 
