@@ -32,7 +32,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties")
 	UBoxComponent* OverlapBox;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Properties")
 	const UMGEffectDataAsset* ItemEffectData;
 
 private:
