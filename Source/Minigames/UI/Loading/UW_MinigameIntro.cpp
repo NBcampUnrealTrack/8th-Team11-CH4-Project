@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 
 void UUW_MinigameIntro::Setup(const FMGMinigameInfoRow& Row)
 {
@@ -50,6 +51,8 @@ void UUW_MinigameIntro::Setup(const FMGMinigameInfoRow& Row)
 				const FString LineText = FString::Printf(TEXT("%d. %s"), i + 1, *Row.RuleLines[i].ToString());
 				Line->SetText(FText::FromString(LineText));
 				Line->SetColorAndOpacity(FSlateColor(FLinearColor::Black));
+				Line->SetAutoWrapText(true);
+				
 				Box_Rules->AddChildToVerticalBox(Line);
 			}
 		}
