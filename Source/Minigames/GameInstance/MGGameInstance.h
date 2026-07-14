@@ -42,5 +42,8 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Player")
 	FString PlayerNickname;
+	
+	UPROPERTY()
+	TSet<FString> LobbyPlayerIds;
 
 };

@@ -34,13 +34,12 @@ void AMGLobbyGameModeBase::PreLogin(const FString& Options, const FString& Addre
 	const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage)
 {
 	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
-
+	
 	if (AllPlayerControllers.Num() >= MaxPlayerCount)
 	{
 		ErrorMessage = TEXT("Lobby is full");
 		// TODO: 정원 초과 안내 UI. ErrorString을 위젯에 표시 (3~4주차 UI 작업 때 같이 처리)
 	}
-	
 }
 
 void AMGLobbyGameModeBase::PostLogin(APlayerController* NewPlayer)
@@ -53,6 +52,18 @@ void AMGLobbyGameModeBase::PostLogin(APlayerController* NewPlayer)
 		AllPlayerControllers.Add(PC);
 		
 		AssignRandomColorToPlayer(PC->GetPlayerState<AMGLobbyPlayerState>());
+		
+		if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
+		{
+			if (IsValid(PC->PlayerState))
+			{
+				const FUniqueNetIdRepl Id = PC->PlayerState->GetUniqueId();
+				if (Id.IsValid())
+				{
+					GI->LobbyPlayerIds.Add(Id.ToString());
+				}
+			}
+		}
 		
 		if (AMGLobbyGameStateBase* GS = GetGameState<AMGLobbyGameStateBase>())
 		{

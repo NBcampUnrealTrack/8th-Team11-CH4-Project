@@ -32,8 +32,12 @@ void AMGGameModeBase::PreLogin(const FString& Options, const FString& Address, c
 		// 로비 상태가 아니라면 (Round1, Round2, Round3, FinalResult) 접속 차단
 		if (MGGameInstance->CurrentRoundState != ERoundState::Lobby)
 		{
-			ErrorMessage = TEXT("The tournament has already started. You can only join in the Lobby.");
-			// 에러 메세지에 유효한 값이 있으면 접속 차단
+			// 로비를 거친 플레이어면 재접속 허용 (심리스 실패 대비)
+			if (MGGameInstance->LobbyPlayerIds.Contains(UniqueId.ToString()) == false)
+			{
+				// 모르는 외부인만 차단
+				ErrorMessage = TEXT("The tournament has already started. You can only join in the Lobby.");
+			}
 			return;
 		}
 	}
