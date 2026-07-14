@@ -38,9 +38,13 @@ public:
     UPROPERTY(ReplicatedUsing = OnRep_TimeRemaining, BlueprintReadOnly, Category = "Game")
     int32 TimeRemaining;
 
-    // 소유권 개수 순으로 플레이어 리스트 정렬
+    // 소유권 개수 순으로 플레이어 정렬
     UFUNCTION(BlueprintCallable, Category = "Scoreboard")
-    TArray<AMGButtonPlayerState*> GetSortedPlayerStates();
+    TArray<AMGButtonPlayerState*> GetSortedPlayerStatesByScore();
+
+    // 토탈 점수 순으로 플레이어 정렬
+    UFUNCTION(BlueprintCallable, Category = "Scoreboard")
+    TArray<AMGButtonPlayerState*> GetSortedPlayerStatesByTotalScore();
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
