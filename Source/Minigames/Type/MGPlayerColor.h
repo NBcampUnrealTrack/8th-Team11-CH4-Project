@@ -26,42 +26,41 @@ inline FLinearColor MGPlayerColorToLinear(EMGPlayerColor Color)
     {
     case EMGPlayerColor::Red:
         {
-            return FLinearColor(1.000f, 0.420f, 0.420f);
+            return FLinearColor(0.957f, 0.208f, 0.271f); 
         }
 
     case EMGPlayerColor::Orange:
         {
-            return FLinearColor(1.000f, 0.624f, 0.251f);
+            return FLinearColor(1.000f, 0.537f, 0.004f);
         }
 
     case EMGPlayerColor::Yellow:
         {
-            return FLinearColor(1.000f, 0.780f, 0.239f);
+            return FLinearColor(0.980f, 0.843f, 0.090f); 
         }
 
     case EMGPlayerColor::Green:
         {
-            return FLinearColor(0.424f, 0.800f, 0.467f);
+            return FLinearColor(0.000f, 0.729f, 0.443f);
         }
 
     case EMGPlayerColor::Blue:
         {
-            return FLinearColor(0.310f, 0.804f, 0.773f);
+            return FLinearColor(0.000f, 0.761f, 0.871f); 
         }
 
     case EMGPlayerColor::Indigo:
         {
-            return FLinearColor(0.302f, 0.608f, 0.961f);
+            return FLinearColor(0.000f, 0.255f, 0.553f); 
         }
 
     case EMGPlayerColor::Purple:
         {
-            return FLinearColor(0.631f, 0.416f, 0.961f);
+        return FLinearColor(0.373f, 0.157f, 0.475f); 
         }
-
     case EMGPlayerColor::Pink:
         {
-            return FLinearColor(0.996f, 0.420f, 0.835f);
+            return FLinearColor(0.941f, 0.204f, 0.643f);
         }
 
     case EMGPlayerColor::White:

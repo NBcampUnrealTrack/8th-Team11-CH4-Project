@@ -125,6 +125,12 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UMGChat>ChatWidgetInstance;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Chat")
+	TSubclassOf<class UMGChatPopupList> ChatPopupListClass;
+
+	UPROPERTY()
+	TObjectPtr<class UMGChatPopupList> ChatPopupListInstance;
+
 	FString ChatMessageString;
 
 	virtual void SetupInputComponent() override;

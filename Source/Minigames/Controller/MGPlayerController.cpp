@@ -27,6 +27,8 @@
 #include "PlayerState/MGPlayerState.h"
 #include "PlayerState/MGLobbyPlayerState.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "UI/Chat/MGChatPopup.h"
+#include "UI/Chat/MGChatPopupList.h"
 
 
 void AMGPlayerController::BeginPlay()
@@ -62,7 +64,7 @@ void AMGPlayerController::BeginPlay()
 		SetInputMode(InputMode);
 		bShowMouseCursor = true;
 
-		// (일반 트래블: PC가 재생성되어 BeginPlay 경로로 생성됨.
+	// (일반 트래블: PC가 재생성되어 BeginPlay 경로로 생성됨.
 	//  심리스 트래블: PC가 유지되어 BeginPlay가 다시 불리지 않으므로
 	//  ClientRPCOnSeamlessTravelCompleted 경로로 재생성 — 두 경로 모두 필요함)
 		CreateChatWidget();
@@ -331,6 +333,20 @@ void AMGPlayerController::CreateChatWidget()
 			}
 		}
 	}
+	if (IsValid(ChatPopupListInstance) == true)
+	{
+		ChatPopupListInstance->RemoveFromParent();
+		ChatPopupListInstance = nullptr;
+	}
+	if (IsValid(ChatPopupListClass) == true)
+	{
+		ChatPopupListInstance = CreateWidget<UMGChatPopupList>(this, ChatPopupListClass);
+		if (IsValid(ChatPopupListInstance) == true)
+		{
+			ChatPopupListInstance->AddToViewport(9); 
+			ChatPopupListInstance->SetVisibility(ESlateVisibility::HitTestInvisible); 
+		}
+	}
 }
 
 void AMGPlayerController::SetChatMessageString(const FString& InChatMessageString)
@@ -346,17 +362,32 @@ void AMGPlayerController::SetChatMessageString(const FString& InChatMessageStrin
 void AMGPlayerController::ClientRPCPrintChatMessage_Implementation(const FMGChatType& InChatMessageString)
 {
 	UMGGameInstance* MGGameInstance = GetGameInstance<UMGGameInstance>();
-
 	if (IsValid(MGGameInstance) == true)
 	{
 		MGGameInstance->ChatMessageHistory.Add(InChatMessageString);
+		while (MGGameInstance->ChatMessageHistory.Num() > MaxChatHistory)
+		{
+			MGGameInstance->ChatMessageHistory.RemoveAt(0);
+		}
 	}
+
 	if (IsValid(ChatWidgetInstance) == true)
 	{
 		ChatWidgetInstance->AddChatMessage(InChatMessageString);
+
+		bool bIsMyMessage = false;
+		if (IsValid(PlayerState) == true)
+		{
+			bIsMyMessage = (InChatMessageString.SenderName == PlayerState->GetPlayerName());
+		}
+		if (bIsMyMessage == false
+			&& ChatWidgetInstance->GetVisibility() == ESlateVisibility::Collapsed
+			&& IsValid(ChatPopupListInstance) == true)
+		{
+			ChatPopupListInstance->AddPopup(InChatMessageString);
+		}
 	}
 }
-
 bool AMGPlayerController::ServerRPCPrintChatMessageString_Validate(const FString& InChatMessageString)
 {
 	return InChatMessageString.Len() <= MaxChatLength;
@@ -417,6 +448,10 @@ void AMGPlayerController::OnEnterKeyPressed()
 	{
 		ChatWidgetInstance->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
+		if (IsValid(ChatPopupListInstance) == true)
+		{
+			ChatPopupListInstance->ClearAllPopups();
+		}
 		if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
 		{
 			GI->bChatVisible = true;
