@@ -60,7 +60,7 @@ void AMGButtonGameModeBase::AdvanceTimer()
     }
 
     UE_LOG(LogTemp, Warning, TEXT("남은 게임 시간: %d"), TimeRemaining);
-\
+
     if (TimeRemaining <= 0)
     {
         UE_LOG(LogTemp, Warning, TEXT("시간 종료! EndMinigame 호출"));
@@ -75,6 +75,9 @@ void AMGButtonGameModeBase::AdvanceTimer()
 void AMGButtonGameModeBase::EndMinigame()
 {
     UE_LOG(LogTemp, Warning, TEXT("EndMinigame 함수 진입"));
+
+    // 타이머 정리
+    GetWorldTimerManager().ClearTimer(GameTimerHandle);
 
     CurrentPhase = EGamePhase::GameOver;
 
@@ -107,7 +110,7 @@ void AMGButtonGameModeBase::EndMinigame()
 
         int32 CurrentRank = 1;
 
-        // 순위 계산
+        // 순위 계산 
         for (int32 i = 0; i < PlayerStates.Num(); ++i)
         {
             if (i > 0 && PlayerStates[i]->GetScore() < PlayerStates[i - 1]->GetScore())
@@ -116,8 +119,7 @@ void AMGButtonGameModeBase::EndMinigame()
             }
 
             // 점수 지급
-            Super::GiveScore(Cast<AMGPlayerState>(PlayerStates[i]), CurrentRank);
-
+            GiveScore(PlayerStates[i], CurrentRank);
 
             UE_LOG(LogTemp, Log, TEXT("플레이어: %s | 이번 미니게임 등수: %d"),
                 *PlayerStates[i]->GetPlayerName(),
@@ -141,7 +143,6 @@ void AMGButtonGameModeBase::EndMinigame()
             }
 
             PlayerStates[i]->Rank = OverallRank;
-
         }
 
         // 버튼 점수 초기화
