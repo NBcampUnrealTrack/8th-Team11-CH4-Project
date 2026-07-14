@@ -280,6 +280,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 				NotificationString = FString::Printf(TEXT(""));
 	
 				PlayCutScene();
+				MGGameState->OnRep_MatchState();
 			}
 	
 			NotifyToAllPlayer(NotificationString);
