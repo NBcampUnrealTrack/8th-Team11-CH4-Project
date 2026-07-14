@@ -16,6 +16,8 @@ public:
 protected:
     virtual void BeginPlay() override;
 
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
     // 게임 진행 함수
     virtual void StartMinigame() override;
     void AdvanceTimer();

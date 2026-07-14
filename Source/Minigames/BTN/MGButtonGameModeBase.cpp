@@ -1,8 +1,6 @@
 ﻿#include "MGButtonGameModeBase.h"
 #include "MGButtonPlayerState.h"
-#include "PlayerState/MGPlayerState.h"
 #include "GameState/MGGameStateBase.h"
-#include "Controller/MGPlayerController.h"
 #include "GameFramework/PlayerController.h"
 
 AMGButtonGameModeBase::AMGButtonGameModeBase()
@@ -18,6 +16,14 @@ void AMGButtonGameModeBase::BeginPlay()
     Super::BeginPlay();
 }
 
+void AMGButtonGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    // 종료 시 실행 중인 타이머 정리
+    GetWorldTimerManager().ClearTimer(GameTimerHandle);
+
+    Super::EndPlay(EndPlayReason);
+}
+
 // 게임 시작
 void AMGButtonGameModeBase::StartMinigame()
 {
@@ -25,8 +31,6 @@ void AMGButtonGameModeBase::StartMinigame()
 
     CurrentPhase = EGamePhase::Playing;
     TimeRemaining = GameDuration;
-
-    UE_LOG(LogTemp, Warning, TEXT("게임 시작 (%d초)"), TimeRemaining);
 
     if (AMGButtonGameState* GS = GetGameState<AMGButtonGameState>())
     {
@@ -59,25 +63,14 @@ void AMGButtonGameModeBase::AdvanceTimer()
         }
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("남은 게임 시간: %d"), TimeRemaining);
-
     if (TimeRemaining <= 0)
     {
-        UE_LOG(LogTemp, Warning, TEXT("시간 종료! EndMinigame 호출"));
-
-        GetWorldTimerManager().ClearTimer(GameTimerHandle);
-
         EndMinigame();
     }
 }
 
-
 void AMGButtonGameModeBase::EndMinigame()
 {
-    UE_LOG(LogTemp, Warning, TEXT("EndMinigame 함수 진입"));
-
-    // 타이머 정리
-    GetWorldTimerManager().ClearTimer(GameTimerHandle);
 
     CurrentPhase = EGamePhase::GameOver;
 
@@ -110,7 +103,7 @@ void AMGButtonGameModeBase::EndMinigame()
 
         int32 CurrentRank = 1;
 
-        // 순위 계산 
+        // 순위 계산
         for (int32 i = 0; i < PlayerStates.Num(); ++i)
         {
             if (i > 0 && PlayerStates[i]->GetScore() < PlayerStates[i - 1]->GetScore())
@@ -120,10 +113,6 @@ void AMGButtonGameModeBase::EndMinigame()
 
             // 점수 지급
             GiveScore(PlayerStates[i], CurrentRank);
-
-            UE_LOG(LogTemp, Log, TEXT("플레이어: %s | 이번 미니게임 등수: %d"),
-                *PlayerStates[i]->GetPlayerName(),
-                CurrentRank);
         }
 
         // 전체 점수 기준 정렬
