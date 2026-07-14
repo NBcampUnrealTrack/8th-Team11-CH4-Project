@@ -60,7 +60,7 @@ void AMGLobbyGameModeBase::PostLogin(APlayerController* NewPlayer)
 				const FUniqueNetIdRepl Id = PC->PlayerState->GetUniqueId();
 				if (Id.IsValid())
 				{
-					GI->LobbyPlayerIds.Add(Id.ToString());
+					GI->LobbyPlayerIds.Add(Id.GetUniqueNetId()->ToString());
 				}
 			}
 		}
