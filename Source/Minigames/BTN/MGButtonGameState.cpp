@@ -23,30 +23,41 @@ void AMGButtonGameState::OnRep_CurrentPhase()
 
 void AMGButtonGameState::OnRep_TimeRemaining() {}
 
-TArray<AMGButtonPlayerState*> AMGButtonGameState::GetSortedPlayerStates()
+TArray<AMGButtonPlayerState*> AMGButtonGameState::GetSortedPlayerStatesByScore()
 {
     TArray<AMGButtonPlayerState*> SortedPlayers;
 
     for (APlayerState* PS : PlayerArray)
     {
-        if (PS == nullptr) continue;
-
-        AMGButtonPlayerState* ButtonPS = Cast<AMGButtonPlayerState>(PS);
-
-        // 캐스팅 실패 시, 객체 클래스 이름을 출력
-        if (ButtonPS)
+        if (AMGButtonPlayerState* ButtonPS = Cast<AMGButtonPlayerState>(PS))
         {
             SortedPlayers.Add(ButtonPS);
         }
-        else
+    }
+
+    SortedPlayers.Sort([](const AMGButtonPlayerState& A, const AMGButtonPlayerState& B)
         {
-            UE_LOG(LogTemp, Warning, TEXT("DEBUG: Cast FAILED. Real Class Name: %s"), *PS->GetClass()->GetName());
+            return A.GetScore() > B.GetScore();
+        });
+
+    return SortedPlayers;
+}
+
+TArray<AMGButtonPlayerState*> AMGButtonGameState::GetSortedPlayerStatesByTotalScore()
+{
+    TArray<AMGButtonPlayerState*> SortedPlayers;
+
+    for (APlayerState* PS : PlayerArray)
+    {
+        if (AMGButtonPlayerState* ButtonPS = Cast<AMGButtonPlayerState>(PS))
+        {
+            SortedPlayers.Add(ButtonPS);
         }
     }
 
-    // 소유권 개수 순으로 내림차순 정렬
-    SortedPlayers.Sort([](const AMGButtonPlayerState& A, const AMGButtonPlayerState& B) {
-        return A.GetScore() > B.GetScore();
+    SortedPlayers.Sort([](const AMGButtonPlayerState& A, const AMGButtonPlayerState& B)
+        {
+            return A.Rank < B.Rank;
         });
 
     return SortedPlayers;
