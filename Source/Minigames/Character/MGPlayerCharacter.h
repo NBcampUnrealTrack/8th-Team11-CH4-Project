@@ -34,6 +34,8 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void OnRep_PlayerState() override;
+
 #pragma endregion
 
 #pragma region MGPlayerCharacter Components

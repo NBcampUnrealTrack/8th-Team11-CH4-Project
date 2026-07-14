@@ -23,10 +23,13 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Controller/MGPlayerController.h"
 #include "GameState/MGGameStateBase.h"
+#include "PlayerState/MGPlayerState.h"
+#include "Type/MGPlayerColor.h"
 #include "NiagaraComponent.h"
 #include "UI/MGFlagHUD.h"
 
 #include "Component/Button/MGInteractionOverlapComponent.h"
+#include "Minigames.h"
 
 AMGPlayerCharacter::AMGPlayerCharacter()
 	: bCanAttack(true)
@@ -169,6 +172,19 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 		FVector WidgetComponentLocation = NameWidgetComponent->GetComponentLocation();
 		FVector LocalPlayerCameraLocation = UGameplayStatics::GetPlayerCameraManager(this, 0)->GetCameraLocation();
 		NameWidgetComponent->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(WidgetComponentLocation, LocalPlayerCameraLocation));
+	}
+}
+
+void AMGPlayerCharacter::OnRep_PlayerState()
+{
+	UMaterialInstanceDynamic* ColorMat = GetMesh()->CreateDynamicMaterialInstance(0, GetMesh()->GetMaterial(0));
+	if (IsValid(ColorMat))
+	{
+		AMGPlayerState* MGPS = GetPlayerState<AMGPlayerState>();
+		if (IsValid(MGPS))
+		{
+			ColorMat->SetVectorParameterValue("PlayerColor", MGPlayerColorToLinear(MGPS->PlayerColor));
+		}
 	}
 }
 
