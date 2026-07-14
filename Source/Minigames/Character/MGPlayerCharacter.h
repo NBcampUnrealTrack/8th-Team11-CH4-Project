@@ -43,7 +43,7 @@ public:
 
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 
-	float GetCurrentAimPitch() const { return CurrentAimPitch; }
+	FORCEINLINE FRotator GetCurrentCamRot() { return CurrentCamRot; }
 
 	UMGStatusComponent* GetMGStatusComponent() const { return StatusComponent; }
 
@@ -87,7 +87,7 @@ private:
 	void HandleLandMineInput(const FInputActionValue& InValue);
 
 	UFUNCTION(Server, Unreliable) // 한 두번 정도는 씹혀도 되기 때문.
-	void ServerRPCUpdateAimValue(const float& InAimPitchValue);
+	void ServerRPCUpdateCamRot(const FRotator& InCamRot);
 
 	void HandleMeleeAttackInput(const FInputActionValue& InValue);
 
@@ -111,9 +111,12 @@ protected:
 	TObjectPtr<UInputAction> LandMineAction;
 
 	UPROPERTY(Replicated)
-	float CurrentAimPitch = 0.f;
+	FRotator CurrentCamRot = FRotator::ZeroRotator;
 
-	float PreviousAimPitch = 0.f;
+	FRotator PreviousCamRot = FRotator::ZeroRotator;
+
+
+	bool HeadDirection;	// true라면 양의 Yaw각도
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Input")
 	TObjectPtr<UInputAction> MeleeAttackAction;
