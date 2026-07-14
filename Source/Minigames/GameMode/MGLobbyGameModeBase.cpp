@@ -235,7 +235,7 @@ void AMGLobbyGameModeBase::TravelToMinigameLevel()
 	}
 
 	GI->CurrentRoundState = ERoundState::Round1;
-	GetWorld()->ServerTravel("/Game/Minigames/Level/KTI"); // Test
+	GetWorld()->ServerTravel(URL);
 }
 
 void AMGLobbyGameModeBase::GenerateMinigameSequence()
