@@ -10,6 +10,7 @@
 #include "MGGameInstance.generated.h"
 
 enum class EMGPlayerColor : uint8;
+class UDataTable;
 
 UCLASS()
 class MINIGAMES_API UMGGameInstance : public UGameInstance
@@ -18,6 +19,8 @@ class MINIGAMES_API UMGGameInstance : public UGameInstance
 
 public:
 	UMGGameInstance();
+	
+	virtual void Init() override;
 
 	UFUNCTION(BlueprintPure, Category = "Game Flow")
 	FString GetLevelURLForRound(int32 RoundIndex) const;
@@ -45,5 +48,14 @@ public:
 	
 	UPROPERTY()
 	TSet<FString> LobbyPlayerIds;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Loading")
+	FString PendingDestinationMapName;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Loading")
+	TObjectPtr<UDataTable> MinigameInfoTable;
+	
+private:
+	void HandleSeamlessTravelStart(UWorld* CurrentWorld, const FString& LevelName);
 
 };
