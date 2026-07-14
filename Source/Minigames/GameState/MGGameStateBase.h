@@ -14,8 +14,11 @@ class MINIGAMES_API AMGGameStateBase : public AGameStateBase
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	UFUNCTION()
+	void OnRep_MatchState();
+	
 public:
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "GameFlow")
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState, VisibleAnywhere, BlueprintReadOnly, Category = "GameFlow")
 	EMatchState MatchState = EMatchState::Waiting;
 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "GameFlow")
