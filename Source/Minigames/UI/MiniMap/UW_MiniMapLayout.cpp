@@ -40,24 +40,27 @@ void UUW_MiniMapLayout::NativeDestruct()
 
 void UUW_MiniMapLayout::UpdateIconPosition()
 {
-	// 안전 검사
 	if (!IsValid(CachedPlayerPawn) || !IsValid(CachedMinimapCamera) || !IsValid(PlayerIcon))
 	{
 		return;
 	}
 
-	// 월드 좌표 가져오기
 	FVector PlayerLoc = CachedPlayerPawn->GetActorLocation();
 	FVector CameraLoc = CachedMinimapCamera->GetActorLocation();
 	float OrthoWidth = CachedMinimapCamera->OrthographicSize;
 
-	// 3D 월드 좌표 -> 2D UI 좌표 변환 공식 (언리얼 좌표계 기준)
-	// X축: 플레이어의 Y(좌우) - 카메라의 Y(좌우)
-	// Y축: 플레이어의 X(앞뒤) - 카메라의 X(앞뒤)에 마이너스 적용 (UI는 아래로 갈수록 +이므로)
-	float UI_X = ((PlayerLoc.Y - CameraLoc.Y) / OrthoWidth) * MinimapSize.X;
-	float UI_Y = (-(PlayerLoc.X - CameraLoc.X) / OrthoWidth) * MinimapSize.Y;
+	// 카메라 위치를 기준으로 플레이어의 상대위치 구하기
+	float DistanceX = PlayerLoc.X - CameraLoc.X;
+	float DistanceY = PlayerLoc.Y - CameraLoc.Y;
 
-	// 캔버스 슬롯으로 형변환하여 위치 적용
+	// Ratio를 [-1.0 ~ 1.0] 으로 맵핑
+	float RatioX = DistanceY / (OrthoWidth * 0.5f);
+	float RatioY = -DistanceX / (OrthoWidth * 0.5f);
+
+	// 미니맵 전체 크기(256 * 256)의 절반을 곱해서 [-128 ~ 128] 맵핑
+	float UI_X = RatioX * (MinimapSize.X * 0.5f);
+	float UI_Y = RatioY * (MinimapSize.Y * 0.5f);
+
 	if (UCanvasPanelSlot* IconSlot = Cast<UCanvasPanelSlot>(PlayerIcon->Slot))
 	{
 		IconSlot->SetPosition(FVector2D(UI_X, UI_Y));
