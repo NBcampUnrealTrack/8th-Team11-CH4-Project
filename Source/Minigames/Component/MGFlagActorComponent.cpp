@@ -49,12 +49,14 @@ bool UMGFlagActorComponent::SetHasFlag(bool bHasFlag, AMGFlagActor* InFlagActor)
 				if (AMGPlayerState* PS = PC->GetPlayerState<AMGPlayerState>())
 				{
 					ReplicatedFlagColor = PS->GetPlayerLinearColor();
+					UE_LOG(LogTemp, Warning, TEXT("flag color is changed"));
 				}
 			}
 		}
 		else
 		{
 			ReplicatedFlagColor = FLinearColor::White;
+			UE_LOG(LogTemp, Warning, TEXT("flag color cannot be changed"));
 		}
 
 		bFlagState = bHasFlag;
@@ -132,6 +134,7 @@ void UMGFlagActorComponent::ServerRPCTakeFlag_Implementation()
 
 				if (IsValid(TargetFlagComp) && TargetFlagComp->GetHasFlag() == true && TargetFlagComp->GetIsFlagProtected() == false)
 				{
+					UE_LOG(LogTemp, Warning, TEXT("flag owner changed"));
 					TargetFlagComp->SetHasFlag(false);
 					this->SetHasFlag(true);
 					break;
@@ -176,7 +179,11 @@ void UMGFlagActorComponent::OnRep_FlagVisuals()
 		{		
 			FlagMeshComp->SetVisibility(true);
 
-			UMaterialInstanceDynamic* MID = FlagMeshComp->CreateAndSetMaterialInstanceDynamic(0);
+			UMaterialInstanceDynamic* MID = Cast<UMaterialInstanceDynamic>(FlagMeshComp->GetMaterial(0));
+			if (!IsValid(MID))
+			{
+				MID = FlagMeshComp->CreateAndSetMaterialInstanceDynamic(0);
+			}
 			if (IsValid(MID))
 			{
 				MID->SetVectorParameterValue(FName("BaseColorFactor"), ReplicatedFlagColor);
