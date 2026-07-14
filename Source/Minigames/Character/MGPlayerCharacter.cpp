@@ -23,6 +23,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Controller/MGPlayerController.h"
 #include "GameState/MGGameStateBase.h"
+#include "NiagaraComponent.h"
+#include "UI/MGFlagHUD.h"
 
 #include "Component/Button/MGInteractionOverlapComponent.h"
 
@@ -74,6 +76,10 @@ AMGPlayerCharacter::AMGPlayerCharacter()
 	FlagEffectMeshComponent->SetupAttachment(FlagMeshComponent);
 	FlagEffectMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	FlagEffectMeshComponent->SetVisibility(false);
+
+	FlagNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("FlagNiagaraComponent"));
+	FlagNiagaraComponent->SetupAttachment(FlagMeshComponent);
+	FlagNiagaraComponent->SetAutoActivate(false);
 }
 
 void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -96,6 +102,14 @@ void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	if (IsValid(TakeFlagAction))
 	{
 		EIC->BindAction(TakeFlagAction, ETriggerEvent::Started, this, &ThisClass::HandleTakeFlagInput);
+	}
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (AMGFlagHUD* FlagHUD = Cast<AMGFlagHUD>(PC->GetHUD()))
+		{
+			FlagHUD->BindPlayerFlagComponent(FlagActorComponent);
+		}
 	}
 }
 
@@ -123,7 +137,7 @@ void AMGPlayerCharacter::BeginPlay()
 
 	if (IsValid(FlagActorComponent))
 	{
-		FlagActorComponent->RegisterFlagMeshes(FlagMeshComponent, FlagEffectMeshComponent);
+		FlagActorComponent->RegisterFlagMeshes(FlagMeshComponent, FlagEffectMeshComponent, FlagNiagaraComponent);
 	}
 
 }

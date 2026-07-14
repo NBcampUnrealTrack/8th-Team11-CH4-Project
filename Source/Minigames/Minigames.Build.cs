@@ -17,7 +17,10 @@ public class Minigames : ModuleRules
 			"UMG","Slate", "SlateCore",
 
 			// Level Sequence
-			"LevelSequence", "MovieScene",
+			"LevelSequence", "MovieScene", 
+
+			// Particle Effect
+			"Niagara", 
         });
 
 		PublicIncludePaths.AddRange(new string[]
