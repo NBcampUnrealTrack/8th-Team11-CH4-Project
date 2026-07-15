@@ -13,7 +13,6 @@ class UInputAction;
 class UAnimMontage;
 class UMGStatusComponent;
 class UMGNameWidgetComponent;
-class UUW_HPText;
 class UMGInteractionOverlapComponent;
 
 UCLASS()
@@ -34,8 +33,6 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void OnRep_PlayerState() override;
-
 #pragma endregion
 
 #pragma region MGPlayerCharacter Components
@@ -45,9 +42,11 @@ public:
 
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 
-	FORCEINLINE FRotator GetCurrentCamRot() { return CurrentCamRot; }
+	FORCEINLINE FRotator GetCurrentCamRot() const { return CurrentCamRot; }
 
 	UMGStatusComponent* GetMGStatusComponent() const { return StatusComponent; }
+
+	void FillPlayerColor();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Components")
@@ -77,6 +76,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MGPlayerCharacter|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UNiagaraComponent> FlagNiagaraComponent;
 
+	UPROPERTY()
+	UMaterialInstanceDynamic* PlayerColorMat;
+
 #pragma endregion
 
 #pragma region Input
@@ -86,12 +88,8 @@ private:
 
 	void HandleLookInput(const FInputActionValue& InValue);
 
-	void HandleLandMineInput(const FInputActionValue& InValue);
-
 	UFUNCTION(Server, Unreliable) // 한 두번 정도는 씹혀도 되기 때문.
 	void ServerRPCUpdateCamRot(const FRotator& InCamRot);
-
-	void HandleMeleeAttackInput(const FInputActionValue& InValue);
 
 	// 깃발 뺏기 액션
 	void HandleTakeFlagInput(const FInputActionValue& InValue);
@@ -109,90 +107,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Input")
 	TObjectPtr<UInputAction> JumpAction;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Input")
-	TObjectPtr<UInputAction> LandMineAction;
-
 	UPROPERTY(Replicated)
 	FRotator CurrentCamRot = FRotator::ZeroRotator;
 
 	FRotator PreviousCamRot = FRotator::ZeroRotator;
 
-
-	bool HeadDirection;	// true라면 양의 Yaw각도
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Input")
-	TObjectPtr<UInputAction> MeleeAttackAction;
-
 	// 깃발 뺏기 입력 액션
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Input")
 	TObjectPtr<UInputAction> TakeFlagAction;
-
-#pragma endregion
-
-#pragma region LandMine
-
-private:
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerRPCSpawnLandMine();
-
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSubclassOf<AActor> LandMineClass;
-
-#pragma endregion
-
-#pragma region Attack
-
-public:
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-
-	void CheckMeleeAttackHit();
-
-	UFUNCTION()
-	void OnDeath();
-
-private:
-	void DrawDebugMeleeAttack(const FColor& DrawColor, FVector TraceStart, FVector TraceEnd, FVector Forward);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerRPCMeleeAttack(float InStartMeleeAttackTime);
-
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastRPCMeleeAttack();
-
-	UFUNCTION()
-	void OnRep_CanAttack();
-
-	void PlayMeleeAttackMontage();
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerRPCPerformMeleeHit(ACharacter* InDamagedCharacters, float InCheckTime);
-
-	UFUNCTION(Client, Unreliable)
-	void ClientRPCPlayMeleeAttackMontage(AMGPlayerCharacter* InTargetCharacter);
-
-protected:
-	UPROPERTY(ReplicatedUsing = OnRep_CanAttack)
-	uint8 bCanAttack : 1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<UAnimMontage> MeleeAttackMontage;
-
-	float MeleeAttackMontagePlayTime;
-
-	float LastStartMeleeAttackTime;
-
-	float MeleeAttackTimeDifference;
-
-	float MinAllowedTimeForMeleeAttack;
-
-#pragma endregion
-
-#pragma region HPWidget
-
-public:
-	void TakeBuff(float InBuffValue);
-
-#pragma endregion
 
 };
