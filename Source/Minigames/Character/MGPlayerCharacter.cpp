@@ -23,10 +23,13 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Controller/MGPlayerController.h"
 #include "GameState/MGGameStateBase.h"
+#include "PlayerState/MGPlayerState.h"
+#include "Type/MGPlayerColor.h"
 #include "NiagaraComponent.h"
 #include "UI/MGFlagHUD.h"
 
 #include "Component/Button/MGInteractionOverlapComponent.h"
+#include "Minigames.h"
 
 AMGPlayerCharacter::AMGPlayerCharacter()
 	: bCanAttack(true)
@@ -146,7 +149,7 @@ void AMGPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ThisClass, CurrentAimPitch);
+	DOREPLIFETIME(ThisClass, CurrentCamRot);
 	DOREPLIFETIME(ThisClass, bCanAttack);
 }
 
@@ -154,25 +157,35 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (IsValid(GetController()) == true)
+	if (IsLocallyControlled() == true)
 	{
-		PreviousAimPitch = CurrentAimPitch;
-
-		FRotator ControlRotation = GetController()->GetControlRotation();
-		float NormalizedPitch = FRotator::NormalizeAxis(ControlRotation.Pitch);
-		CurrentAimPitch = FMath::Clamp(NormalizedPitch, -90.0f, 90.0f);
+		CurrentCamRot = Camera->GetComponentRotation();
+		if (CurrentCamRot != PreviousCamRot)
+		{
+			ServerRPCUpdateCamRot(CurrentCamRot);
+			PreviousCamRot = CurrentCamRot;
+		}
 	}
-
-	if (IsLocallyControlled() == true && PreviousAimPitch != CurrentAimPitch)
-	{
-		ServerRPCUpdateAimValue(CurrentAimPitch);
-	}
-
+	
 	if (IsValid(NameWidgetComponent) == true && HasAuthority() == false)
 	{
 		FVector WidgetComponentLocation = NameWidgetComponent->GetComponentLocation();
 		FVector LocalPlayerCameraLocation = UGameplayStatics::GetPlayerCameraManager(this, 0)->GetCameraLocation();
 		NameWidgetComponent->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(WidgetComponentLocation, LocalPlayerCameraLocation));
+	}
+}
+
+void AMGPlayerCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	UMaterialInstanceDynamic* ColorMat = GetMesh()->CreateDynamicMaterialInstance(0, GetMesh()->GetMaterial(0));
+	if (IsValid(ColorMat))
+	{
+		AMGPlayerState* MGPS = GetPlayerState<AMGPlayerState>();
+		if (IsValid(MGPS))
+		{
+			ColorMat->SetVectorParameterValue("PlayerColor", MGPlayerColorToLinear(MGPS->PlayerColor));
+		}
 	}
 }
 
@@ -438,9 +451,9 @@ bool AMGPlayerCharacter::ServerRPCPerformMeleeHit_Validate(ACharacter* InDamaged
 	return MinAllowedTimeForMeleeAttack < (InCheckTime - LastStartMeleeAttackTime);
 }
 
-void AMGPlayerCharacter::ServerRPCUpdateAimValue_Implementation(const float& InAimPitchValue)
+void AMGPlayerCharacter::ServerRPCUpdateCamRot_Implementation(const FRotator& InCamRot)
 {
-	CurrentAimPitch = InAimPitchValue;
+	CurrentCamRot = InCamRot;
 }
 
 void AMGPlayerCharacter::ServerRPCSpawnLandMine_Implementation()
