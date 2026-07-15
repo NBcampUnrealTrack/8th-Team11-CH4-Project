@@ -21,7 +21,7 @@ void UMGAnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
-	if (IsValid(OwnerCharacter) == false || IsValid(OwnerCharacterMovementComponent) == false)
+	if (!ensure(IsValid(OwnerCharacter) && IsValid(OwnerCharacterMovementComponent)))
 	{
 		return;
 	}
@@ -50,13 +50,5 @@ void UMGAnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 
 		HeadDirection = (TargetHeadRot.Yaw >= 0.f);
 		CurrentHeadRot = FMath::RInterpTo(CurrentHeadRot, TargetHeadRot, DeltaSeconds, HeadInterpSpeed);
-	}
-}
-
-void UMGAnimInstanceBase::AnimNotify_CheckMeleeAttackHit()
-{
-	if (IsValid(OwnerCharacter) == true)
-	{
-		OwnerCharacter->CheckMeleeAttackHit();
 	}
 }

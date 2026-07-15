@@ -1,4 +1,5 @@
 ﻿#include "PlayerState/MGPlayerState.h"
+#include "Character/MGPlayerCharacter.h"
 #include "Net/UnrealNetwork.h"
 
 #include "Minigames.h"				// 커스텀 Log
@@ -18,6 +19,17 @@ void AMGPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(ThisClass, TotalScore);
 	DOREPLIFETIME(ThisClass, MGScore);
 	DOREPLIFETIME(ThisClass, Rank);
+}
+
+void AMGPlayerState::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    if (PlayerColorTickDelegateHandle.IsValid())
+    {
+        FTSTicker::GetCoreTicker().RemoveTicker(PlayerColorTickDelegateHandle);
+        PlayerColorTickDelegateHandle.Reset();
+    }
+
+    Super::EndPlay(EndPlayReason);
 }
 
 void AMGPlayerState::CopyProperties(APlayerState* PlayerState)
@@ -44,4 +56,25 @@ void AMGPlayerState::OnRep_PlayerColor()
     // TestLog
     // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White,
     //     FString::Printf(TEXT("[Player %d] Color: %d"), GetPlayerId(), (uint8)PlayerColor));
+
+    if (PlayerColorTickDelegateHandle.IsValid())
+    {
+        FTSTicker::GetCoreTicker().RemoveTicker(PlayerColorTickDelegateHandle);
+    }
+    PlayerColorTickDelegateHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &ThisClass::SendColorToPlayerCharacter), 0.0f);
+}
+
+bool AMGPlayerState::SendColorToPlayerCharacter(float DeltaTime)
+{
+    if (IsValid(GetPawn()))
+    {
+        AMGPlayerCharacter* MGPC = Cast<AMGPlayerCharacter>(GetPawn());
+
+        if (IsValid(MGPC))
+        {
+            MGPC->FillPlayerColor();
+            return false;
+        }
+    }
+    return true;
 }
