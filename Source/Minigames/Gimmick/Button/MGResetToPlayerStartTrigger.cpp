@@ -1,16 +1,14 @@
 ﻿#include "MGResetToPlayerStartTrigger.h"
 
 #include "Components/BoxComponent.h"
+#include "EngineUtils.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerStart.h"
-#include "EngineUtils.h"
-#include "TimerManager.h"
 
 AMGResetToPlayerStartTrigger::AMGResetToPlayerStartTrigger()
 {
     PrimaryActorTick.bCanEverTick = false;
-
     bReplicates = false;
 
     TriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerVolume"));
@@ -29,34 +27,27 @@ void AMGResetToPlayerStartTrigger::BeginPlay()
 
     if (HasAuthority())
     {
-        TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &AMGResetToPlayerStartTrigger::OnTriggerOverlapBegin);
+        TriggerVolume->OnComponentBeginOverlap.AddDynamic(
+            this, &AMGResetToPlayerStartTrigger::OnTriggerOverlapBegin);
     }
 }
 
-APlayerStart* AMGResetToPlayerStartTrigger::FindTargetPlayerStart() const
+APlayerStart* AMGResetToPlayerStartTrigger::GetRandomPlayerStart() const
 {
-    if (TargetPlayerStart)
-    {
-        return TargetPlayerStart;
-    }
-
-    if (!PlayerStartTag.IsNone())
-    {
-        for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
-        {
-            if (It->PlayerStartTag == PlayerStartTag)
-            {
-                return *It;
-            }
-        }
-    }
+    TArray<APlayerStart*> Candidates;
 
     for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
     {
-        return *It;
+        Candidates.Add(*It);
     }
 
-    return nullptr;
+    if (Candidates.Num() == 0)
+    {
+        return nullptr;
+    }
+
+    const int32 RandomIndex = FMath::RandRange(0, Candidates.Num() - 1);
+    return Candidates[RandomIndex];
 }
 
 void AMGResetToPlayerStartTrigger::OnTriggerOverlapBegin(
@@ -87,7 +78,7 @@ void AMGResetToPlayerStartTrigger::OnTriggerOverlapBegin(
         }
     }
 
-    APlayerStart* StartPoint = FindTargetPlayerStart();
+    APlayerStart* StartPoint = GetRandomPlayerStart();
     if (!StartPoint)
     {
         UE_LOG(LogTemp, Warning, TEXT("[%s] PlayerStart를 찾지 못해 리셋을 수행할 수 없습니다."), *GetName());
@@ -103,7 +94,6 @@ void AMGResetToPlayerStartTrigger::OnTriggerOverlapBegin(
     const FRotator TargetRotation = StartPoint->GetActorRotation();
 
     Character->TeleportTo(TargetLocation, TargetRotation, false, true);
-
     Character->ForceNetUpdate();
 
     if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
