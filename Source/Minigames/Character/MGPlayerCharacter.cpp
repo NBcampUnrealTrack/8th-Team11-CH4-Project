@@ -177,6 +177,7 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 
 void AMGPlayerCharacter::OnRep_PlayerState()
 {
+	Super::OnRep_PlayerState();
 	UMaterialInstanceDynamic* ColorMat = GetMesh()->CreateDynamicMaterialInstance(0, GetMesh()->GetMaterial(0));
 	if (IsValid(ColorMat))
 	{

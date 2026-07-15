@@ -12,6 +12,7 @@
 
 void AMGPassBombPlayerState::OnRep_Owner()
 {
+	Super::OnRep_Owner();
 	// 플레이어만 생성
 	if (HasAuthority() == false)
 	{
@@ -28,6 +29,11 @@ void AMGPassBombPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 void AMGPassBombPlayerState::ServerRPC_SetSpectator_Implementation()
 {
+	if (Spectator != nullptr)
+	{
+		return;
+	}
+
 	Spectator = GetWorld()->SpawnActor<AMGSpectatorPawn>(SpectatorClass);
 }
 
