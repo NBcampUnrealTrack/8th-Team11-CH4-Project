@@ -20,9 +20,11 @@ public:
 	
 	void SetReady(bool bReady);
 	
+	void SetPlayerColor(EMGPlayerColor NewColor);
+	
 	UPROPERTY(ReplicatedUsing = OnRep_IsReady, VisibleAnywhere, BlueprintReadOnly)
 	bool bIsReady = false;
-	
+		
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, VisibleAnywhere, BlueprintReadOnly)
 	EMGPlayerColor PlayerColor;
 	

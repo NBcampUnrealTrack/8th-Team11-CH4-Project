@@ -395,9 +395,9 @@ void AMGPlayerController::ServerRPCPrintChatMessageString_Implementation(const F
 		UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
 		if (IsValid(GI) == true)
 		{
-			if (const EMGPlayerColor* FoundColor = GI->PlayerColors.Find(PlayerState->GetUniqueId()))
+			if (const FMGPlayerSaveData* FoundData = GI->SavedPlayerData.Find(PlayerState->GetUniqueId()))
 			{
-				ChatMessage.SenderColor = *FoundColor;
+				ChatMessage.SenderColor = FoundData->Color;
 			}
 		}
 	}

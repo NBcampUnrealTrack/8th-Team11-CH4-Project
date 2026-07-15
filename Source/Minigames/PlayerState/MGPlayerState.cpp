@@ -34,6 +34,13 @@ void AMGPlayerState::CopyProperties(APlayerState* PlayerState)
     }
 }
 
+void AMGPlayerState::SetPlayerColor(EMGPlayerColor NewColor)
+{
+    PlayerColor = NewColor;
+
+    OnRep_PlayerColor();
+}
+
 FLinearColor AMGPlayerState::GetPlayerLinearColor() const
 {
     return MGPlayerColorToLinear(PlayerColor);

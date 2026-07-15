@@ -90,15 +90,7 @@ void AMGLobbyGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 		}
 
 		// 로비로 돌아와도 PlayerColor 유지
-		AMGLobbyPlayerState* LPS = PC->GetPlayerState<AMGLobbyPlayerState>();
-		UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
-		if (IsValid(LPS) && IsValid(GI))
-		{
-			if (const EMGPlayerColor* FoundColor = GI->PlayerColors.Find(LPS->GetUniqueId()))
-			{
-				LPS->PlayerColor = *FoundColor;
-			}
-		}
+		AssignRandomColorToPlayer(PC->GetPlayerState<AMGLobbyPlayerState>());
 		PC->ClientRPCOnSeamlessTravelCompleted();
 
 		// TODO: 레디 버튼 기본값은 비활성화.
@@ -290,28 +282,46 @@ void AMGLobbyGameModeBase::OnPlayerChangeColor(AMGPlayerController* PC, EMGPlaye
 
 	AvailableColors.RemoveAtSwap(Index);
 	AvailableColors.Add(PS->PlayerColor);   // 원래 쓰던 색은 반납
-	PS->PlayerColor = NewColor;
+	PS->SetPlayerColor(NewColor);
 	
 	if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
 	{
-		GI->PlayerColors.Add(PS->GetUniqueId(), PS->PlayerColor);
+		GI->SavedPlayerData.FindOrAdd(PS->GetUniqueId()).Color = PS->PlayerColor;
 	}
 }
 
 void AMGLobbyGameModeBase::AssignRandomColorToPlayer(AMGLobbyPlayerState* PS)
 {
-	if (IsValid(PS) == false || AvailableColors.Num() == 0)
+	if (IsValid(PS) == false)
 	{
 		return;
 	}
-
+	
+	UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
+	// 저장된 색이 있으면 복원 (재접속/복귀 대비)
+	if (IsValid(GI))
+	{
+		if (const FMGPlayerSaveData* Saved = GI->SavedPlayerData.Find(PS->GetUniqueId()))
+		{
+			PS->SetPlayerColor(Saved->Color);
+			AvailableColors.Remove(Saved->Color);   // 풀에서 제거해 중복 방지
+			return;
+		}
+	}
+	
+	// 없으면 새로 랜덤 배정
+	if (AvailableColors.Num() == 0)
+	{
+		return;
+	}
+	
 	const int32 RandomIndex = FMath::RandRange(0, AvailableColors.Num() - 1);
-	PS->PlayerColor = AvailableColors[RandomIndex];
+	PS->SetPlayerColor(AvailableColors[RandomIndex]);
 	AvailableColors.RemoveAtSwap(RandomIndex);
 	
-	if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
+	if (IsValid(GI))
 	{
-		GI->PlayerColors.Add(PS->GetUniqueId(), PS->PlayerColor);
+		GI->SavedPlayerData.FindOrAdd(PS->GetUniqueId()).Color = PS->PlayerColor;
 	}
 }
 

@@ -24,6 +24,8 @@ public:
 	
 	void SetMGScore(int32 InMGScore) { MGScore = InMGScore; }
 	
+	void SetPlayerColor(EMGPlayerColor NewColor);
+	
 	int32 GetMGScore() { return MGScore; }
 	
 	FLinearColor GetPlayerLinearColor() const;
@@ -41,11 +43,11 @@ public:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
 	int32 TotalScore = 0;	// 게임 최종점수
 
-	UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, Replicated, EditAnywhere, BlueprintReadWrite)
-	EMGPlayerColor PlayerColor = EMGPlayerColor::None;
-
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
 	bool bReadyToReturn = false;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, Replicated, EditAnywhere, BlueprintReadWrite)
+	EMGPlayerColor PlayerColor = EMGPlayerColor::None;
 	
 private:
 	UFUNCTION()
