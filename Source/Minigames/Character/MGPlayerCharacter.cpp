@@ -74,6 +74,9 @@ AMGPlayerCharacter::AMGPlayerCharacter()
 	FlagEffectMeshComponent->SetupAttachment(FlagMeshComponent);
 	FlagEffectMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	FlagEffectMeshComponent->SetVisibility(false);
+
+	//버튼 게임 관련
+	GetCharacterMovement()->bImpartBaseVelocityZ = false;
 }
 
 void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

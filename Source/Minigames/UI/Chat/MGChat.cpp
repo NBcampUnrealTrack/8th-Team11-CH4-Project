@@ -63,6 +63,20 @@ void UMGChat::FocusChatInput()
 
 void UMGChat::OnChatInputTextCommitted(const FText& Text, ETextCommit::Type CommitMethod)
 {
+	if (CommitMethod == ETextCommit::OnUserMovedFocus)
+	{
+		if (IsValid(Button_Send) == true && Button_Send->IsHovered() == true)
+		{
+			return;
+		}
+
+		if (AMGPlayerController* MGPC = Cast<AMGPlayerController>(GetOwningPlayer()))
+		{
+			MGPC->RestoreDefaultInputMode();
+		}
+		return;
+	}
+
 	if (CommitMethod != ETextCommit::OnEnter)
 	{
 		return;

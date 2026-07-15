@@ -1,6 +1,7 @@
 #include "UI/Chat/MGChatPopupList.h"
 #include "UI/Chat/MGChatPopup.h"
 #include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 
 void UMGChatPopupList::AddPopup(const FMGChatType& InChatMessage)
 {
@@ -17,7 +18,13 @@ void UMGChatPopupList::AddPopup(const FMGChatType& InChatMessage)
 	UMGChatPopup* NewPopup = CreateWidget<UMGChatPopup>(this, PopupClass);
 	if (IsValid(NewPopup) == true)
 	{
-		VerticalBox_Popups->AddChild(NewPopup);
+		UVerticalBoxSlot* PopupSlot = VerticalBox_Popups->AddChildToVerticalBox(NewPopup);
+		if (PopupSlot != nullptr)
+		{
+			PopupSlot->SetHorizontalAlignment(HAlign_Left);
+			PopupSlot->SetPadding(FMargin(0.0f, 2.0f)); 
+		}
+
 		NewPopup->ShowMessage(InChatMessage);
 	}
 }

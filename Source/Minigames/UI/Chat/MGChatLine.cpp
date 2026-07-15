@@ -1,5 +1,4 @@
 #include "UI/Chat/MGChatLine.h"
-
 #include "Components/TextBlock.h"
 #include "Type/MGPlayerColor.h"
 

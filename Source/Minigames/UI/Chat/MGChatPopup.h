@@ -20,10 +20,13 @@ protected:
 
 protected:
 	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> TextBlock_Nickname;
+
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> TextBlock_Message;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Popup")
-	int32 MaxPreviewLength = 20;
+	int32 MaxPreviewLength = 10;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Popup")
 	float VisibleDuration = 3.0f;
