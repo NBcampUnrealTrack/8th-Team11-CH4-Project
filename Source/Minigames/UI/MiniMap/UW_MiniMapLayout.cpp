@@ -6,6 +6,7 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/MiniMap/MGMiniMapCamera.h"
+#include "Data/MGMinimapIconDataAsset.h"
 
 void UUW_MiniMapLayout::NativeConstruct()
 {
@@ -35,26 +36,66 @@ void UUW_MiniMapLayout::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UUW_MiniMapLayout::AddMinimapTarget(AActor* InActor, TSubclassOf<UUserWidget> IconClass)
+void UUW_MiniMapLayout::AddMinimapTarget(AActor* InActor, EMinimapTargetType TargetType)
 {
-	if (!IsValid(InActor) || !IsValid(IconClass) || !IsValid(MinimapCanvas))
+	if (!IsValid(InActor))
 	{
 		return;
 	}
 
-	// 새 아이콘 위젯 생성
-	UUserWidget* NewIcon = CreateWidget<UUserWidget>(GetWorld(), IconClass);
+	if (!IsValid(IconDataAsset))
+	{
+		return;
+	}
+
+	if (!IsValid(MinimapCanvas))
+	{
+		return;
+	}
+
+	for (const FMinimapTarget& Target : TrackingTargets)
+	{
+		if (Target.TargetActor == InActor)
+		{
+			return; // 중복 등록의 경우 조기 return
+		}
+	}
+
+	// 이미 아이콘이 Map에 등록되어 있으면 return
+	if (!IconDataAsset->IconMap.Contains(TargetType))
+	{
+		return;
+	}
+
+	TSubclassOf<UUserWidget> MinimapIcon = IconDataAsset->IconMap[TargetType];
+	if (!IsValid(MinimapIcon))
+	{
+		return;
+	}	// Target Type에 맞는 Icon이 IconDataAsset에 없으면 return
+
+	APlayerController* OwningPC = GetOwningPlayer();
+	if (!IsValid(OwningPC))
+	{
+		return;
+	}
+
+	UUserWidget* NewIcon = nullptr;
+	if (IsValid(OwningPC))
+	{
+		NewIcon = CreateWidget<UUserWidget>(OwningPC, MinimapIcon);
+	}
+
 	if (!IsValid(NewIcon))
 	{
 		return;
 	}
 
-	// 미니맵 캔버스에 자식으로 추가
 	UCanvasPanelSlot* NewSlot = MinimapCanvas->AddChildToCanvas(NewIcon);
 	if (NewSlot)
 	{
-		NewSlot->SetAnchors(FAnchors(0.5f)); // 앵커를 정중앙(0.5, 0.5)으로 세팅
+		NewSlot->SetAnchors(FAnchors(0.5f));
 		NewSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+		NewSlot->SetAutoSize(true);
 	}
 
 	// 추적 배열에 저장
@@ -113,7 +154,7 @@ void UUW_MiniMapLayout::UpdateIconPosition()
 		float RatioX = DistanceY / (OrthoWidth * 0.5f);
 		float RatioY = -DistanceX / (OrthoWidth * 0.5f);
 
-		// 미니맵 전체 크기의 절반을 곱해서 [-128 ~ 128] 맵핑
+		// 미니맵 전체 크기[-256 ~ 256] 의 절반을 곱해서 [-128 ~ 128] 맵핑
 		float UI_X = RatioX * (MinimapSize.X * 0.5f);
 		float UI_Y = RatioY * (MinimapSize.Y * 0.5f);
 
