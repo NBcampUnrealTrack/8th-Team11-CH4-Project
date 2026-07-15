@@ -65,9 +65,9 @@ void AMGLobbyGameModeBase::PostLogin(APlayerController* NewPlayer)
 			}
 		}
 		
-		if (AMGLobbyGameStateBase* GS = GetGameState<AMGLobbyGameStateBase>())
+		if (AMGLobbyGameStateBase* LGS = GetGameState<AMGLobbyGameStateBase>())
 		{
-			GS->CurrentPlayerCount = AllPlayerControllers.Num();
+			LGS->SetCurrentPlayerCount(AllPlayerControllers.Num());
 		}
 		
 		// TODO: 레디 버튼 기본값은 비활성화.
@@ -86,7 +86,7 @@ void AMGLobbyGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 
 		if (AMGLobbyGameStateBase* LGS = GetGameState<AMGLobbyGameStateBase>())
 		{
-			LGS->CurrentPlayerCount = AllPlayerControllers.Num();
+			LGS->SetCurrentPlayerCount(AllPlayerControllers.Num());
 		}
 
 		// 로비로 돌아와도 PlayerColor 유지
@@ -110,9 +110,9 @@ void AMGLobbyGameModeBase::Logout(AController* ExitingController)
 
 	AllPlayerControllers.Remove(PC);
 	
-	if (AMGLobbyGameStateBase* GS = GetGameState<AMGLobbyGameStateBase>())
+	if (AMGLobbyGameStateBase* LGS = GetGameState<AMGLobbyGameStateBase>())
 	{
-		GS->CurrentPlayerCount = AllPlayerControllers.Num();
+		LGS->SetCurrentPlayerCount(AllPlayerControllers.Num());
 	}
 			
 	AMGLobbyPlayerState* PS = PC->GetPlayerState<AMGLobbyPlayerState>();
@@ -175,10 +175,10 @@ void AMGLobbyGameModeBase::CheckAndStartCountdown()
 		return;
 	}
 
-	AMGLobbyGameStateBase* GS = GetGameState<AMGLobbyGameStateBase>();
-	if (IsValid(GS))
+	AMGLobbyGameStateBase* LGS = GetGameState<AMGLobbyGameStateBase>();
+	if (IsValid(LGS))
 	{
-		GS->RemainCountdownTime = CountdownTime;
+		LGS->SetRemainCountdownTime(CountdownTime);
 	}
 	
 	GenerateMinigameSequence();
@@ -194,15 +194,16 @@ void AMGLobbyGameModeBase::CheckAndStartCountdown()
 
 void AMGLobbyGameModeBase::OnCountdownElapsed()
 {
-	AMGLobbyGameStateBase* GS = GetGameState<AMGLobbyGameStateBase>();
-	if (IsValid(GS) == false)
+	AMGLobbyGameStateBase* LGS = GetGameState<AMGLobbyGameStateBase>();
+	if (IsValid(LGS) == false)
 	{
 		return;
 	}
 
-	--GS->RemainCountdownTime;
-
-	if (GS->RemainCountdownTime > 0)
+	const int32 NewTime = LGS->GetRemainCountdownTime() - 1;
+	LGS->SetRemainCountdownTime(NewTime);
+	
+	if (NewTime > 0)
 	{
 		return;
 	}
@@ -216,10 +217,10 @@ void AMGLobbyGameModeBase::CancelCountdown()
 {
 	GetWorldTimerManager().ClearTimer(CountdownTimerHandle);
 	
-	AMGLobbyGameStateBase* GS = GetGameState<AMGLobbyGameStateBase>();
-	if (IsValid(GS))
+	AMGLobbyGameStateBase* LGS = GetGameState<AMGLobbyGameStateBase>();
+	if (IsValid(LGS))
 	{
-		GS->RemainCountdownTime = 0;
+		LGS->SetRemainCountdownTime(0);
 	}
 }
 

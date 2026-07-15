@@ -14,6 +14,7 @@ class ULevelSequence;
 class UUW_FinalResult;
 class UMGChat;
 class UUW_MinigameIntro;
+class UUW_FinalResult;
 
 
 UCLASS()
@@ -86,6 +87,10 @@ public:
 
 	UPROPERTY()
 	TObjectPtr<UUW_MinigameIntro> MinigameIntroInstance;
+	
+private:
+	UPROPERTY()
+	TObjectPtr<UUW_FinalResult> FinalResultWidget;
 	
 #pragma region CutScene
 

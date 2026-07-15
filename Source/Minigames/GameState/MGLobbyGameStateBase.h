@@ -17,12 +17,11 @@ class MINIGAMES_API AMGLobbyGameStateBase : public AGameStateBase
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
-	UPROPERTY(ReplicatedUsing = OnRep_HeaderChanged, VisibleAnywhere, BlueprintReadOnly)
-	int32 CurrentPlayerCount = 0;
-	
-	// 남은 카운트다운 시간 (10→0). 0이면 카운트다운 미진행
-	UPROPERTY(ReplicatedUsing = OnRep_HeaderChanged, VisibleAnywhere, BlueprintReadOnly)
-	int32 RemainCountdownTime = 0;
+	void SetCurrentPlayerCount(int32 NewCount);
+	void SetRemainCountdownTime(int32 NewTime);
+
+	FORCEINLINE int32 GetCurrentPlayerCount() const { return CurrentPlayerCount; }
+	FORCEINLINE int32 GetRemainCountdownTime() const { return RemainCountdownTime; }
 	
 	FOnLobbyRosterChanged OnLobbyRosterChanged;
 	FOnLobbyHeaderChanged OnLobbyHeaderChanged;
@@ -31,6 +30,13 @@ protected:
 	virtual void AddPlayerState(APlayerState* PlayerState) override;
 	
 	virtual void RemovePlayerState(APlayerState* PlayerState) override;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_HeaderChanged, VisibleAnywhere, BlueprintReadOnly)
+	int32 CurrentPlayerCount = 0;
+	
+	// 남은 카운트다운 시간 (10→0). 0이면 카운트다운 미진행
+	UPROPERTY(ReplicatedUsing = OnRep_HeaderChanged, VisibleAnywhere, BlueprintReadOnly)
+	int32 RemainCountdownTime = 0;
 	
 private:
 	UFUNCTION()

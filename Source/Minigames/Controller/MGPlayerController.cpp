@@ -155,28 +155,31 @@ void AMGPlayerController::ClientRPCReturnToTitle_Implementation()
 
 void AMGPlayerController::ClientRPCShowGameResultWidget_Implementation(int32 InRanking)
 {
-	if (IsLocalController() == true)
+	if (IsLocalController() == false)
 	{
-		if (IsValid(GameResultUIClass) == true)
-		{
-			UUW_GameResult* GameResultUI = CreateWidget<UUW_GameResult>(this, GameResultUIClass);
-			if (IsValid(GameResultUI) == true)
-			{
-				GameResultUI->AddToViewport(3);
+		return;
+	}
+	if (IsValid(GameResultUIClass) == false)
+	{
+		return;
+	}
+	
+	UUW_GameResult* GameResultUI = CreateWidget<UUW_GameResult>(this, GameResultUIClass);
+	if (IsValid(GameResultUI) == true)
+	{
+		GameResultUI->AddToViewport(3);
 
-				FString GameResultString = FString::Printf(TEXT("%s"), InRanking == 1 ? TEXT("Winner Winner!") : TEXT("Looser..."));
-				GameResultUI->ResultText->SetText(FText::FromString(GameResultString));
+		FString GameResultString = FString::Printf(TEXT("%s"), InRanking == 1 ? TEXT("Winner Winner!") : TEXT("Loser..."));
+		GameResultUI->ResultText->SetText(FText::FromString(GameResultString));
 
-				FString RankingString = FString::Printf(TEXT("#%02d"), InRanking);
-				GameResultUI->RankingText->SetText(FText::FromString(RankingString));
+		FString RankingString = FString::Printf(TEXT("#%02d"), InRanking);
+		GameResultUI->RankingText->SetText(FText::FromString(RankingString));
 
-				FInputModeUIOnly Mode;
-				Mode.SetWidgetToFocus(GameResultUI->GetCachedWidget());
-				SetInputMode(Mode);
+		FInputModeUIOnly Mode;
+		Mode.SetWidgetToFocus(GameResultUI->GetCachedWidget());
+		SetInputMode(Mode);
 
-				bShowMouseCursor = true;
-			}
-		}
+		bShowMouseCursor = true;
 	}
 }
 
@@ -199,18 +202,22 @@ void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
 	{
 		return;
 	}
+	if (IsValid(FinalResultWidget))
+	{
+		return;
+	}
 	if (IsValid(FinalResultWidgetClass) == false)
 	{
 		return;
 	}
 	
-	UUW_FinalResult* FinalResultUI = CreateWidget<UUW_FinalResult>(this, FinalResultWidgetClass);
-	if (IsValid(FinalResultUI) == false)
+	FinalResultWidget = CreateWidget<UUW_FinalResult>(this, FinalResultWidgetClass);
+	if (IsValid(FinalResultWidget) == false)
 	{
 		return;
 	}
 	
-	FinalResultUI->AddToViewport(3);
+	FinalResultWidget->AddToViewport(3);
 	
 	FInputModeGameAndUI InputMode;
 	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);

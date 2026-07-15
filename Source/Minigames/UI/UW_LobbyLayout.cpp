@@ -74,13 +74,13 @@ void UUW_LobbyLayout::RefreshHeader()
     // 인원수 "N/10"
     PlayerCountText->SetText(FText::Format(
         NSLOCTEXT("Lobby", "PlayerCount", "{0}/10"),
-        FText::AsNumber(GS->CurrentPlayerCount))
+        FText::AsNumber(GS->GetCurrentPlayerCount()))
     );
 
     // 카운트다운 중이면 숫자+잠금, 아니면 READY+활성
-    if (GS->RemainCountdownTime > 0)
+    if (GS->GetRemainCountdownTime() > 0)
     {
-        CountdownText->SetText(FText::AsNumber(GS->RemainCountdownTime));
+        CountdownText->SetText(FText::AsNumber(GS->GetRemainCountdownTime()));
         ReadyButton->SetIsEnabled(false);
     }
     else

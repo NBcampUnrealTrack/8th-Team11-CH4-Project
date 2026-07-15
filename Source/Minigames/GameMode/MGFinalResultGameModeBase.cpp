@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "PlayerState/MGPlayerState.h"
 
+
 void AMGFinalResultGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 {
 	Super::HandleSeamlessTravelPlayer(C);
@@ -16,6 +17,7 @@ void AMGFinalResultGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 	if (AMGPlayerController* PC = Cast<AMGPlayerController>(C))
 	{
 		PC->ClientRPC_SetResultCamera();
+		PC->ClientRPC_ShowFinalResult();
 	}
 }
 
