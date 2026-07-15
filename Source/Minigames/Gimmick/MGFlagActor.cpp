@@ -54,10 +54,9 @@ void AMGFlagActor::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 	if (PlayerCharacter)
 	{
 		UMGFlagActorComponent* FlagComp = PlayerCharacter->GetComponentByClass<UMGFlagActorComponent>();
-
 		if (FlagComp)
 		{
-			FlagComp->SetHasFlag(true);
+			FlagComp->SetHasFlag(true, this);
 
 			// 서버에서 삭제
 			Destroy();

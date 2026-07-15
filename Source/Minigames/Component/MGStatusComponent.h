@@ -81,6 +81,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Status|Speed")
 	void SetNormalSpeed(float InSpeed);
 
+	UFUNCTION(BlueprintCallable, Category = "Status|Speed")
 	void AddEffectforDuration(const UMGEffectDataAsset* InEffectData);
 
 protected:

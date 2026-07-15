@@ -32,4 +32,6 @@ private:
 	// 깃발 스태틱 메시 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* FlagMesh;
+
+	FLinearColor FlagColor;
 };

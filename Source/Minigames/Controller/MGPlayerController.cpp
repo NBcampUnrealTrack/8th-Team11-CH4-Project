@@ -24,12 +24,14 @@
 
 #include "UI/Chat/MGChat.h"
 #include "EngineUtils.h"
-#include "PlayerState/MGPlayerState.h"
-#include "PlayerState/MGLobbyPlayerState.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+
 #include "UI/Chat/MGChatPopup.h"
 #include "UI/Chat/MGChatPopupList.h"
 
+#include "Data/MGMinigameInfoRow.h"
+#include "UI/Loading/UW_MinigameIntro.h"
+#include "Engine/DataTable.h"
 
 void AMGPlayerController::BeginPlay()
 {
@@ -104,6 +106,47 @@ void AMGPlayerController::OnCharacterDead()
 	if (HasAuthority() == true && IsValid(GameMode) == true)
 	{
 		GameMode->OnCharacterDead(this);
+	}
+}
+
+void AMGPlayerController::ShowMinigameIntro()
+{
+	if (IsLocalController() == false || MinigameIntroClass == nullptr)
+	{
+		return;
+	}
+
+	UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
+	if (IsValid(GI) == false || IsValid(GI->MinigameInfoTable) == false)
+	{
+		return;
+	}
+
+	// 현재 맵(=목적지) 이름으로 행 조회. 행 없으면(로비 등) 그냥 안 띄움 → 자연스러운 가드
+	const FName RowName(*GI->PendingDestinationMapName);
+	FMGMinigameInfoRow* Row = GI->MinigameInfoTable->FindRow<FMGMinigameInfoRow>(RowName, TEXT("ShowMinigameIntro"));
+	if (Row == nullptr)
+	{
+		return;
+	}
+
+	if (IsValid(MinigameIntroInstance) == false)
+	{
+		MinigameIntroInstance = CreateWidget<UUW_MinigameIntro>(this, MinigameIntroClass);
+	}
+
+	if (IsValid(MinigameIntroInstance))
+	{
+		MinigameIntroInstance->Setup(*Row);
+		MinigameIntroInstance->AddToViewport();
+	}
+}
+
+void AMGPlayerController::HideMinigameIntro()
+{
+	if (IsValid(MinigameIntroInstance))
+	{
+		MinigameIntroInstance->RemoveFromParent();
 	}
 }
 
@@ -426,6 +469,7 @@ void AMGPlayerController::ServerRPCPrintChatMessageString_Implementation(const F
 void AMGPlayerController::ClientRPCOnSeamlessTravelCompleted_Implementation()
 {
 	CreateChatWidget();
+	ShowMinigameIntro();
 }
 
 void AMGPlayerController::SetupInputComponent()

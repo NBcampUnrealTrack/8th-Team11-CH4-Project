@@ -72,6 +72,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MGPlayerCharacter|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UStaticMeshComponent> FlagEffectMeshComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MGPlayerCharacter|Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UNiagaraComponent> FlagNiagaraComponent;
+
 #pragma endregion
 
 #pragma region Input

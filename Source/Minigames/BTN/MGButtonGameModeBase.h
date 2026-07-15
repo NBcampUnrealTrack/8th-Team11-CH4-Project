@@ -16,17 +16,15 @@ public:
 protected:
     virtual void BeginPlay() override;
 
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
     // 게임 진행 함수
-    void StartReadyPhase();
-    void StartPlayingPhase();
+    virtual void StartMinigame() override;
     void AdvanceTimer();
     virtual void EndMinigame() override;
 
     // 타이머
     FTimerHandle GameTimerHandle;
-
-    UPROPERTY(EditAnywhere, Category = "Game Settings")
-    int32 ReadyDuration = 10;
 
     UPROPERTY(EditAnywhere, Category = "Game Settings")
     int32 GameDuration = 30;

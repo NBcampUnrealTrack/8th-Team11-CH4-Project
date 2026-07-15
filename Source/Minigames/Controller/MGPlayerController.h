@@ -12,11 +12,9 @@ class UUW_GameResult;
 class UUW_LobbyLayout;
 class ULevelSequence;
 class UUW_FinalResult;
-
 class UMGChat;
-/**
- *
- */
+class UUW_MinigameIntro;
+
 
 UCLASS()
 class MINIGAMES_API AMGPlayerController : public APlayerController
@@ -27,9 +25,7 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	void OnCharacterDead();
-
+	
 	UFUNCTION(Client, Reliable)
 	void ClientRPCShowGameResultWidget(int32 InRanking);
 
@@ -63,6 +59,12 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRPC_ReadyToReturn();
 	
+	void OnCharacterDead();
+
+	void ShowMinigameIntro();
+
+	void HideMinigameIntro();
+	
 public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	FText NotificationText;
@@ -78,6 +80,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUW_FinalResult> FinalResultWidgetClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Intro")
+	TSubclassOf<UUW_MinigameIntro> MinigameIntroClass;
+
+	UPROPERTY()
+	TObjectPtr<UUW_MinigameIntro> MinigameIntroInstance;
 	
 #pragma region CutScene
 
