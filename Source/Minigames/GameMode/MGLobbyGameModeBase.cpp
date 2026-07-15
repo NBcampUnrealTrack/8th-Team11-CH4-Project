@@ -285,9 +285,12 @@ void AMGLobbyGameModeBase::OnPlayerChangeColor(AMGPlayerController* PC, EMGPlaye
 	AvailableColors.Add(PS->PlayerColor);   // 원래 쓰던 색은 반납
 	PS->SetPlayerColor(NewColor);
 	
-	if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
+	if (PS->GetUniqueId().IsValid())
 	{
-		GI->SavedPlayerData.FindOrAdd(PS->GetUniqueId()).Color = PS->PlayerColor;
+		if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
+		{
+			GI->SavedPlayerData.FindOrAdd(PS->GetUniqueId()).Color = PS->PlayerColor;
+		}
 	}
 }
 
@@ -298,11 +301,12 @@ void AMGLobbyGameModeBase::AssignRandomColorToPlayer(AMGLobbyPlayerState* PS)
 		return;
 	}
 	
+	const FUniqueNetIdRepl Id = PS->GetUniqueId();
 	UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
-	// 저장된 색이 있으면 복원 (재접속/복귀 대비)
-	if (IsValid(GI))
+	// 저장된 색이 있으면 복원 (재접속/복귀 대비) — 유효한 NetId일 때만 (IP 모드는 무효 → 스킵)
+	if (Id.IsValid() && IsValid(GI))
 	{
-		if (const FMGPlayerSaveData* Saved = GI->SavedPlayerData.Find(PS->GetUniqueId()))
+		if (const FMGPlayerSaveData* Saved = GI->SavedPlayerData.Find(Id))
 		{
 			PS->SetPlayerColor(Saved->Color);
 			AvailableColors.Remove(Saved->Color);   // 풀에서 제거해 중복 방지
@@ -320,9 +324,9 @@ void AMGLobbyGameModeBase::AssignRandomColorToPlayer(AMGLobbyPlayerState* PS)
 	PS->SetPlayerColor(AvailableColors[RandomIndex]);
 	AvailableColors.RemoveAtSwap(RandomIndex);
 	
-	if (IsValid(GI))
+	if (Id.IsValid() && IsValid(GI))
 	{
-		GI->SavedPlayerData.FindOrAdd(PS->GetUniqueId()).Color = PS->PlayerColor;
+		GI->SavedPlayerData.FindOrAdd(Id).Color = PS->PlayerColor;
 	}
 }
 

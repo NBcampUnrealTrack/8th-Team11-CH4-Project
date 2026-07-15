@@ -2,10 +2,12 @@
 
 #include "GameInstance/MGGameInstance.h"
 
+#include "Engine/Engine.h"
 #include "GameFramework/GameStateBase.h"
 #include "PlayerState/MGLobbyPlayerState.h"
 #include "PlayerState/MGPlayerState.h"
 #include "Type/MGPlayerColor.h"						// 플레이어 컬러
+#include "MGNetConfig.h"
 
 UMGGameInstance::UMGGameInstance()
 {
@@ -16,7 +18,22 @@ UMGGameInstance::UMGGameInstance()
 void UMGGameInstance::Init()
 {
 	Super::Init();
-	
+
+#if !MG_USE_EOS
+	// IP 모드: ini의 EOS 넷드라이버를 IpNetDriver로 교체 (리슨 서버 생성 전 시점)
+	if (GEngine != nullptr)
+	{
+		for (FNetDriverDefinition& Def : GEngine->NetDriverDefinitions)
+		{
+			if (Def.DefName == FName(TEXT("GameNetDriver")))
+			{
+				Def.DriverClassName         = FName(TEXT("/Script/OnlineSubsystemUtils.IpNetDriver"));
+				Def.DriverClassNameFallback = FName(TEXT("/Script/OnlineSubsystemUtils.IpNetDriver"));
+			}
+		}
+	}
+#endif
+
 	FWorldDelegates::OnSeamlessTravelStart.AddUObject(
 		this, &UMGGameInstance::HandleSeamlessTravelStart);
 }
