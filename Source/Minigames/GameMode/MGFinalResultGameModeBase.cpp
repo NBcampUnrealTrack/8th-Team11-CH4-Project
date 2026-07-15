@@ -10,6 +10,19 @@
 #include "PlayerState/MGPlayerState.h"
 
 
+void AMGFinalResultGameModeBase::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+	
+	PlacePlayersByRank(GetPlayersSortedByScore());
+	
+	if (AMGPlayerController* PC = Cast<AMGPlayerController>(NewPlayer))
+	{
+		PC->ClientRPC_SetResultCamera();
+		PC->ClientRPC_ShowFinalResult();
+	}
+}
+
 void AMGFinalResultGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 {
 	Super::HandleSeamlessTravelPlayer(C);

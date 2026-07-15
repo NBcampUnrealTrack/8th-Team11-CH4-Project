@@ -15,6 +15,8 @@ class MINIGAMES_API AMGFinalResultGameModeBase : public AMGGameModeBase
 	GENERATED_BODY()
 	
 public:
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+	
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 	
 	virtual void StartMinigame() override;
