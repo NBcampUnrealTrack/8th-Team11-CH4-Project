@@ -9,6 +9,8 @@ AMGButtonGameModeBase::AMGButtonGameModeBase()
 
     CurrentPhase = EGamePhase::WaitingToStart;
     TimeRemaining = 0;
+
+    bGameEnded = false;
 }
 
 void AMGButtonGameModeBase::BeginPlay()
@@ -29,6 +31,17 @@ void AMGButtonGameModeBase::StartMinigame()
 {
     Super::StartMinigame();
 
+    if (CurrentPhase == EGamePhase::Playing)
+    {
+        return;
+    }
+
+    // 이전 종료 상태 초기화
+    bGameEnded = false;
+
+    // 기존 타이머 제거
+    GetWorldTimerManager().ClearTimer(GameTimerHandle);
+
     CurrentPhase = EGamePhase::Playing;
     TimeRemaining = GameDuration;
 
@@ -47,14 +60,26 @@ void AMGButtonGameModeBase::StartMinigame()
         true);
 }
 
-// 타이머 갱신 로직
+// 타이머 갱신
 void AMGButtonGameModeBase::AdvanceTimer()
 {
+    if (bGameEnded)
+    {
+        return;
+    }
+
+    if (TimeRemaining <= 0)
+    {
+        GetWorldTimerManager().ClearTimer(GameTimerHandle);
+        EndMinigame();
+        return;
+    }
+
     TimeRemaining--;
 
     if (AMGButtonGameState* GS = GetGameState<AMGButtonGameState>())
     {
-        GS->TimeRemaining = TimeRemaining;
+        GS->TimeRemaining = FMath::Max(TimeRemaining, 0);
 
         if (GS->CurrentPhase != CurrentPhase)
         {
@@ -65,18 +90,35 @@ void AMGButtonGameModeBase::AdvanceTimer()
 
     if (TimeRemaining <= 0)
     {
+        TimeRemaining = 0;
+
+        GetWorldTimerManager().ClearTimer(GameTimerHandle);
+
         EndMinigame();
+
+        return;
     }
 }
 
 void AMGButtonGameModeBase::EndMinigame()
 {
+    // 중복 실행 방지
+    if (bGameEnded || CurrentPhase == EGamePhase::GameOver)
+    {
+        return;
+    }
+
+    bGameEnded = true;
+
+    // 타이머 정지
+    GetWorldTimerManager().ClearTimer(GameTimerHandle);
 
     CurrentPhase = EGamePhase::GameOver;
 
     if (AMGButtonGameState* GS = GetGameState<AMGButtonGameState>())
     {
         GS->CurrentPhase = CurrentPhase;
+        GS->TimeRemaining = 0;
         GS->OnGamePhaseChanged.Broadcast(CurrentPhase);
     }
 
@@ -106,12 +148,12 @@ void AMGButtonGameModeBase::EndMinigame()
         // 순위 계산
         for (int32 i = 0; i < PlayerStates.Num(); ++i)
         {
-            if (i > 0 && PlayerStates[i]->GetScore() < PlayerStates[i - 1]->GetScore())
+            if (i > 0 &&
+                PlayerStates[i]->GetScore() < PlayerStates[i - 1]->GetScore())
             {
                 CurrentRank = i + 1;
             }
 
-            // 점수 지급
             GiveScore(PlayerStates[i], CurrentRank);
         }
 
@@ -123,13 +165,15 @@ void AMGButtonGameModeBase::EndMinigame()
 
         int32 OverallRank = 1;
 
-        // 전체 랭킹 계산
         for (int32 i = 0; i < PlayerStates.Num(); ++i)
         {
-            if (i > 0 && PlayerStates[i]->TotalScore < PlayerStates[i - 1]->TotalScore)
+
+            if (i > 0 &&
+                PlayerStates[i]->TotalScore < PlayerStates[i - 1]->TotalScore)
             {
                 OverallRank = i + 1;
             }
+
 
             PlayerStates[i]->Rank = OverallRank;
         }
@@ -140,6 +184,5 @@ void AMGButtonGameModeBase::EndMinigame()
             PS->SetScore(0.f);
         }
     }
-
     Super::EndMinigame();
 }
