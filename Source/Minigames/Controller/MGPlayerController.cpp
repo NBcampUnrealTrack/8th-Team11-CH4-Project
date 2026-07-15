@@ -190,15 +190,33 @@ void AMGPlayerController::ClientRPCShowGameResultWidget_Implementation(int32 InR
 
 void AMGPlayerController::ClientRPC_SetResultCamera_Implementation()
 {
+	ResultCameraRetryCount = 0;
+	TrySetResultCamera();
+}
+
+void AMGPlayerController::TrySetResultCamera()
+{
 	TArray<AActor*> Cams;
 	UGameplayStatics::GetAllActorsWithTag(this, TEXT("ResultCamera"), Cams);
-	if (Cams.Num() == 0)
+	if (Cams.Num() > 0 && IsValid(Cams[0]))
 	{
+		bAutoManageActiveCameraTarget = false;
+		SetViewTargetWithBlend(Cams[0], 0.5f);
 		return;
 	}
-	
-	bAutoManageActiveCameraTarget = false;
-	SetViewTargetWithBlend(Cams[0], 0.5f);
+
+	// 카메라 액터가 아직 스폰 안 됨(레벨 로딩 중) → 재시도 (0.2초 * 20 = 최대 4초)
+	if (ResultCameraRetryCount < 20)
+	{
+		++ResultCameraRetryCount;
+		GetWorldTimerManager().SetTimer(
+			ResultCameraRetryHandle,
+			this,
+			&ThisClass::TrySetResultCamera,
+			0.2f,
+			false
+		);
+	}
 }
 
 void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
@@ -564,4 +582,11 @@ void AMGPlayerController::RestoreAllWidgets()
 		}
 	}
 	SavedWidgetVisibilities.Empty();
+}
+
+void AMGPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearTimer(ResultCameraRetryHandle);
+
+	Super::EndPlay(EndPlayReason);
 }

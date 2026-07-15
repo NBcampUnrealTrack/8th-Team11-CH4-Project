@@ -27,6 +27,8 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
+	virtual	void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	UFUNCTION(Client, Reliable)
 	void ClientRPCShowGameResultWidget(int32 InRanking);
 
@@ -89,9 +91,14 @@ public:
 	TObjectPtr<UUW_MinigameIntro> MinigameIntroInstance;
 	
 private:
+	void TrySetResultCamera();
+
 	UPROPERTY()
 	TObjectPtr<UUW_FinalResult> FinalResultWidget;
 	
+	int32 ResultCameraRetryCount = 0;
+	
+	FTimerHandle ResultCameraRetryHandle;
 #pragma region CutScene
 
 public:

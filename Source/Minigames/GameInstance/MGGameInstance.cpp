@@ -109,6 +109,9 @@ void UMGGameInstance::SavePlayerData(APlayerState* PS)
 		Data.Color = MGPS->PlayerColor;
 		Data.TotalScore = MGPS->TotalScore;
 		Data.RoundScores = MGPS->RoundScores;
+
+		UE_LOG(LogTemp, Warning, TEXT("[SaveData] %s | Score=%d | Rounds=%d | Color=%d"),
+			*Id.ToString(), Data.TotalScore, Data.RoundScores.Num(), (int32)Data.Color);
 	}
 	else if (const AMGLobbyPlayerState* LPS = Cast<AMGLobbyPlayerState>(PS))
 	{
@@ -140,6 +143,9 @@ void UMGGameInstance::RestorePlayerData(APlayerState* PS)
 		MGPS->SetPlayerColor(Data->Color);
 		MGPS->TotalScore = Data->TotalScore;
 		MGPS->RoundScores = Data->RoundScores;
+
+		UE_LOG(LogTemp, Warning, TEXT("[RestoreData] %s | Score=%d | Rounds=%d"),
+			*Id.ToString(), Data->TotalScore, Data->RoundScores.Num());
 	}
 	else if (AMGLobbyPlayerState* LPS = Cast<AMGLobbyPlayerState>(PS))
 	{
