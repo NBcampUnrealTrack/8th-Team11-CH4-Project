@@ -10,6 +10,14 @@ UMGGameInstance::UMGGameInstance()
 	CurrentRoundState = ERoundState::Lobby;
 }
 
+void UMGGameInstance::Init()
+{
+	Super::Init();
+	
+	FWorldDelegates::OnSeamlessTravelStart.AddUObject(
+		this, &UMGGameInstance::HandleSeamlessTravelStart);
+}
+
 FString UMGGameInstance::GetLevelURLForRound(int32 RoundIndex) const
 {
 	if (MinigameSequence.IsValidIndex(RoundIndex) == false)
@@ -34,4 +42,13 @@ FString UMGGameInstance::GetLevelURLForRound(int32 RoundIndex) const
 FString UMGGameInstance::GetLevelURLForRoundState(ERoundState Round) const
 {
 	return GetLevelURLForRound(static_cast<int32>(Round) - static_cast<int32>(ERoundState::Round1));
+}
+
+void UMGGameInstance::HandleSeamlessTravelStart(UWorld* CurrentWorld, const FString& LevelName)
+{
+	// "/Game/.../L_MG_01_BombTag" -> "L_MG_01_BombTag" (RowName과 매칭용)
+	PendingDestinationMapName = FPackageName::GetShortName(LevelName);
+
+	UE_LOG(LogTemp, Warning, TEXT("[OnSeamlessTravelStart] Full=%s | Short=%s"),
+		*LevelName, *PendingDestinationMapName);
 }
