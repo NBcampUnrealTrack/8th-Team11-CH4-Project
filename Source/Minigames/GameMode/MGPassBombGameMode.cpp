@@ -23,6 +23,12 @@ void AMGPassBombGameMode::StartMinigame()
 	for (int32 i = 0; i < AlivePlayers.Num(); i++)
 	{
 		MGGS->AliveCharacters.Add(AlivePlayers[i]->GetCharacter());
+
+		AMGPassBombPlayerState* MGPS = AlivePlayers[i]->GetPlayerState<AMGPassBombPlayerState>();
+		if (IsValid(MGPS))
+		{
+			MGPS->SpawnSpectator();
+		}
 	}
 
 	NextRound();

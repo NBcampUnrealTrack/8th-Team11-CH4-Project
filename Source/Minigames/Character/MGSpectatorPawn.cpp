@@ -82,7 +82,7 @@ void AMGSpectatorPawn::DeathCamFollowCharacter(ACharacter* Character)
 
 	MG_LOG_NET(LogMGNet, Warning, TEXT("[SpecDBG] DeathCamFollow called. HasAuth=%d OwnerPCValid=%d"), HasAuthority(), IsValid(OwnerPC));
 
-	if (HasAuthority() == true)
+	if (IsValid(OwnerPC) == false || OwnerPC->IsLocalController() == false)
 	{
 		return;
 	}

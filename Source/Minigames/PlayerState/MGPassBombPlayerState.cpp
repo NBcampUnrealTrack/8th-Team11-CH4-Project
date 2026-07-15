@@ -10,15 +10,15 @@
 #include "Net/UnrealNetwork.h"
 #include "Minigames.h"
 
-void AMGPassBombPlayerState::OnRep_Owner()
-{
-	Super::OnRep_Owner();
-	// 플레이어만 생성
-	if (HasAuthority() == false)
-	{
-		ServerRPC_SetSpectator();
-	}
-}
+// void AMGPassBombPlayerState::OnRep_Owner()
+// {
+// 	Super::OnRep_Owner();
+// 	// 플레이어만 생성
+// 	if (HasAuthority() == false)
+// 	{
+// 		ServerRPC_SetSpectator();
+// 	}
+// }
 
 void AMGPassBombPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -27,8 +27,12 @@ void AMGPassBombPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	DOREPLIFETIME(ThisClass, Spectator);
 }
 
-void AMGPassBombPlayerState::ServerRPC_SetSpectator_Implementation()
+void AMGPassBombPlayerState::SpawnSpectator()
 {
+	if (HasAuthority() == false)
+	{
+		return;
+	}
 	if (Spectator != nullptr)
 	{
 		return;
@@ -38,6 +42,18 @@ void AMGPassBombPlayerState::ServerRPC_SetSpectator_Implementation()
 
 	MG_LOG_NET(LogMGNet, Warning, TEXT("[SpecDBG] Spawned Spectator for Player=%s Valid=%d"), *GetPlayerName(), IsValid(Spectator));
 }
+
+// void AMGPassBombPlayerState::ServerRPC_SetSpectator_Implementation()
+// {
+// 	if (Spectator != nullptr)
+// 	{
+// 		return;
+// 	}
+// 
+// 	Spectator = GetWorld()->SpawnActor<AMGSpectatorPawn>(SpectatorClass);
+// 
+// 	MG_LOG_NET(LogMGNet, Warning, TEXT("[SpecDBG] Spawned Spectator for Player=%s Valid=%d"), *GetPlayerName(), IsValid(Spectator));
+// }
 
 void AMGPassBombPlayerState::MulticastRPC_RetireCharacter_Implementation()
 {
@@ -60,7 +76,7 @@ void AMGPassBombPlayerState::MulticastRPC_RetireCharacter_Implementation()
 		MGPC->GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
 
 		// 탈락 대상자의 컨트롤러
-		if (IsValid(GetPlayerController()))
+		if (IsValid(GetPlayerController()) && GetPlayerController()->IsLocalController())
 		{
 			// 캐릭터의 입력을 막고 관찰자 모드로 전환
 			MGPC->DisableInput(GetPlayerController());
