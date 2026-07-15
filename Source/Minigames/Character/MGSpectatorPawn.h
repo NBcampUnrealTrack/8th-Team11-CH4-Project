@@ -12,6 +12,9 @@
 class UInputMappingContext;
 class UInputAction;
 class AMGPlayerController;
+class UCameraComponent;
+class USpringArmComponent;
+
 UCLASS()
 class MINIGAMES_API AMGSpectatorPawn : public APawn
 {
@@ -53,10 +56,10 @@ protected:
 	TObjectPtr<USceneComponent> RootComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	TObjectPtr<class UCameraComponent> Cam;
+	TObjectPtr<UCameraComponent> Cam;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	TObjectPtr<class USpringArmComponent> CamArm;
+	TObjectPtr<USpringArmComponent> CamArm;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
@@ -68,10 +71,10 @@ protected:
 	TObjectPtr<UInputAction> SpectateAction;
 
 	UPROPERTY()
-	ACharacter* FollowingCharacter;
+	TObjectPtr<ACharacter> FollowingCharacter;
 
 	UPROPERTY()
-	USkeletalMeshComponent* FollowingMesh;
+	TObjectPtr<USkeletalMeshComponent> FollowingMesh;
 
 	FTimerHandle DeathTimeHandle;
 };

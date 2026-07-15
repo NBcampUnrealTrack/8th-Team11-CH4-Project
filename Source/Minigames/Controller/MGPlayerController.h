@@ -115,7 +115,7 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientRPCPrintChatMessage(const FMGChatType& InChatMessage);
 
-	UFUNCTION(Server, Reliable)
+	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerRPCPrintChatMessageString(const FString& InChatMessageString);
 
 	UFUNCTION()
@@ -124,6 +124,8 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientRPCOnSeamlessTravelCompleted();
 
+	void RestoreDefaultInputMode();
+
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UMGChat>ChatWidgetClass;
@@ -131,7 +133,20 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UMGChat>ChatWidgetInstance;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Chat")
+	TSubclassOf<class UMGChatPopupList> ChatPopupListClass;
+
+	UPROPERTY()
+	TObjectPtr<class UMGChatPopupList> ChatPopupListInstance;
+
 	FString ChatMessageString;
+
+	virtual void SetupInputComponent() override;
+	void OnEnterKeyPressed();
+
+	static constexpr int32 MaxChatLength = 200;
+
+	static constexpr int32 MaxChatHistory = 100;
 
 #pragma endregion
 

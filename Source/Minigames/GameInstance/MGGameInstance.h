@@ -43,6 +43,9 @@ public:
 	UPROPERTY()
 	TArray<FMGChatType> ChatMessageHistory;
 
+	UPROPERTY()
+	bool bChatVisible = false;
+
 	UPROPERTY(BlueprintReadWrite, Category = "Player")
 	FString PlayerNickname;
 	
