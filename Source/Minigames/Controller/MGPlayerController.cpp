@@ -26,7 +26,6 @@
 #include "EngineUtils.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
-#include "UI/Chat/MGChatPopup.h"
 #include "UI/Chat/MGChatPopupList.h"
 
 #include "Data/MGMinigameInfoRow.h"
@@ -205,11 +204,12 @@ void AMGPlayerController::TrySetResultCamera()
 	if (Cams.Num() > 0 && IsValid(Cams[0]))
 	{
 		bAutoManageActiveCameraTarget = false;
-		SetViewTargetWithBlend(Cams[0], 0.5f);
 		
+		if (GetViewTarget() != Cams[0])
+		{
+			SetViewTargetWithBlend(Cams[0], 0.5f);
+		}
 		UE_LOG(LogTemp, Warning, TEXT("[ResultCam] SET view -> %s"), *Cams[0]->GetName());
-		
-		return;
 	}
 
 	// 카메라 액터가 아직 스폰 안 됨(레벨 로딩 중) → 재시도 (0.2초 * 20 = 최대 4초)
