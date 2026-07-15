@@ -6,7 +6,9 @@
 
 AMGMiniMapCamera::AMGMiniMapCamera()
 	: CaptureInterval(0.1f)
-	, OrthographicSize(8000.f)
+	, OrthographicSize(12000.f)
+	// TODO : 현재 Initializer List를 통해 초기화된 값이 계산에서 사용중,
+	// 플레이어 위치를 맵핑할 때 정확하게 반영되지 않는 버그 수정해야함
 {
 	PrimaryActorTick.bCanEverTick = false;	// Tick 갱신 대신 적당한 Interval 사용
 
