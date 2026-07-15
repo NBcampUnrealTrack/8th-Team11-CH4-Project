@@ -35,14 +35,15 @@ void AMGPlayerState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AMGPlayerState::CopyProperties(APlayerState* PlayerState)
 {
     Super::CopyProperties(PlayerState);
-    
+ 
+    MG_LOG_ROLE(LogMGNet, Log, TEXT(""));
     if (AMGPlayerState* NewPlayerState = Cast<AMGPlayerState>(PlayerState))
     {
         NewPlayerState->TotalScore = this->TotalScore;
         NewPlayerState->PlayerColor = this->PlayerColor;
         NewPlayerState->RoundScores = this->RoundScores;
 
-        UE_LOG(LogTemp, Warning, TEXT("[After Travel - CopyProperties] Copied TotalScore : %d"), NewPlayerState->TotalScore);
+        MG_LOG_ROLE(LogMGNet, Warning, TEXT("[After Travel - CopyProperties] Copied TotalScore : %d"), NewPlayerState->TotalScore);
     }
 }
 
@@ -66,15 +67,18 @@ void AMGPlayerState::OnRep_PlayerColor()
 
 bool AMGPlayerState::SendColorToPlayerCharacter(float DeltaTime)
 {
-    if (IsValid(GetPawn()))
+    // Pawn이 지연 스폰되는 리슨 서버 환경에서 색 설정을 계속 시도
+    APawn* Pawn = GetPawn();
+    if (!Pawn)
     {
-        AMGPlayerCharacter* MGPC = Cast<AMGPlayerCharacter>(GetPawn());
-
-        if (IsValid(MGPC))
-        {
-            MGPC->FillPlayerColor();
-            return false;
-        }
+        return true;  // Pawn 생성될 때까지 재시도
     }
-    return true;
+
+    AMGPlayerCharacter* MGPC = Cast<AMGPlayerCharacter>(Pawn);
+    if (MGPC)
+    {
+        MGPC->FillPlayerColor();
+    }
+
+    return false;  // Pawn 획득 후 종료
 }
