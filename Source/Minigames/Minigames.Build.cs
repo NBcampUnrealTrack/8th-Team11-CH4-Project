@@ -21,6 +21,9 @@ public class Minigames : ModuleRules
 			
 			// Online (EOS)
 			"OnlineSubsystem", "OnlineSubsystemUtils",
+
+			// Particle Effect
+			"Niagara", 
         });
 
 		PublicIncludePaths.AddRange(new string[]
