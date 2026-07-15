@@ -198,10 +198,17 @@ void AMGPlayerController::TrySetResultCamera()
 {
 	TArray<AActor*> Cams;
 	UGameplayStatics::GetAllActorsWithTag(this, TEXT("ResultCamera"), Cams);
+	
+	UE_LOG(LogTemp, Warning, TEXT("[ResultCam] Try #%d | Found=%d | Local=%d"),
+		ResultCameraRetryCount, Cams.Num(), IsLocalController());
+	
 	if (Cams.Num() > 0 && IsValid(Cams[0]))
 	{
 		bAutoManageActiveCameraTarget = false;
 		SetViewTargetWithBlend(Cams[0], 0.5f);
+		
+		UE_LOG(LogTemp, Warning, TEXT("[ResultCam] SET view -> %s"), *Cams[0]->GetName());
+		
 		return;
 	}
 

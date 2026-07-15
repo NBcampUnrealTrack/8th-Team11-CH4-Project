@@ -355,6 +355,10 @@ void AMGGameModeBase::OnMainTimerElapsed()
 					// 심리스 트래블 실행 (클라이언트들은 자동으로 서버를 따라옴)
 					if (NextMapURL.IsEmpty() == false)
 					{
+						for (APlayerState* PS : MGGameState->PlayerArray)
+						{
+							MGGameInstance->SavePlayerData(PS);
+						}
 						UE_LOG(LogTemp, Warning, TEXT("[Travel Check] Executing ServerTravel..."));
 						GetWorld()->ServerTravel(NextMapURL);
 					}
