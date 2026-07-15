@@ -238,6 +238,7 @@ void AMGLobbyGameModeBase::TravelToMinigameLevel()
 		return;
 	}
 
+	GI->TournamentPlayerCount = AllPlayerControllers.Num();
 	GI->CurrentRoundState = ERoundState::Round1;
 	GetWorld()->ServerTravel(URL); 
 }

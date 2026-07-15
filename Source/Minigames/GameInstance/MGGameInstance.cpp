@@ -8,6 +8,7 @@
 #include "PlayerState/MGPlayerState.h"
 #include "Type/MGPlayerColor.h"						// 플레이어 컬러
 #include "MGNetConfig.h"
+#include "Minigames.h"
 
 UMGGameInstance::UMGGameInstance()
 {
@@ -68,8 +69,8 @@ void UMGGameInstance::HandleSeamlessTravelStart(UWorld* CurrentWorld, const FStr
 {
 	PendingDestinationMapName = FPackageName::GetShortName(LevelName);
 
-	UE_LOG(LogTemp, Verbose, TEXT("[OnSeamlessTravelStart] Full=%s | Short=%s"),
-	   *LevelName, *PendingDestinationMapName);
+	UE_LOG(LogMGNet, Warning, TEXT("[IntroDBG] OnSeamlessTravelStart Full=%s | Short=%s | NetMode=%d"),
+	   *LevelName, *PendingDestinationMapName, (int32)(CurrentWorld ? CurrentWorld->GetNetMode() : NM_MAX));
 
 	if (CurrentWorld == nullptr || CurrentWorld->GetNetMode() == NM_Client)
 	{

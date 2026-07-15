@@ -32,6 +32,9 @@
 #include "UI/Loading/UW_MinigameIntro.h"
 #include "Engine/DataTable.h"
 
+#include "Minigames.h"							// LogMGNet
+#include "GameState/MGGameStateBase.h"
+
 void AMGPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -78,6 +81,7 @@ void AMGPlayerController::BeginPlay()
 		bShowMouseCursor = false;
 		
 		CreateChatWidget();
+		ShowMinigameIntro();
 	}
 
 	if (IsValid(NotificationTextUIClass) == true)
@@ -110,6 +114,9 @@ void AMGPlayerController::OnCharacterDead()
 
 void AMGPlayerController::ShowMinigameIntro()
 {
+	UE_LOG(LogMGNet, Warning, TEXT("[IntroDBG] Show ENTER | Local=%d | IntroClass=%d | Map=%s"),
+		IsLocalController(), MinigameIntroClass != nullptr, *GetWorld()->GetMapName());
+
 	if (IsLocalController() == false || MinigameIntroClass == nullptr)
 	{
 		return;
@@ -118,12 +125,27 @@ void AMGPlayerController::ShowMinigameIntro()
 	UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
 	if (IsValid(GI) == false || IsValid(GI->MinigameInfoTable) == false)
 	{
+		UE_LOG(LogMGNet, Warning, TEXT("[IntroDBG] Show ABORT | GI=%d | Table=%d"),
+			IsValid(GI), (GI != nullptr) ? IsValid(GI->MinigameInfoTable) : 0);
 		return;
 	}
 
+	if (AMGGameStateBase* GS = GetWorld()->GetGameState<AMGGameStateBase>())
+	{
+		if (GS->MatchState != EMatchState::Entering && GS->MatchState != EMatchState::Waiting)
+		{
+			return;
+		}
+	}
+	
 	// 현재 맵(=목적지) 이름으로 행 조회. 행 없으면(로비 등) 그냥 안 띄움 → 자연스러운 가드
-	const FName RowName(*GI->PendingDestinationMapName);
+	const FString CleanMapName = UWorld::RemovePIEPrefix(GetWorld()->GetMapName());
+	const FName RowName(*CleanMapName);
 	FMGMinigameInfoRow* Row = GI->MinigameInfoTable->FindRow<FMGMinigameInfoRow>(RowName, TEXT("ShowMinigameIntro"));
+
+	UE_LOG(LogMGNet, Warning, TEXT("[IntroDBG] Show | RowName=%s | Found=%d"),
+		*RowName.ToString(), Row != nullptr);
+
 	if (Row == nullptr)
 	{
 		return;
@@ -143,6 +165,8 @@ void AMGPlayerController::ShowMinigameIntro()
 
 void AMGPlayerController::HideMinigameIntro()
 {
+	UE_LOG(LogMGNet, Warning, TEXT("[IntroDBG] Hide called. Valid=%d"), IsValid(MinigameIntroInstance));
+
 	if (IsValid(MinigameIntroInstance))
 	{
 		MinigameIntroInstance->RemoveFromParent();
@@ -500,6 +524,9 @@ void AMGPlayerController::ServerRPCPrintChatMessageString_Implementation(const F
 
 void AMGPlayerController::ClientRPCOnSeamlessTravelCompleted_Implementation()
 {
+	UE_LOG(LogMGNet, Warning, TEXT("[IntroDBG] RPC received. Map=%s | Local=%d"),
+		*GetWorld()->GetMapName(), IsLocalController());
+
 	CreateChatWidget();
 	ShowMinigameIntro();
 }

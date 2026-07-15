@@ -68,6 +68,8 @@ public:
 	// 서버 전용 저장고 → UObject 포인터 없고 수명이 GI에 묶여있어 UPROPERTY 불필요
 	TMap<FUniqueNetIdRepl, FMGPlayerSaveData> SavedPlayerData;
 	
+	int32 TournamentPlayerCount = 0;   // 이번 토너먼트 참가 인원 (라운드 게이트용)
+	
 private:
 	void HandleSeamlessTravelStart(UWorld* CurrentWorld, const FString& LevelName);
 

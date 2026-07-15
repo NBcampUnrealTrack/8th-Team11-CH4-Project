@@ -17,11 +17,11 @@ void AMGGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 void AMGGameStateBase::OnRep_MatchState()
 {
-	// 게임 시작(Waiting 종료)되면 인트로 숨김
-	if (MatchState == EMatchState::PlayingCutScene || MatchState == EMatchState::Playing)
+	// 게임이 시작(또는 그 이후)됐으면 인트로 숨김.
+	// PlayingCutScene/Playing만 보면, 폭탄게임처럼 시작과 동시에 Ending으로 넘어가는 경우
+	// 수동 OnRep 시점엔 이미 Ending이라 숨김을 놓침 → Entering/Waiting이 아니면 전부 숨김.
+	if (MatchState != EMatchState::Entering && MatchState != EMatchState::Waiting)
 	{
-		// 데디 서버엔 로컬 플레이어/뷰포트가 없어 nullptr이 반환되어 자연히 무시됨.
-		// 리슨 서버(호스트)와 클라이언트는 각자의 로컬 PC를 대상으로 숨김.
 		if (APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController())
 		{
 			if (AMGPlayerController* MGPC = Cast<AMGPlayerController>(PC))

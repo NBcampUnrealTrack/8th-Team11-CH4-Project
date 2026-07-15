@@ -124,8 +124,8 @@ void AMGGameModeBase::BeginPlay()
 	);
 
 	RemainWaitingTimeForPlaying = WaitingTime;
-
 	RemainWaitingTimeForEnding = EndingTime;
+	RemainEnteringWaitTime = EnteringMaxWaitTime;
 }
 
 #pragma region CutScene
@@ -270,6 +270,27 @@ void AMGGameModeBase::OnMainTimerElapsed()
 	{
 	case EMatchState::None:
 		{
+			break;
+		}
+	case EMatchState::Entering:
+		{
+			UMGGameInstance* GI = Cast<UMGGameInstance>(GetGameInstance());
+			const int32 Expected = IsValid(GI) ? GI->TournamentPlayerCount : 0;
+
+			const bool bEveryoneArrived = (Expected > 0 && AllPlayerControllers.Num() >= Expected);
+			--RemainEnteringWaitTime;
+			const bool bTimedOut = (RemainEnteringWaitTime <= 0);
+
+			if (bEveryoneArrived || bTimedOut)
+			{
+				RemainWaitingTimeForPlaying = WaitingTime;   // 전원 도착 시점부터 카운트다운
+				MGGameState->MatchState = EMatchState::Waiting;
+			}
+			else
+			{
+				NotifyToAllPlayer(FString::Printf(TEXT("Waiting for players... (%d/%d)"),
+					AllPlayerControllers.Num(), Expected));
+			}
 			break;
 		}
 	case EMatchState::Waiting:
