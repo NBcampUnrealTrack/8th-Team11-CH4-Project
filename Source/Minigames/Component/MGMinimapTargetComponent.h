@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Type/MGTypes.h"
 #include "MGMinimapTargetComponent.generated.h"
 
 
@@ -23,9 +24,6 @@ private:
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Minimap")
-	TSubclassOf<UUserWidget> MyPlayerCharacterIcon;
-
-	UPROPERTY(EditAnywhere, Category = "Minimap")
-	TSubclassOf<UUserWidget> OtherPlayerCharacterIcon;
+	EMinimapTargetType TargetType = EMinimapTargetType::None;
 
 };
