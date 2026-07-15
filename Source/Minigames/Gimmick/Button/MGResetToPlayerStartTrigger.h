@@ -21,12 +21,6 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trigger")
     TObjectPtr<UBoxComponent> TriggerVolume;
 
-    UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Trigger")
-    TObjectPtr<APlayerStart> TargetPlayerStart;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
-    FName PlayerStartTag;
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
     float ResetCooldownSeconds = 1.0f;
 
@@ -40,8 +34,7 @@ protected:
         const FHitResult& SweepResult);
 
 private:
+    APlayerStart* GetRandomPlayerStart() const;
 
     TMap<TWeakObjectPtr<AActor>, float> LastResetTimeMap;
-
-    APlayerStart* FindTargetPlayerStart() const;
 };

@@ -45,6 +45,11 @@ protected:
 	uint8 bIsFalling : 1;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	float AimPitch;
+	FRotator CurrentHeadRot;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FRotator TargetHeadRot;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool HeadDirection;
 };

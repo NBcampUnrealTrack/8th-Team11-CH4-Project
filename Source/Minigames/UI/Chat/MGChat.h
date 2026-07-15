@@ -8,6 +8,7 @@
 
 class UEditableTextBox;
 class UScrollBox;
+class UButton;
 class UMGChatLine;
 /**
  *
@@ -18,22 +19,31 @@ class MINIGAMES_API UMGChat : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	void AddChatMessage(const FMGChatType& InChatMessage);
+	void FocusChatInput();
+
+protected:
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+
+	UFUNCTION()
+	void OnChatInputTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+
+	UFUNCTION()
+	void OnSendButtonClicked();
+
+	void SendChatMessage();
+
+protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UEditableTextBox> EditableTextBox_ChatInput;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UScrollBox> ScrollBox_ChatLog;
 
-	virtual void NativeConstruct() override;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> Button_Send;
 
-	virtual void NativeDestruct() override;
-
-	void AddChatMessage(const FMGChatType& InChatMessage);
-
-protected:
-	UFUNCTION()
-	void OnChatInputTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
-	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Chat")
 	TSubclassOf<UMGChatLine> ChatLineClass;
 };
