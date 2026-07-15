@@ -77,6 +77,11 @@ AMGPlayerCharacter::AMGPlayerCharacter()
 	FlagNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("FlagNiagaraComponent"));
 	FlagNiagaraComponent->SetupAttachment(FlagMeshComponent);
 	FlagNiagaraComponent->SetAutoActivate(false);
+
+
+	//버튼 게임 관련
+	GetCharacterMovement()->bImpartBaseVelocityZ = false;
+
 }
 
 void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
