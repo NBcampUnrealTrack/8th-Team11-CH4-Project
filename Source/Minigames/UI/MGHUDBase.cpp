@@ -13,6 +13,9 @@ void AMGHUDBase::BeginPlay()
 		return;
 	}	// 혹시 Dedicated Server에서 호출된다면 서버는 조기 return
 
+
+	// TODO : 현재 BeginPlay()에서 AddToViewport를 하고 있는데
+	// 미니게임이 시작되는 타이밍에 델리게이트를 통해 적절한 시점에서 AddToViewport 필요
 	if (!IsValid(MinimapWidgetClass))
 	{
 		return;
