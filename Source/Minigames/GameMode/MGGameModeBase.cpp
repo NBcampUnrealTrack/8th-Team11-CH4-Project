@@ -188,7 +188,11 @@ void AMGGameModeBase::PlayCutScene()
 
 void AMGGameModeBase::OnFinishedCutScene()
 {
-	StartMinigame();
+	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
+	if (IsValid(MGGameState))
+	{
+		MGGameState->SetMatchState(EMatchState::Waiting);
+	}
 }
 
 #pragma endregion
@@ -282,7 +286,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			if (bEveryoneArrived || bTimedOut)
 			{
 				RemainWaitingTimeForPlaying = WaitingTime;   // 전원 도착 시점부터 카운트다운
-				MGGameState->SetMatchState(EMatchState::Waiting);
+				PlayCutScene();
 			}
 			else
 			{
@@ -302,9 +306,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			if (RemainWaitingTimeForPlaying <= 0)
 			{
 				NotificationString = FString::Printf(TEXT(""));
-	
-				PlayCutScene();
-				MGGameState->OnRep_MatchState();
+				StartMinigame();
 			}
 	
 			NotifyToAllPlayer(NotificationString);
