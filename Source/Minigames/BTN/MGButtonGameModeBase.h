@@ -13,6 +13,8 @@ class MINIGAMES_API AMGButtonGameModeBase : public AMGGameModeBase
 public:
     AMGButtonGameModeBase();
 
+    bool bGameEnded = false;
+
 protected:
     virtual void BeginPlay() override;
 
