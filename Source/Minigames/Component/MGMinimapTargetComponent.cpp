@@ -5,6 +5,7 @@
 #include "GameFramework/Pawn.h"
 #include "UI/MGHUDBase.h"
 #include "UI/MiniMap/UW_MiniMapLayout.h"
+#include "GameState/MGGameStateBase.h"
 
 UMGMinimapTargetComponent::UMGMinimapTargetComponent()
 {
@@ -20,14 +21,23 @@ void UMGMinimapTargetComponent::BeginPlay()
 		return;
 	}
 
-	FTimerHandle RegisterTimerHandler;
 	GetWorld()->GetTimerManager().SetTimer(
-		RegisterTimerHandler, 
+		BindTimerHandler,
 		this, 
-		&UMGMinimapTargetComponent::RegisterToMinimap, 
-		1.0f, 
-		false
+		&UMGMinimapTargetComponent::TryBindMinigameStart,
+		0.1f, 
+		true
 	);
+}
+
+void UMGMinimapTargetComponent::TryBindMinigameStart()
+{
+	AMGGameStateBase* MGGameState = GetWorld() ? GetWorld()->GetGameState<AMGGameStateBase>() : nullptr;
+	if (IsValid(MGGameState))
+	{
+		MGGameState->OnMinigameStarted.AddDynamic(this, &UMGMinimapTargetComponent::RegisterToMinimap);
+		GetWorld()->GetTimerManager().ClearTimer(BindTimerHandler);	// 바인딩에 성공하면 ClearTimer
+	}
 }
 
 void UMGMinimapTargetComponent::RegisterToMinimap()
@@ -66,3 +76,9 @@ void UMGMinimapTargetComponent::RegisterToMinimap()
 	MyHUD->MinimapWidget->AddMinimapTarget(OwnerActor, FinalType);	// 미니맵에 등록
 }
 
+void UMGMinimapTargetComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearTimer(BindTimerHandler);		// 타이머 정리
+
+	Super::EndPlay(EndPlayReason);
+}
