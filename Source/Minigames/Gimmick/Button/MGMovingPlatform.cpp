@@ -174,9 +174,4 @@ void AMGMovingPlatform::ApplyStandCollisionInfo(int32 Index)
 
     Box->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-    Box->SetHiddenInGame(false);           // 게임 중에 보이게
-    Box->SetVisibility(true);              // 렌더링 켜기
-    Box->ShapeColor = FColor::Green;       // 초록색
-    Box->SetLineThickness(2.f);
-
 }
