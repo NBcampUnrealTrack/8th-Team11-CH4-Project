@@ -23,9 +23,12 @@ public:
 	// [기능 변경] 깃발 세팅 시 액터 포인터도 함께 받도록 변경
 	bool SetHasFlag(bool bHasFlag, class AMGFlagActor* InFlagActor = nullptr);
 
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE bool GetHasFlag() const { return bFlagState; }
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE bool GetIsFlagProtected() const { return bIsFlagProtected; }
-	const float GetStealRange() { return StealRange; }
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE float GetStealRange() const { return StealRange; }
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerRPCTakeFlag();
@@ -34,10 +37,6 @@ public:
 	FOnFlagProtectionChanged OnFlagProtectionChanged;
 
 private:
-	/*
-	UFUNCTION()
-	void OnRep_FlagState();
-	*/
 
 	// 색 정보를 같이 넘겨줄 수 있도록 기존 OnRep_FlagState() 함수를 대체
 	UFUNCTION()

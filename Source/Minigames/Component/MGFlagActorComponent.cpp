@@ -49,14 +49,12 @@ bool UMGFlagActorComponent::SetHasFlag(bool bHasFlag, AMGFlagActor* InFlagActor)
 				if (AMGPlayerState* PS = PC->GetPlayerState<AMGPlayerState>())
 				{
 					ReplicatedFlagColor = PS->GetPlayerLinearColor();
-					UE_LOG(LogTemp, Warning, TEXT("flag color is changed"));
 				}
 			}
 		}
 		else
 		{
 			ReplicatedFlagColor = FLinearColor::White;
-			UE_LOG(LogTemp, Warning, TEXT("flag color cannot be changed"));
 		}
 
 		bFlagState = bHasFlag;
@@ -65,10 +63,7 @@ bool UMGFlagActorComponent::SetHasFlag(bool bHasFlag, AMGFlagActor* InFlagActor)
 		{
 			OnRep_FlagVisuals();
 		}	
-	}
 
-	if (IsValid(Owner) && Owner->HasAuthority())
-	{
 		if (bFlagState == true)
 		{
 			bIsFlagProtected = true;
@@ -134,7 +129,6 @@ void UMGFlagActorComponent::ServerRPCTakeFlag_Implementation()
 
 				if (IsValid(TargetFlagComp) && TargetFlagComp->GetHasFlag() == true && TargetFlagComp->GetIsFlagProtected() == false)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("flag owner changed"));
 					TargetFlagComp->SetHasFlag(false);
 					this->SetHasFlag(true);
 					break;
@@ -149,20 +143,11 @@ bool UMGFlagActorComponent::ServerRPCTakeFlag_Validate()
 	return true;
 }
 
-/*
-void UMGFlagActorComponent::OnRep_FlagState()
-{
-	if (IsValid(FlagMeshComp))
-	{
-		FlagMeshComp->SetVisibility(bFlagState);
-	}
-
-	OnFlagStateChanged.Broadcast(bFlagState);
-}
-*/
-
 void UMGFlagActorComponent::OnRep_IsFlagProtected()
 {
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_FlagVisuals -> bFlagState: %d, Received Color: %s"),
+		bFlagState, *ReplicatedFlagColor.ToString());
+
 	if (IsValid(FlagEffectMeshComp))
 	{
 		FlagEffectMeshComp->SetVisibility(bIsFlagProtected);
