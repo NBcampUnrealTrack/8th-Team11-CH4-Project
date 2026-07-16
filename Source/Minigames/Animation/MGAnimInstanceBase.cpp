@@ -24,9 +24,19 @@ void UMGAnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
-	if (!ensure(IsValid(OwnerCharacter) && IsValid(OwnerCharacterMovementComponent)))
+	if (GetWorld() && GetWorld()->WorldType == EWorldType::EditorPreview)
 	{
-		return;
+		if (!(IsValid(OwnerCharacter) && IsValid(OwnerCharacterMovementComponent)))
+		{
+			return;
+		}
+	}
+	else
+	{
+		if (!ensure(IsValid(OwnerCharacter) && IsValid(OwnerCharacterMovementComponent)))
+		{
+			return;
+		}
 	}
 
 	Velocity = OwnerCharacterMovementComponent->Velocity;
