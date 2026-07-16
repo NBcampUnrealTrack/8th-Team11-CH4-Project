@@ -12,6 +12,9 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnBombHolderChanged, class ACharacter* /*Ne
 // RemainTime이 줄어들 때, 일정 시간 간격으로 동기화를 위한 델리게이트
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBombTimeChanged, int32 /*RemainTime*/);
 
+
+class AMGPlayerCharacter;
+
 UCLASS()
 class MINIGAMES_API AMGBombActor : public AActor
 {
@@ -34,7 +37,7 @@ public:
 	void Multicast_OnExplode();
 
 	// 폭탄의 ExplodeTimer를 관리, GameMode에서 최초로 폭탄을 넘기는 함수
-	void ActivateBomb(ACharacter* InitialHolder, float ExplodeTime);
+	void ActivateBomb(AMGPlayerCharacter* InitialHolder, float ExplodeTime);
 
 	// BombRemainTime 값이 바뀌었을 때 호출될 OnRep 함수
 	UFUNCTION()
@@ -59,10 +62,10 @@ protected:
 
 private:
 	// NewHolder를 BombHolder로 변경하는 함수
-	void SetBombHolder(ACharacter* NewHolder);
+	void SetBombHolder(AMGPlayerCharacter* NewHolder);
 
 	// TargetHolder에 MGBombActor를 부착하는 함수
-	void AttachToHolder(ACharacter* TargetHolder);
+	void AttachToHolder(AMGPlayerCharacter* TargetHolder);
 
 	// Timer에 의해 호출될 bCanPass를 true로 만들어주는 함수
 	void ResetPassCooldown();
@@ -107,7 +110,7 @@ public:
 	// Replication된 값을 받은 각 Client에서 OnRep_BombHolder()가 호출됨
 	// OnRep를 이용하면 Culling 등으로 무시될 일 없이 반드시 실행됨
 	UPROPERTY(ReplicatedUsing = OnRep_BombHolder)
-	ACharacter* BombHolder;
+	AMGPlayerCharacter* BombHolder;
 
 	// 다시 Pass하기 위한 쿨타임 시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")

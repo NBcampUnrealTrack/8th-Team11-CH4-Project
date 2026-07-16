@@ -173,7 +173,11 @@ void AMGPassBombGameMode::AssignBombToRandomAlive()
 		AMGPlayerController* Target = AlivePlayers[BombIndex];
 		if (IsValid(Target) && IsValid(Target->GetCharacter()))
 		{
-			BombActor->ActivateBomb(Target->GetCharacter(), ExplodeTime);
+			AMGPlayerCharacter* MGPC = Cast<AMGPlayerCharacter>(Target->GetCharacter());
+			if (IsValid(MGPC))
+			{
+				BombActor->ActivateBomb(MGPC, ExplodeTime);
+			}
 		}
 	}
 }

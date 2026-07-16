@@ -11,7 +11,6 @@
 #include "EnhancedInputComponent.h"
 #include "Component/MGFlagActorComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Net/UnrealNetwork.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/GameStateBase.h"
@@ -24,10 +23,12 @@
 #include "GameState/MGGameStateBase.h"
 #include "PlayerState/MGPlayerState.h"
 #include "Type/MGPlayerColor.h"
+#include "Type/MGTypes.h"
 #include "NiagaraComponent.h"
+#include "Animation/MGAnimInstanceBase.h"
 #include "UI/MGFlagHUD.h"
-
 #include "Component/Button/MGInteractionOverlapComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "Minigames.h"
 
 AMGPlayerCharacter::AMGPlayerCharacter()
@@ -97,9 +98,10 @@ void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	EIC->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 	EIC->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
-	if (IsValid(TakeFlagAction))
+	if (IsValid(InteractionAction))
 	{
-		EIC->BindAction(TakeFlagAction, ETriggerEvent::Started, this, &ThisClass::HandleTakeFlagInput);
+		EIC->BindAction(InteractionAction, ETriggerEvent::Started, this, &ThisClass::HandleInteractionInput);
+		EIC->BindAction(InteractionAction, ETriggerEvent::Completed, this, &ThisClass::HandleInteractionEndInput);
 	}
 
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
@@ -210,14 +212,99 @@ void AMGPlayerCharacter::HandleLookInput(const FInputActionValue& InValue)
 	AddControllerPitchInput(InLookVector.Y);
 }
 
-void AMGPlayerCharacter::HandleTakeFlagInput(const FInputActionValue& InValue)
+void AMGPlayerCharacter::HandleInteractionInput(const FInputActionValue& InValue)
 {
-	if (IsLocallyControlled() == true)
+	if (IsValid(Controller) == false)
 	{
+		MG_LOG_NET(LogMGNet, Error, TEXT("Controller is invalid."));
+		return;
+	}
+
+	AMGGameStateBase* MGGS = GetWorld()->GetGameState<AMGGameStateBase>();
+	if (ensure(IsValid(MGGS)) == false)
+	{
+		return;
+	}
+	EMinigameType MGType = MGGS->GetCurrentMinigameType();
+	
+	switch (MGType)
+	{
+	case EMinigameType::PassBomb:
+		if (IsCarrying)
+		{
+			ServerRPC_SendPlayPassBombRequest(true);
+			IsPlayingPassBomb = true;
+		}
+		break;
+	case EMinigameType::FlagGame:
 		if (IsValid(FlagActorComponent))
 		{
 			FlagActorComponent->ServerRPCTakeFlag();
 		}
+		break;
+	}
+}
+
+void AMGPlayerCharacter::HandleInteractionEndInput(const FInputActionValue& InValue)
+{
+	if (IsValid(Controller) == false)
+	{
+		MG_LOG_NET(LogMGNet, Error, TEXT("Controller is invalid."));
+		return;
+	}
+
+	AMGGameStateBase* MGGS = GetWorld()->GetGameState<AMGGameStateBase>();
+	if (ensure(IsValid(MGGS)) == false)
+	{
+		return;
+	}
+	EMinigameType MGType = MGGS->GetCurrentMinigameType();
+
+	switch (MGType)
+	{
+	case EMinigameType::PassBomb:
+		if (IsCarrying)
+		{
+			ServerRPC_SendPlayPassBombRequest(false);
+			IsPlayingPassBomb = false;
+		}
+		break;
+	}
+}
+
+void AMGPlayerCharacter::ServerRPC_SendPlayPassBombRequest_Implementation(bool Value)
+{
+	MulticastRPC_PlayPassBombAnim(Value);
+}
+
+void AMGPlayerCharacter::MulticastRPC_PlayPassBombAnim_Implementation(bool Value)
+{
+	IsPlayingPassBomb = Value;
+	if (IsValid(GetMesh()))
+	{
+		UMGAnimInstanceBase* AnimInstance = Cast<UMGAnimInstanceBase>(GetMesh()->GetAnimInstance());
+		if (IsValid(AnimInstance) == true)
+		{
+			AnimInstance->bPassBomb = Value;
+		}
+	}
+}
+
+void AMGPlayerCharacter::MulticastRPC_SetCarryState_Implementation(bool Value)
+{
+	IsCarrying = Value;
+	if (IsValid(GetMesh()))
+	{
+		UMGAnimInstanceBase* AnimInstance = Cast<UMGAnimInstanceBase>(GetMesh()->GetAnimInstance());
+		if (IsValid(AnimInstance) == true)
+		{
+			AnimInstance->bIsCarrying = Value;
+		}
+	}
+
+	if (HasAuthority() == true && IsCarrying == false)
+	{
+		MulticastRPC_PlayPassBombAnim(false);
 	}
 }
 

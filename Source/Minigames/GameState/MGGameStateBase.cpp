@@ -2,9 +2,25 @@
 
 
 #include "GameState/MGGameStateBase.h"
+#include "GameState/MGPassBombGameState.h"
+#include "GameState/MGFlagGameStateBase.h"
 
 #include "Controller/MGPlayerController.h"
 #include "Net/UnrealNetwork.h"
+
+EMinigameType AMGGameStateBase::GetCurrentMinigameType()
+{
+	if (Cast<AMGPassBombGameState>(this))
+	{
+		return EMinigameType::PassBomb;
+	}
+	if (Cast<AMGFlagGameStateBase>(this))
+	{
+		return EMinigameType::FlagGame;
+	}
+
+	return EMinigameType::NONE;
+}
 
 void AMGGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
