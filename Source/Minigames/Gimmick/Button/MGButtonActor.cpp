@@ -7,6 +7,8 @@
 #include "GameInstance/MGGameInstance.h"
 #include "Type/MGPlayerColor.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundAttenuation.h"
 
 AMGButtonActor::AMGButtonActor()
 {
@@ -41,10 +43,19 @@ void AMGButtonActor::BeginPlay()
     Super::BeginPlay();
     DynamicMaterial = ButtonMesh->CreateDynamicMaterialInstance(0);
     ApplyVisual();
-    GetWorldTimerManager().SetTimerForNextTick(this, &AMGButtonActor::ApplyVisual);
-    FTimerHandle ReapplyHandle;
+    NextTickVisualHandle = GetWorldTimerManager().SetTimerForNextTick(this, &AMGButtonActor::ApplyVisual);
     GetWorldTimerManager().SetTimer(
-        ReapplyHandle, this, &AMGButtonActor::ApplyVisual, 0.5f, false);
+        ReapplyVisualHandle, this, &AMGButtonActor::ApplyVisual, 0.5f, false);
+}
+
+void AMGButtonActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    if (UWorld* World = GetWorld())
+    {
+        World->GetTimerManager().ClearTimer(NextTickVisualHandle);
+        World->GetTimerManager().ClearTimer(ReapplyVisualHandle);
+    }
+    Super::EndPlay(EndPlayReason);
 }
 
 void AMGButtonActor::BeginInteract_Implementation(AActor* Interactor)
@@ -65,11 +76,17 @@ void AMGButtonActor::BeginInteract_Implementation(AActor* Interactor)
     {
         return;
     }
+    const bool bWasPressed = bPressed;
 
     bPressed = true;
     CurrentColor = PlayerState->GetPlayerLinearColor();
     bColorOverridden = true;
     ApplyVisual();
+
+    if (!bWasPressed)
+    {
+        MulticastPlayPressSound();
+    }
 
     SetButtonOwner(PlayerState);
 }
@@ -127,12 +144,7 @@ float AMGButtonActor::GetButtonTopWorldZ() const
     {
         return GetActorLocation().Z;
     }
-    const FVector WorldOrigin =
-        BaseMesh->GetComponentTransform().TransformPosition(ButtonOriginLocation);
-    const float MeshHalfHeight = ButtonMesh->GetStaticMesh()
-        ? ButtonMesh->GetStaticMesh()->GetBounds().BoxExtent.Z * ButtonMesh->GetComponentScale().Z
-        : 0.f;
-    return WorldOrigin.Z + MeshHalfHeight;
+    return ButtonMesh->Bounds.Origin.Z + ButtonMesh->Bounds.BoxExtent.Z;
 }
 
 void AMGButtonActor::OnRep_Pressed()
@@ -145,6 +157,13 @@ void AMGButtonActor::OnRep_Color()
     ApplyVisual();
 }
 
+float AMGButtonActor::GetWorldPressDepth() const
+{
+    const FVector LocalOffset(0.f, 0.f, PressDepth);
+    const FVector WorldOffset = BaseMesh->GetComponentTransform().TransformVector(LocalOffset);
+    return WorldOffset.Z;
+}
+
 void AMGButtonActor::ApplyVisual()
 {
     const FVector TargetLocation = bPressed
@@ -155,4 +174,28 @@ void AMGButtonActor::ApplyVisual()
     {
         DynamicMaterial->SetVectorParameterValue(ColorParameterName, CurrentColor);
     }
+}
+
+void AMGButtonActor::MulticastPlayPressSound_Implementation()
+{
+    if (GetNetMode() == NM_DedicatedServer)
+    {
+        return;
+    }
+
+    if (!PressSound)
+    {
+        return;
+    }
+
+    const float Now = GetWorld()->GetTimeSeconds();
+    if (Now - LastPressSoundTime < PressSoundCooldown)
+    {
+        return;
+    }
+    LastPressSoundTime = Now;
+
+    UGameplayStatics::PlaySoundAtLocation(
+        this, PressSound, GetActorLocation(),
+        1.f, 1.f, 0.f, ButtonSoundAttenuation);
 }

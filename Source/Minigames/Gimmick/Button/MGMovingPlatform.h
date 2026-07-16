@@ -76,11 +76,4 @@ private:
     UPROPERTY(ReplicatedUsing = OnRep_StandCollisionInfos)
     TArray<FStandCollisionInfo> StandCollisionInfos;
 
-    /* //ÇÃ·§Æû À§Ä¡ È®ÀÎ¿ë ·Î±×
-    public:
-        UFUNCTION(NetMulticast, Unreliable)
-        void MulticastDebugPlatform(const FVector& ServerLocation, float ServerTime);
-    private:
-        float DebugTimer = 0.f;
-        */
 };

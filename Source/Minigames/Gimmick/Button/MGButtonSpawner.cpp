@@ -42,25 +42,20 @@ TMap<AActor*, int32> AMGButtonSpawner::BuildSpawnCounts(const TArray<AActor*>& P
 {
     TMap<AActor*, int32> SpawnCounts;
 
+    TArray<AActor*> Candidates = Platforms;
+
     int32 Remaining = FMath::Min(TotalButtonCount, Platforms.Num() * MaxButtonsPerPlatform);
 
-    for (AActor* Platform : Platforms)
+    while (Remaining > 0 && !Candidates.IsEmpty())
     {
-        if (Remaining-- <= 0)
-        {
-            break;
-        }
-        SpawnCounts.Add(Platform, 1);
-    }
+        const int32 Index = FMath::RandRange(0, Candidates.Num() - 1);
+        int32& Count = SpawnCounts.FindOrAdd(Candidates[Index]);
 
-    while (Remaining > 0)
-    {
-        int32& Count = SpawnCounts.FindOrAdd(Platforms[FMath::RandRange(0, Platforms.Num() - 1)]);
-        if (Count < MaxButtonsPerPlatform)
+        if (++Count >= MaxButtonsPerPlatform)
         {
-            ++Count;
-            --Remaining;
+            Candidates.RemoveAtSwap(Index);
         }
+        --Remaining;
     }
 
     return SpawnCounts;
@@ -110,7 +105,7 @@ void AMGButtonSpawner::SpawnButtonsOnPlatform(AActor* Platform, int32 ButtonCoun
         {
             MovingPlatform->AddStandCollisionAtWorldTop(
                 FVector(SpawnLocation.X, SpawnLocation.Y, 0.f),
-                Button->GetButtonTopWorldZ(),
+                Button->GetButtonTopWorldZ() - Button->GetWorldPressDepth(),
                 ButtonStandCollisionExtent);
         }
 
