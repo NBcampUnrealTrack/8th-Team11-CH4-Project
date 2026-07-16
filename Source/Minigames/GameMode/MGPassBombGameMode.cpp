@@ -79,7 +79,7 @@ void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
 {
 	// 이미 종료됐으면(이탈로 승자 확정 등) 잔여 폭발 무시
 	AMGGameStateBase* GS = GetGameState<AMGGameStateBase>();
-	if (IsValid(GS) && GS->MatchState == EMatchState::Ending)
+	if (IsValid(GS) && GS->GetMatchState() == EMatchState::Ending)
 	{
 		return;
 	}

@@ -133,7 +133,7 @@ void AMGGameModeBase::PlayCutScene()
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
 	if (IsValid(MGGameState))
 	{
-		MGGameState->MatchState = EMatchState::PlayingCutScene;
+		MGGameState->SetMatchState(EMatchState::PlayingCutScene);
 	}
 
 	for (TObjectPtr<AMGPlayerController> PC : AllPlayerControllers)
@@ -198,14 +198,14 @@ void AMGGameModeBase::StartMinigame()
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
 	if (IsValid(MGGameState))
 	{
-		MGGameState->MatchState = EMatchState::Playing;
+		MGGameState->SetMatchState(EMatchState::Playing);
 	}
 }
 
 void AMGGameModeBase::EndMinigame()
 {
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
-	MGGameState->MatchState = EMatchState::Ending;
+	MGGameState->SetMatchState(EMatchState::Ending);
 }
 
 void AMGGameModeBase::OnCharacterDead(AMGPlayerController* InController)
@@ -257,14 +257,14 @@ void AMGGameModeBase::OnMainTimerElapsed()
 
 	// Test Log
 	UE_LOG(LogMGNet, Verbose, TEXT("[State Check] Current Map: %s | MatchState: %d"), 
-		*GetWorld()->GetMapName(), (int32)MGGameState->MatchState);
+		*GetWorld()->GetMapName(), (int32)MGGameState->GetMatchState());
 
 	// TODO : Lobby -> Minigame1, 2, 3, ..., -> FinalResult Level -> Lobby Level로
 	// 모든 레벨에서 Seamless Travel을 사용할 경우
 	// MGGameInstance->CurrentRoundState == ERoundState::Lobby인 경우
 	// 최초로 Lobby에서 Minigame으로 넘어왔을때 초기화 작업이 필요할 수도 있음
 
-	switch (MGGameState->MatchState)
+	switch (MGGameState->GetMatchState())
 	{
 	case EMatchState::None:
 		{
@@ -282,7 +282,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			if (bEveryoneArrived || bTimedOut)
 			{
 				RemainWaitingTimeForPlaying = WaitingTime;   // 전원 도착 시점부터 카운트다운
-				MGGameState->MatchState = EMatchState::Waiting;
+				MGGameState->SetMatchState(EMatchState::Waiting);
 			}
 			else
 			{
@@ -295,7 +295,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 		{
 			// Test Log
 			UE_LOG(LogTemp, Verbose, TEXT("[State Check] Current Map: %s | MatchState: %d | Players: %d | RemainWait: %d"),
-			 	*GetWorld()->GetMapName(), (int32)MGGameState->MatchState, AllPlayerControllers.Num(), RemainWaitingTimeForPlaying);
+			 	*GetWorld()->GetMapName(), (int32)MGGameState->GetMatchState(), AllPlayerControllers.Num(), RemainWaitingTimeForPlaying);
 
 			FString NotificationString = FString::Printf(TEXT("Round starts in %d seconds..."), RemainWaitingTimeForPlaying);
 	

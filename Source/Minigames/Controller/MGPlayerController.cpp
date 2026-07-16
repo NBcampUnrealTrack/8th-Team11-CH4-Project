@@ -132,7 +132,7 @@ void AMGPlayerController::ShowMinigameIntro()
 
 	if (AMGGameStateBase* GS = GetWorld()->GetGameState<AMGGameStateBase>())
 	{
-		if (GS->MatchState != EMatchState::Entering && GS->MatchState != EMatchState::Waiting)
+		if (GS->GetMatchState() != EMatchState::Entering && GS->GetMatchState() != EMatchState::Waiting)
 		{
 			return;
 		}
@@ -222,7 +222,7 @@ void AMGPlayerController::TrySetResultCamera()
 	TArray<AActor*> Cams;
 	UGameplayStatics::GetAllActorsWithTag(this, TEXT("ResultCamera"), Cams);
 	
-	UE_LOG(LogMGNet, Warning, TEXT("[ResultCam] Try #%d | Found=%d | Local=%d"),
+	UE_LOG(LogMGNet, Verbose, TEXT("[ResultCam] Try #%d | Found=%d | Local=%d"),
 		ResultCameraRetryCount, Cams.Num(), IsLocalController());
 	
 	if (Cams.Num() > 0 && IsValid(Cams[0]))
@@ -233,7 +233,7 @@ void AMGPlayerController::TrySetResultCamera()
 		{
 			SetViewTargetWithBlend(Cams[0], 0.5f);
 		}
-		UE_LOG(LogMGNet, Warning, TEXT("[ResultCam] SET view -> %s"), *Cams[0]->GetName());
+		UE_LOG(LogMGNet, Verbose, TEXT("[ResultCam] SET view -> %s"), *Cams[0]->GetName());
 	}
 
 	// 카메라 액터가 아직 스폰 안 됨(레벨 로딩 중) → 재시도 (0.2초 * 20 = 최대 4초)
@@ -256,28 +256,28 @@ void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
 	{
 		return;
 	}
-	if (IsValid(FinalResultWidget))
+	if (ensure(IsValid(FinalResultWidgetClass)) == false)
 	{
 		return;
 	}
-	if (IsValid(FinalResultWidgetClass) == false)
+
+	// 위젯은 최초 1회만 생성
+	if (IsValid(FinalResultWidget) == false)
 	{
-		return;
+		FinalResultWidget = CreateWidget<UUW_FinalResult>(this, FinalResultWidgetClass);
+		if (ensure(IsValid(FinalResultWidget)) == false)
+		{
+			return;
+		}
+		FinalResultWidget->AddToViewport(3);
 	}
-	
-	FinalResultWidget = CreateWidget<UUW_FinalResult>(this, FinalResultWidgetClass);
-	if (ensure(IsValid(FinalResultWidget)) == false)
-	{
-		return;
-	}
-	
-	FinalResultWidget->AddToViewport(3);
-	
+
+	// 마우스/입력 모드/이동 차단은 매 호출마다 재적용 (폰·뷰포트 준비 타이밍 대응)
 	FInputModeGameAndUI InputMode;
 	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 	SetInputMode(InputMode);
 	bShowMouseCursor = true;
-	
+
 	if (APawn* MyPawn = GetPawn())
 	{
 		MyPawn->DisableInput(this);

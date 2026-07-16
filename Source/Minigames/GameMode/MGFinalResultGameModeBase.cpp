@@ -77,7 +77,7 @@ void AMGFinalResultGameModeBase::CheckAllReadyToReturn()
 	// 이미 종료 진행 중이면 무시
 	if (AMGGameStateBase* GS = GetGameState<AMGGameStateBase>())
 	{
-		if (GS->MatchState == EMatchState::Ending)
+		if (GS->GetMatchState() == EMatchState::Ending)
 		{
 			return;
 		}

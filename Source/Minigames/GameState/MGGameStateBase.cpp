@@ -67,3 +67,12 @@ void AMGGameStateBase::OnRep_MatchState()
 		}
 	}
 }
+
+void AMGGameStateBase::SetMatchState(EMatchState NewState)
+{
+	MatchState = NewState;
+	if (HasAuthority())
+	{
+		OnRep_MatchState();
+	}
+}
