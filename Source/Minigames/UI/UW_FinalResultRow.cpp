@@ -8,7 +8,7 @@
 
 void UUW_FinalResultRow::Setup(AMGPlayerState* PS, int32 Rank)
 {
-	if (IsValid(PS) == false)
+	if (ensure(IsValid(PS)) == false)
 	{
 		return;
 	}

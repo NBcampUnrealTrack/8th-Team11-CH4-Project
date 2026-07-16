@@ -5,10 +5,8 @@
 
 #include "Controller/MGPlayerController.h"
 #include "GameState/MGGameStateBase.h"
-#include "Kismet/GameplayStatics.h"
 #include "PlayerState/MGFlagPlayerState.h"
 #include "GameInstance/MGGameInstance.h"
-#include "Type/MGPlayerColor.h"
 
 #include "Minigames.h"				// 커스텀 Log
 
@@ -53,7 +51,7 @@ void AMGGameModeBase::PostLogin(APlayerController* NewPlayer)
 	Super::PostLogin(NewPlayer);
 
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
-	if (IsValid(MGGameState) == false)
+	if (ensure(IsValid(MGGameState)) == false)
 	{
 		return;
 	}
@@ -78,7 +76,7 @@ void AMGGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 	Super::HandleSeamlessTravelPlayer(C);
     
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
-	if (IsValid(MGGameState) == false)
+	if (ensure(IsValid(MGGameState)) == false)
 	{
 		return;
 	}
@@ -244,7 +242,7 @@ void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 	PS->TotalScore += AddScore;
 	PS->RoundScores.Add(AddScore);
 	
-	UE_LOG(LogTemp, Log, TEXT("[GiveScore] %s | Rank %d/%d | +%d점 | MGScore %d->%d | TotalScore %d->%d"),
+	UE_LOG(LogMGNet, Log, TEXT("[GiveScore] %s | Rank %d/%d | +%d점 | MGScore %d->%d | TotalScore %d->%d"),
 		*PS->GetPlayerName(), Rank, PlayerCount, AddScore,
 		PrevMGScore, PS->GetMGScore(), PrevTotalScore, PS->TotalScore);
 }
@@ -252,13 +250,13 @@ void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 void AMGGameModeBase::OnMainTimerElapsed()
 {
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
-	if (IsValid(MGGameState) == false)
+	if (ensure(IsValid(MGGameState)) == false)
 	{
 		return;
 	}
 
 	// Test Log
-	UE_LOG(LogTemp, Verbose, TEXT("[State Check] Current Map: %s | MatchState: %d"), 
+	UE_LOG(LogMGNet, Verbose, TEXT("[State Check] Current Map: %s | MatchState: %d"), 
 		*GetWorld()->GetMapName(), (int32)MGGameState->MatchState);
 
 	// TODO : Lobby -> Minigame1, 2, 3, ..., -> FinalResult Level -> Lobby Level로
@@ -413,9 +411,9 @@ void AMGGameModeBase::OnMainTimerElapsed()
 
 void AMGGameModeBase::NotifyToAllPlayer(const FString& NotificationString)
 {
-	for (auto MGPC : AllPlayerControllers)
+	for (auto PC : AllPlayerControllers)
 	{
-		MGPC->NotificationText = FText::FromString(NotificationString);
+		PC->NotificationText = FText::FromString(NotificationString);
 	}
 }
 

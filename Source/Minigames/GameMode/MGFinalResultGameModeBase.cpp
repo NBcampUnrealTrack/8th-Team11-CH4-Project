@@ -61,7 +61,7 @@ void AMGFinalResultGameModeBase::StartMinigame()
 
 void AMGFinalResultGameModeBase::OnPlayerReadyToReturn(AMGPlayerController* PC)
 {
-	if (IsValid(PC) == false)
+	if (ensure(IsValid(PC)) == false)
 	{
 		return;
 	}

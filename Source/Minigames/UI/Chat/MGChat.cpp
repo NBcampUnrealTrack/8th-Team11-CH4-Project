@@ -121,7 +121,7 @@ void UMGChat::SendChatMessage()
 	}
 
 	AMGPlayerController* OwningMGPlayerController = Cast<AMGPlayerController>(GetOwningPlayer());
-	if (IsValid(OwningMGPlayerController) == false)
+	if (ensure(IsValid(OwningMGPlayerController)) == false)
 	{
 		return;
 	}
