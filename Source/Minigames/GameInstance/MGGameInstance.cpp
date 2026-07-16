@@ -69,7 +69,7 @@ void UMGGameInstance::HandleSeamlessTravelStart(UWorld* CurrentWorld, const FStr
 {
 	PendingDestinationMapName = FPackageName::GetShortName(LevelName);
 
-	UE_LOG(LogMGNet, Warning, TEXT("[IntroDBG] OnSeamlessTravelStart Full=%s | Short=%s | NetMode=%d"),
+	UE_LOG(LogMGNet, Verbose, TEXT("[IntroDBG] OnSeamlessTravelStart Full=%s | Short=%s | NetMode=%d"),
 	   *LevelName, *PendingDestinationMapName, (int32)(CurrentWorld ? CurrentWorld->GetNetMode() : NM_MAX));
 
 	if (CurrentWorld == nullptr || CurrentWorld->GetNetMode() == NM_Client)

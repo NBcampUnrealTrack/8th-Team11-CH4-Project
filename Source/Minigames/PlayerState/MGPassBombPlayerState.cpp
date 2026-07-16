@@ -40,7 +40,7 @@ void AMGPassBombPlayerState::SpawnSpectator()
 
 	Spectator = GetWorld()->SpawnActor<AMGSpectatorPawn>(SpectatorClass);
 
-	MG_LOG_NET(LogMGNet, Warning, TEXT("[SpecDBG] Spawned Spectator for Player=%s Valid=%d"), *GetPlayerName(), IsValid(Spectator));
+	MG_LOG_NET(LogMGNet, Verbose, TEXT("[SpecDBG] Spawned Spectator for Player=%s Valid=%d"), *GetPlayerName(), IsValid(Spectator));
 }
 
 // void AMGPassBombPlayerState::ServerRPC_SetSpectator_Implementation()
@@ -59,7 +59,7 @@ void AMGPassBombPlayerState::MulticastRPC_RetireCharacter_Implementation()
 {
 	AMGPlayerCharacter* MGPC = Cast<AMGPlayerCharacter>(GetPawn());
 
-	MG_LOG_NET(LogMGNet, Warning, TEXT("[SpecDBG] Retire Player=%s HasAuth=%d OwnPCValid=%d Spectator=%d"),
+	MG_LOG_NET(LogMGNet, Verbose, TEXT("[SpecDBG] Retire Player=%s HasAuth=%d OwnPCValid=%d Spectator=%d"),
 		*GetPlayerName(), HasAuthority(), IsValid(GetPlayerController()), IsValid(Spectator));
 
 	if (IsValid(MGPC))

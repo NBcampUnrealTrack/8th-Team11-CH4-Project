@@ -114,7 +114,7 @@ void AMGPlayerController::OnCharacterDead()
 
 void AMGPlayerController::ShowMinigameIntro()
 {
-	UE_LOG(LogMGNet, Warning, TEXT("[IntroDBG] Show ENTER | Local=%d | IntroClass=%d | Map=%s"),
+	UE_LOG(LogMGNet, Verbose, TEXT("[IntroDBG] Show ENTER | Local=%d | IntroClass=%d | Map=%s"),
 		IsLocalController(), MinigameIntroClass != nullptr, *GetWorld()->GetMapName());
 
 	if (IsLocalController() == false || MinigameIntroClass == nullptr)
@@ -125,7 +125,7 @@ void AMGPlayerController::ShowMinigameIntro()
 	UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
 	if (IsValid(GI) == false || IsValid(GI->MinigameInfoTable) == false)
 	{
-		UE_LOG(LogMGNet, Warning, TEXT("[IntroDBG] Show ABORT | GI=%d | Table=%d"),
+		UE_LOG(LogMGNet, Verbose, TEXT("[IntroDBG] Show ABORT | GI=%d | Table=%d"),
 			IsValid(GI), (GI != nullptr) ? IsValid(GI->MinigameInfoTable) : 0);
 		return;
 	}
@@ -143,7 +143,7 @@ void AMGPlayerController::ShowMinigameIntro()
 	const FName RowName(*CleanMapName);
 	FMGMinigameInfoRow* Row = GI->MinigameInfoTable->FindRow<FMGMinigameInfoRow>(RowName, TEXT("ShowMinigameIntro"));
 
-	UE_LOG(LogMGNet, Warning, TEXT("[IntroDBG] Show | RowName=%s | Found=%d"),
+	UE_LOG(LogMGNet, Verbose, TEXT("[IntroDBG] Show | RowName=%s | Found=%d"),
 		*RowName.ToString(), Row != nullptr);
 
 	if (Row == nullptr)
@@ -165,7 +165,7 @@ void AMGPlayerController::ShowMinigameIntro()
 
 void AMGPlayerController::HideMinigameIntro()
 {
-	UE_LOG(LogMGNet, Warning, TEXT("[IntroDBG] Hide called. Valid=%d"), IsValid(MinigameIntroInstance));
+	UE_LOG(LogMGNet, Verbose, TEXT("[IntroDBG] Hide called. Valid=%d"), IsValid(MinigameIntroInstance));
 
 	if (IsValid(MinigameIntroInstance))
 	{
@@ -524,7 +524,7 @@ void AMGPlayerController::ServerRPCPrintChatMessageString_Implementation(const F
 
 void AMGPlayerController::ClientRPCOnSeamlessTravelCompleted_Implementation()
 {
-	UE_LOG(LogMGNet, Warning, TEXT("[IntroDBG] RPC received. Map=%s | Local=%d"),
+	UE_LOG(LogMGNet, Verbose, TEXT("[IntroDBG] RPC received. Map=%s | Local=%d"),
 		*GetWorld()->GetMapName(), IsLocalController());
 
 	CreateChatWidget();
