@@ -222,7 +222,7 @@ void AMGPlayerController::TrySetResultCamera()
 	TArray<AActor*> Cams;
 	UGameplayStatics::GetAllActorsWithTag(this, TEXT("ResultCamera"), Cams);
 	
-	UE_LOG(LogTemp, Warning, TEXT("[ResultCam] Try #%d | Found=%d | Local=%d"),
+	UE_LOG(LogMGNet, Warning, TEXT("[ResultCam] Try #%d | Found=%d | Local=%d"),
 		ResultCameraRetryCount, Cams.Num(), IsLocalController());
 	
 	if (Cams.Num() > 0 && IsValid(Cams[0]))
@@ -233,7 +233,7 @@ void AMGPlayerController::TrySetResultCamera()
 		{
 			SetViewTargetWithBlend(Cams[0], 0.5f);
 		}
-		UE_LOG(LogTemp, Warning, TEXT("[ResultCam] SET view -> %s"), *Cams[0]->GetName());
+		UE_LOG(LogMGNet, Warning, TEXT("[ResultCam] SET view -> %s"), *Cams[0]->GetName());
 	}
 
 	// 카메라 액터가 아직 스폰 안 됨(레벨 로딩 중) → 재시도 (0.2초 * 20 = 최대 4초)
@@ -266,7 +266,7 @@ void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
 	}
 	
 	FinalResultWidget = CreateWidget<UUW_FinalResult>(this, FinalResultWidgetClass);
-	if (IsValid(FinalResultWidget) == false)
+	if (ensure(IsValid(FinalResultWidget)) == false)
 	{
 		return;
 	}
@@ -277,6 +277,11 @@ void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
 	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 	SetInputMode(InputMode);
 	bShowMouseCursor = true;
+	
+	if (APawn* MyPawn = GetPawn())
+	{
+		MyPawn->DisableInput(this);
+	}
 }
 
 void AMGPlayerController::ChangeColor(uint8 ColorIndex)
