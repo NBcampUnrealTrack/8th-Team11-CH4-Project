@@ -60,6 +60,19 @@ void AMGSpectatorPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorld()->GetTimerManager().ClearTimer(DeathTimeHandle);
 
+	if (IsValid(OwnerPC) && GetOwner() != nullptr)
+	{
+		UEnhancedInputLocalPlayerSubsystem* EILPS = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(OwnerPC->GetLocalPlayer());
+		if (IsValid(EILPS))
+		{
+			EILPS->RemoveMappingContext(InputMappingContext);
+		}
+		else
+		{
+			MG_LOG_NET(LogMGNet, Error, TEXT("EnhancedInputLocalPlayerSubsystem is invalid."));
+		}
+	}
+
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -151,6 +164,8 @@ void AMGSpectatorPawn::OnDeathTimerEnd()
 
 void AMGSpectatorPawn::OnRep_Owner()
 {
+	Super::OnRep_Owner();
+
 	if (IsValid(OwnerPC) && GetOwner() != nullptr)
 	{
 		CamArm->bUsePawnControlRotation = true;
@@ -175,7 +190,7 @@ void AMGSpectatorPawn::HandleLookInput(const FInputActionValue& InValue)
 {
 	if (GetOwner() == nullptr)
 	{
-		MG_LOG_NET(LogTemp, Error, TEXT("Controller is invalid."));
+		MG_LOG_NET(LogMGNet, Error, TEXT("Controller is invalid. Owner is null"));
 		return;
 	}
 
@@ -190,7 +205,7 @@ void AMGSpectatorPawn::HandleSpectateInput(const FInputActionValue& InValue)
 	MG_LOG_NET(LogMGNet, Log, TEXT("Input: %f"), InValue.Get<float>());
 	if (GetOwner() == nullptr)
 	{
-		MG_LOG_NET(LogTemp, Error, TEXT("Controller is invalid."));
+		MG_LOG_NET(LogMGNet, Error, TEXT("Controller is invalid. Owner is null."));
 		return;
 	}
 

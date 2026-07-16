@@ -4,10 +4,14 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "NiagaraComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Character/MGPlayerCharacter.h"
 #include "GameState/MGFlagGameStateBase.h"
 #include "PlayerState/MGFlagPlayerState.h"
+#include "Gimmick/MGFlagActor.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "PlayerState/MGPlayerState.h"
 
 UMGFlagActorComponent::UMGFlagActorComponent()
 {
@@ -21,25 +25,48 @@ void UMGFlagActorComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UMGFlagActorComponent, bFlagState);
+	DOREPLIFETIME(UMGFlagActorComponent, ReplicatedFlagColor);
 	DOREPLIFETIME(UMGFlagActorComponent, bIsFlagProtected);
 }
 
-void UMGFlagActorComponent::RegisterFlagMeshes(UStaticMeshComponent* InFlagMesh, UStaticMeshComponent* InFlagEffectMesh)
+void UMGFlagActorComponent::RegisterFlagMeshes(class UStaticMeshComponent* InFlagMesh, class UStaticMeshComponent* InFlagEffectMesh, class UNiagaraComponent* InFlagNiagara)
 {
 	FlagMeshComp = InFlagMesh;
 	FlagEffectMeshComp = InFlagEffectMesh;
+	FlagNiagaraComp = InFlagNiagara;
 }
 
-bool UMGFlagActorComponent::SetHasFlag(bool bHasFlag)
+bool UMGFlagActorComponent::SetHasFlag(bool bHasFlag, AMGFlagActor* InFlagActor)
 {
-	bFlagState = bHasFlag;
-	
-	if (IsValid(FlagMeshComp))
+	AActor* Owner = GetOwner();
+
+	if (IsValid(Owner) && Owner->HasAuthority())
 	{
-		OnRep_FlagState();
+		if (bHasFlag)
+		{
+			if (AMGPlayerCharacter* PC = Cast<AMGPlayerCharacter>(Owner))
+			{
+				if (AMGPlayerState* PS = PC->GetPlayerState<AMGPlayerState>())
+				{
+					ReplicatedFlagColor = PS->GetPlayerLinearColor();
+					UE_LOG(LogTemp, Warning, TEXT("flag color is changed"));
+				}
+			}
+		}
+		else
+		{
+			ReplicatedFlagColor = FLinearColor::White;
+			UE_LOG(LogTemp, Warning, TEXT("flag color cannot be changed"));
+		}
+
+		bFlagState = bHasFlag;
+
+		if (IsValid(FlagMeshComp))
+		{
+			OnRep_FlagVisuals();
+		}	
 	}
 
-	AActor* Owner = GetOwner();
 	if (IsValid(Owner) && Owner->HasAuthority())
 	{
 		if (bFlagState == true)
@@ -83,7 +110,6 @@ void UMGFlagActorComponent::ServerRPCTakeFlag_Implementation()
 	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams Params(NAME_None, false, OwnerCharacter);
 
-	const float StealRange = 1500.f;
 	const FVector CheckLocation = OwnerCharacter->GetActorLocation();
 
 	bool bIsHitDetected = GetWorld()->OverlapMultiByChannel(
@@ -108,6 +134,7 @@ void UMGFlagActorComponent::ServerRPCTakeFlag_Implementation()
 
 				if (IsValid(TargetFlagComp) && TargetFlagComp->GetHasFlag() == true && TargetFlagComp->GetIsFlagProtected() == false)
 				{
+					UE_LOG(LogTemp, Warning, TEXT("flag owner changed"));
 					TargetFlagComp->SetHasFlag(false);
 					this->SetHasFlag(true);
 					break;
@@ -122,6 +149,7 @@ bool UMGFlagActorComponent::ServerRPCTakeFlag_Validate()
 	return true;
 }
 
+/*
 void UMGFlagActorComponent::OnRep_FlagState()
 {
 	if (IsValid(FlagMeshComp))
@@ -131,6 +159,7 @@ void UMGFlagActorComponent::OnRep_FlagState()
 
 	OnFlagStateChanged.Broadcast(bFlagState);
 }
+*/
 
 void UMGFlagActorComponent::OnRep_IsFlagProtected()
 {
@@ -140,4 +169,44 @@ void UMGFlagActorComponent::OnRep_IsFlagProtected()
 	}
 
 	OnFlagProtectionChanged.Broadcast(bIsFlagProtected);
+}
+
+void UMGFlagActorComponent::OnRep_FlagVisuals()
+{
+	if (IsValid(FlagMeshComp))
+	{
+		if (bFlagState == true)
+		{		
+			FlagMeshComp->SetVisibility(true);
+
+			UMaterialInstanceDynamic* MID = Cast<UMaterialInstanceDynamic>(FlagMeshComp->GetMaterial(0));
+			if (!IsValid(MID))
+			{
+				MID = FlagMeshComp->CreateAndSetMaterialInstanceDynamic(0);
+			}
+			if (IsValid(MID))
+			{
+				MID->SetVectorParameterValue(FName("BaseColorFactor"), ReplicatedFlagColor);
+			}
+		}
+		else
+		{
+			FlagMeshComp->SetVisibility(false);
+		}
+	}
+	
+
+	if (IsValid(FlagNiagaraComp))
+	{
+		if (bFlagState)
+		{
+			FlagNiagaraComp->Activate(true);
+		}
+		else
+		{
+			FlagNiagaraComp->Deactivate();
+		}
+	}
+
+	OnFlagStateChanged.Broadcast(bFlagState);
 }

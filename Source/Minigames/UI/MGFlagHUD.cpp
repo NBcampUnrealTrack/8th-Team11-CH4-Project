@@ -27,30 +27,16 @@ void AMGFlagHUD::BeginPlay()
 	{
 		BindWithGameState(FGS);
 	}
+}
 
-	APlayerController* PC = GetOwningPlayerController();
-	if (IsValid(PC))
+void AMGFlagHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (const UWorld* World = GetWorld())
 	{
-		if (AMGPlayerCharacter* MyChar = Cast<AMGPlayerCharacter>(PC->GetPawn()))
-		{
-			if (UMGFlagActorComponent* FlagComp = MyChar->GetComponentByClass<UMGFlagActorComponent>())
-			{
-				FlagComp->OnFlagStateChanged.AddLambda([this, FlagComp](bool bHasFlag) {
-					if (UUW_FlagLayout* Layout = Cast<UUW_FlagLayout>(FlagWidgetInstance))
-					{
-						Layout->UpdateFlagStateUI(bHasFlag, FlagComp->GetIsFlagProtected());
-					}
-					});
-
-				FlagComp->OnFlagProtectionChanged.AddLambda([this, FlagComp](bool bIsProtected) {
-					if (UUW_FlagLayout* Layout = Cast<UUW_FlagLayout>(FlagWidgetInstance))
-					{
-						Layout->UpdateFlagStateUI(FlagComp->GetHasFlag(), bIsProtected);
-					}
-					});
-			}
-		}
+		World->GetTimerManager().ClearTimer(StealPromptTimerHandle);
 	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void AMGFlagHUD::BindWithGameState(AMGFlagGameStateBase* FGS)
@@ -75,6 +61,25 @@ void AMGFlagHUD::BindWithGameState(AMGFlagGameStateBase* FGS)
 		0.2f,
 		true
 	);
+}
+
+void AMGFlagHUD::BindPlayerFlagComponent(UMGFlagActorComponent* FlagComp)
+{
+	if (!IsValid(FlagComp)) return;
+
+	FlagComp->OnFlagStateChanged.AddWeakLambda(this, [this, FlagComp](bool bHasFlag) {
+		if (UUW_FlagLayout* Layout = Cast<UUW_FlagLayout>(FlagWidgetInstance))
+		{
+			Layout->UpdateFlagStateUI(bHasFlag, FlagComp->GetIsFlagProtected());
+		}
+		});
+
+	FlagComp->OnFlagProtectionChanged.AddWeakLambda(this, [this, FlagComp](bool bIsProtected) {
+		if (UUW_FlagLayout* Layout = Cast<UUW_FlagLayout>(FlagWidgetInstance))
+		{
+			Layout->UpdateFlagStateUI(FlagComp->GetHasFlag(), bIsProtected);
+		}
+		});
 }
 
 void AMGFlagHUD::OnRemainTimeUpdated(int32 RemainTime)
@@ -115,8 +120,14 @@ void AMGFlagHUD::UpdateLeaderboard()
 	}
 
 	//깃발 보유 시간 기준 내림차순 정렬
-	FlagPlayerStates.Sort([](const AMGFlagPlayerState& A, const AMGFlagPlayerState& B) {
-		return A.HoldingTime > B.HoldingTime;
+	FlagPlayerStates.Sort([](const AMGFlagPlayerState& A, const AMGFlagPlayerState& B) 
+		{
+			if (A.HoldingTime != B.HoldingTime)
+			{
+				return A.HoldingTime > B.HoldingTime;
+			}
+
+			return A.GetPlayerName() < B.GetPlayerName();
 		});
 
 	if (UUW_FlagLayout* Layout = Cast<UUW_FlagLayout>(FlagWidgetInstance))
@@ -148,7 +159,6 @@ void AMGFlagHUD::CheckStealPromptDistance()
 	if (!IsValid(FGS)) return;
 
 	bool bCanStealRightNow = false;
-	const float StealRange = 1500.f; //MGFlagActorComponent의 StealRange값과 동일하게 유지
 
 	for (APlayerState* PS : FGS->PlayerArray)
 	{
@@ -163,7 +173,7 @@ void AMGFlagHUD::CheckStealPromptDistance()
 		if (IsValid(TargetFlagComp) && TargetFlagComp->GetHasFlag() && !TargetFlagComp->GetIsFlagProtected())
 		{
 			float Distance = FVector::Dist(MyChar->GetActorLocation(), TargetChar->GetActorLocation());
-			if (Distance <= StealRange)
+			if (Distance <= MyFlagComp->GetStealRange())
 			{
 				bCanStealRightNow = true;
 				break;

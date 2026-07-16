@@ -22,10 +22,6 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 protected:
-	UFUNCTION()
-	void AnimNotify_CheckMeleeAttackHit();
-
-protected:
 	UPROPERTY()
 	TObjectPtr<AMGPlayerCharacter> OwnerCharacter;
 
@@ -45,6 +41,11 @@ protected:
 	uint8 bIsFalling : 1;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	float AimPitch;
+	FRotator CurrentHeadRot = FRotator::ZeroRotator;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FRotator TargetHeadRot = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool HeadDirection = true;
 };
