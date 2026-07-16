@@ -38,3 +38,13 @@ enum class EMinigameType : uint8
 	ButtonOwnership UMETA(DisplayName = "ButtonOwnership"),
 	FlagGame UMETA(DisplayName = "FlagGame")
 };
+
+UENUM(BlueprintType)
+enum class EMinimapTargetType : uint8
+{
+	None,
+	My	        UMETA(DisplayName = "자신"),
+	Ally        UMETA(DisplayName = "아군"),
+	Enemy       UMETA(DisplayName = "적"),
+	Objective   UMETA(DisplayName = "오브젝트"),
+};

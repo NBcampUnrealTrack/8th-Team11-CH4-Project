@@ -273,7 +273,6 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			 	*GetWorld()->GetMapName(), (int32)MGGameState->MatchState, AllPlayerControllers.Num(), RemainWaitingTimeForPlaying);
 
 			FString NotificationString = FString::Printf(TEXT("Round starts in %d seconds..."), RemainWaitingTimeForPlaying);
-			--RemainWaitingTimeForPlaying;
 	
 			if (RemainWaitingTimeForPlaying <= 0)
 			{
@@ -284,7 +283,8 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			}
 	
 			NotifyToAllPlayer(NotificationString);
-	
+
+			--RemainWaitingTimeForPlaying;
 			break;
 		}
 	case EMatchState::Ending:
