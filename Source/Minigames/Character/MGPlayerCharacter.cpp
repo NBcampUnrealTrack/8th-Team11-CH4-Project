@@ -212,7 +212,6 @@ void AMGPlayerCharacter::HandleLookInput(const FInputActionValue& InValue)
 	AddControllerPitchInput(InLookVector.Y);
 }
 
-UE_DISABLE_OPTIMIZATION
 void AMGPlayerCharacter::HandleInteractionInput(const FInputActionValue& InValue)
 {
 	if (IsValid(Controller) == false)
@@ -245,7 +244,6 @@ void AMGPlayerCharacter::HandleInteractionInput(const FInputActionValue& InValue
 		break;
 	}
 }
-UE_ENABLE_OPTIMIZATION
 
 void AMGPlayerCharacter::HandleInteractionEndInput(const FInputActionValue& InValue)
 {
