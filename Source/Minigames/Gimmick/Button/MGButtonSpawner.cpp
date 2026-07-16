@@ -105,7 +105,7 @@ void AMGButtonSpawner::SpawnButtonsOnPlatform(AActor* Platform, int32 ButtonCoun
         {
             MovingPlatform->AddStandCollisionAtWorldTop(
                 FVector(SpawnLocation.X, SpawnLocation.Y, 0.f),
-                Button->GetButtonTopWorldZ(),
+                Button->GetButtonTopWorldZ() - Button->GetWorldPressDepth(),
                 ButtonStandCollisionExtent);
         }
 
