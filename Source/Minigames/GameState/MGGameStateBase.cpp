@@ -66,6 +66,11 @@ void AMGGameStateBase::OnRep_MatchState()
 		}
 	}
 
+	if (MatchState == EMatchState::Waiting)
+	{
+		OnWaitingStarted.Broadcast();
+	}
+
 	if (MatchState == EMatchState::Playing)
 	{
 		OnMinigameStarted.Broadcast();

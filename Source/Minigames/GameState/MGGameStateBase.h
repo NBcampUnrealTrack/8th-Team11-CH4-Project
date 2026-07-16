@@ -10,6 +10,7 @@
 // 미니게임이 본격적으로 시작될 때 Broadcast 할 delegate
 // DYNAMIC : 블루프린트에서도 가능   |   MULTICAST : 1대N 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMinigameStarted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWaitingStarted);
 
 UCLASS()
 class MINIGAMES_API AMGGameStateBase : public AGameStateBase
@@ -37,6 +38,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Event")
 	FOnMinigameStarted OnMinigameStarted;
+
+	UPROPERTY(BlueprintAssignable, Category = "Event")
+	FOnWaitingStarted OnWaitingStarted;
 	
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState, VisibleAnywhere, BlueprintReadOnly, Category = "GameFlow")
