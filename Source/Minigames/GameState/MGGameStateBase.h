@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/GameStateBase.h"
+
 #include "Type/MGTypes.h"
 #include "MGGameStateBase.generated.h"
 
@@ -13,6 +14,8 @@ class MINIGAMES_API AMGGameStateBase : public AGameStateBase
 
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	EMinigameType GetCurrentMinigameType();
 
 	UFUNCTION()
 	void OnRep_MatchState();

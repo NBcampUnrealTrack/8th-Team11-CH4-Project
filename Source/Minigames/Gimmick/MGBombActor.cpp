@@ -8,6 +8,7 @@
 #include "Net/UnrealNetwork.h"				// Replication
 #include "Components/CapsuleComponent.h"	// Socket이 없을 때 CapsuleComponent의 중앙으로 Attach
 #include "GameMode/MGPassBombGameMode.h"		// Explode를 GameMode에 알려줘야함
+#include "Character/MGPlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/MGPassBombHUD.h"				// Bomb HUD
 
@@ -101,7 +102,7 @@ void AMGBombActor::OnTriggerOverlap(
 	}	// Authority가 없거나 Pass를 할 수 없다면 조기 종료
 
 	// 범용 Character로 Cast
-	ACharacter* OverlappedCharacter = Cast<ACharacter>(OtherActor);
+	AMGPlayerCharacter* OverlappedCharacter = Cast<AMGPlayerCharacter>(OtherActor);
 
 	// Overlapped된 Character이고 && 현재 폭탄을 들고 있지 않다면
 	if (OverlappedCharacter && OverlappedCharacter != BombHolder)
@@ -115,15 +116,20 @@ void AMGBombActor::OnTriggerOverlap(
 }
 
 // 폭탄을 NewHolder에 부착, OnTriggerOverlap에서 실행됨
-void AMGBombActor::SetBombHolder(ACharacter* NewHolder)
+void AMGBombActor::SetBombHolder(AMGPlayerCharacter* NewHolder)
 {
 	if (!HasAuthority() || BombHolder == NewHolder)
 	{
 		return;	// Authority가 없거나 || NewHolder와 (현재)BombHolder가 같다면 조기종료
 	}
 
+	if (IsValid(BombHolder))
+	{
+		BombHolder->MulticastRPC_SetCarryState(false);
+	}
 	BombHolder = NewHolder; // BombHolder 값 변경 시, 레플리케이션으로 클라이언트들에 OnRep_BombHolder() 자동 호출
 	OnRep_BombHolder();	// OnRep 함수가 AttachToHolder 이외에 다른 기능이 추가됨에 따라 직접 호출로 변경
+	BombHolder->MulticastRPC_SetCarryState(true);
 
 	// 폭탄을 옮겼으면 
 	bCanPass = false;						// 폭탄을 들고 있지 않기 때문에 false
@@ -180,7 +186,7 @@ void AMGBombActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void AMGBombActor::AttachToHolder(ACharacter* TargetHolder)
+void AMGBombActor::AttachToHolder(AMGPlayerCharacter* TargetHolder)
 {
 	if (!TargetHolder)	// TargetHolder가 유효하지 않으면
 	{
@@ -219,7 +225,7 @@ void AMGBombActor::ResetPassCooldown()
 	bCanPass = true;
 }
 
-void AMGBombActor::ActivateBomb(ACharacter* InitialHolder, float ExplodeTime)
+void AMGBombActor::ActivateBomb(AMGPlayerCharacter* InitialHolder, float ExplodeTime)
 {
 	if (!HasAuthority())
 	{
