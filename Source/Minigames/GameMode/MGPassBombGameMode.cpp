@@ -13,7 +13,7 @@ void AMGPassBombGameMode::StartMinigame()
 {
 	Super::StartMinigame();
 
-	ExplodeTime = 5.f;
+	ExplodeTime = 15.f;
 
 	AMGPassBombGameState* MGGS = GetGameState<AMGPassBombGameState>();
 	checkf(IsValid(MGGS), TEXT("GameState is Invalid."));
