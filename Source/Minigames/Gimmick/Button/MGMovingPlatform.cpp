@@ -169,27 +169,14 @@ void AMGMovingPlatform::ApplyStandCollisionInfo(int32 Index)
     const FStandCollisionInfo& Info = StandCollisionInfos[Index];
 
     Box->SetRelativeLocation(Info.RelativeLocation);
-    Box->SetBoxExtent(Info.Extent);
+    const FVector PlatformScale = PlatformMesh->GetComponentScale();
+    Box->SetBoxExtent(Info.Extent / PlatformScale);
+
     Box->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+    Box->SetHiddenInGame(false);           // 게임 중에 보이게
+    Box->SetVisibility(true);              // 렌더링 켜기
+    Box->ShapeColor = FColor::Green;       // 초록색
+    Box->SetLineThickness(2.f);
+
 }
-
-/* //플랫폼 위치 확인 로그
-void AMGMovingPlatform::MulticastDebugPlatform_Implementation(
-    const FVector& ServerLocation,
-    float ServerTime)
-{
-    FVector MyLocation = GetActorLocation();
-
-    const float Error =
-        FVector::Dist(ServerLocation, MyLocation);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[%s] %s | ServerTime=%.3f | Server=%s | Mine=%s | Error=%.3f"),
-        HasAuthority() ? TEXT("SERVER") : TEXT("CLIENT"),
-        *GetName(),
-        ServerTime,
-        *ServerLocation.ToCompactString(),
-        *MyLocation.ToCompactString(),
-        Error);
-}
-*/
