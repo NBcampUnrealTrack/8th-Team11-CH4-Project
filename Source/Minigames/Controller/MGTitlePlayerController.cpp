@@ -5,6 +5,9 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameInstance/MGOnlineSubsystem.h"
+#include "Engine/GameInstance.h"
+#include "MGNetConfig.h"
 
 void AMGTitlePlayerController::BeginPlay()
 {
@@ -14,6 +17,13 @@ void AMGTitlePlayerController::BeginPlay()
 	{
 		return;
 	}
+	
+#if MG_USE_EOS
+	if (UMGOnlineSubsystem* OnlineSub = GetGameInstance()->GetSubsystem<UMGOnlineSubsystem>())
+	{
+		OnlineSub->Login();
+	}
+#endif
 
 	if (IsValid(UIWidgetClass) == true)
 	{
@@ -31,8 +41,26 @@ void AMGTitlePlayerController::BeginPlay()
 	}
 }
 
-void AMGTitlePlayerController::JoinServer(const FString& InIPAddress)
+void AMGTitlePlayerController::HostGame()
 {
-	FName NextLevelName = FName(*InIPAddress);
-	UGameplayStatics::OpenLevel(GetWorld(), NextLevelName, true);
+#if MG_USE_EOS
+	if (UMGOnlineSubsystem* Online = GetGameInstance()->GetSubsystem<UMGOnlineSubsystem>())
+	{
+		Online->HostSession();
+	}
+#else
+	GetWorld()->ServerTravel(TEXT("/Game/Minigames/Level/L_Lobby?listen"));
+#endif
+}
+
+void AMGTitlePlayerController::JoinGame()
+{
+#if MG_USE_EOS
+	if (UMGOnlineSubsystem* Online = GetGameInstance()->GetSubsystem<UMGOnlineSubsystem>())
+	{
+		Online->FindAndJoinSession();
+	}
+#else
+	ClientTravel(MG_DIRECT_IP, TRAVEL_Absolute);
+#endif
 }

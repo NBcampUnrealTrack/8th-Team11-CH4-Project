@@ -4,13 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
-#include "GameState/MGGameStateBase.h"
 #include "Type/MGTypes.h"
 #include "Type/MGChatType.h"
+#include "Type/MGPlayerColor.h"
 #include "MGGameInstance.generated.h"
 
-enum class EMGPlayerColor : uint8;
 class UDataTable;
+
+struct FMGPlayerSaveData
+{
+	EMGPlayerColor Color = EMGPlayerColor::None;
+	int32          TotalScore = 0;
+	TArray<int32>  RoundScores;
+};
 
 UCLASS()
 class MINIGAMES_API UMGGameInstance : public UGameInstance
@@ -21,7 +27,11 @@ public:
 	UMGGameInstance();
 	
 	virtual void Init() override;
-
+	
+	void SavePlayerData(APlayerState* PS);
+	void RestorePlayerData(APlayerState* PS);
+	
+	
 	UFUNCTION(BlueprintPure, Category = "Game Flow")
 	FString GetLevelURLForRound(int32 RoundIndex) const;
 
@@ -36,9 +46,6 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Game Flow")
 	TArray<EMinigameType> MinigameSequence;
-	
-	UPROPERTY()
-	TMap<FUniqueNetIdRepl, EMGPlayerColor> PlayerColors;
 
 	UPROPERTY()
 	TArray<FMGChatType> ChatMessageHistory;
@@ -49,11 +56,19 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Player")
 	FString PlayerNickname;
 	
+	UPROPERTY()
+	TSet<FString> LobbyPlayerIds;
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Loading")
 	FString PendingDestinationMapName;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Loading")
 	TObjectPtr<UDataTable> MinigameInfoTable;
+
+	// 서버 전용 저장고 → UObject 포인터 없고 수명이 GI에 묶여있어 UPROPERTY 불필요
+	TMap<FUniqueNetIdRepl, FMGPlayerSaveData> SavedPlayerData;
+	
+	int32 TournamentPlayerCount = 0;   // 이번 토너먼트 참가 인원 (라운드 게이트용)
 	
 private:
 	void HandleSeamlessTravelStart(UWorld* CurrentWorld, const FString& LevelName);

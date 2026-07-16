@@ -19,7 +19,7 @@ public:
 	
 public:
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState, VisibleAnywhere, BlueprintReadOnly, Category = "GameFlow")
-	EMatchState MatchState = EMatchState::Waiting;
+	EMatchState MatchState = EMatchState::Entering;
 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "GameFlow")
 	ERoundState RoundState = ERoundState::None;

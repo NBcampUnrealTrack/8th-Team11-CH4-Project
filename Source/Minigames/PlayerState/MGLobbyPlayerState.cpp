@@ -22,6 +22,13 @@ void AMGLobbyPlayerState::SetReady(bool bReady)
 	OnRep_IsReady();   // 데디에선 비용 0, 리슨 서버 보험
 }
 
+void AMGLobbyPlayerState::SetPlayerColor(EMGPlayerColor NewColor)
+{
+	PlayerColor = NewColor;
+
+	OnRep_PlayerColor();
+}
+
 void AMGLobbyPlayerState::OnRep_IsReady()
 {
 	if (auto* LGS = GetWorld()->GetGameState<AMGLobbyGameStateBase>())
