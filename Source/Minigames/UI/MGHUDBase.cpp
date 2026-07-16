@@ -3,6 +3,7 @@
 #include "UI/MGHUDBase.h"
 #include "UI/MiniMap/UW_MiniMapLayout.h"
 #include "Minigames.h"
+#include "GameState/MGGameStateBase.h"
 
 void AMGHUDBase::BeginPlay()
 {
@@ -11,11 +12,23 @@ void AMGHUDBase::BeginPlay()
 	if (GetNetMode() == NM_DedicatedServer)
 	{
 		return;
+	}	// Dedicated Server는 조기 return
+
+	AMGGameStateBase* MGGameState = GetWorld()->GetGameState<AMGGameStateBase>();
+	if (ensure(IsValid(MGGameState)) == false)
+	{
+		return;
+	}
+	MGGameState->OnMinigameStarted.AddDynamic(this, &AMGHUDBase::InitializeMinimap);
+}
+
+void AMGHUDBase::InitializeMinimap()
+{
+	if (GetNetMode() == NM_DedicatedServer)
+	{
+		return;
 	}	// 혹시 Dedicated Server에서 호출된다면 서버는 조기 return
 
-
-	// TODO : 현재 BeginPlay()에서 AddToViewport를 하고 있는데
-	// 미니게임이 시작되는 타이밍에 델리게이트를 통해 적절한 시점에서 AddToViewport 필요
 	if (!IsValid(MinimapWidgetClass))
 	{
 		return;

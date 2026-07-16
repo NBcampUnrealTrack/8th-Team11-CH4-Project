@@ -16,6 +16,9 @@ class MINIGAMES_API AMGHUDBase : public AHUD
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void InitializeMinimap();
+
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUW_MiniMapLayout> MinimapWidgetClass;
