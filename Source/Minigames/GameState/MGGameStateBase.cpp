@@ -1,6 +1,5 @@
 ﻿// MGGameStateBase.cpp
 
-
 #include "GameState/MGGameStateBase.h"
 #include "GameState/MGPassBombGameState.h"
 #include "GameState/MGFlagGameStateBase.h"
@@ -65,6 +64,11 @@ void AMGGameStateBase::OnRep_MatchState()
 				MGPC->HideMinigameIntro();
 			}
 		}
+	}
+
+	if (MatchState == EMatchState::Playing)
+	{
+		OnMinigameStarted.Broadcast();
 	}
 }
 
