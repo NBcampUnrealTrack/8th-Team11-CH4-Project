@@ -9,6 +9,7 @@
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundAttenuation.h"
+#include "BTN/MGButtonGameModeBase.h"
 
 AMGButtonActor::AMGButtonActor()
 {
@@ -182,7 +183,13 @@ void AMGButtonActor::MulticastPlayPressSound_Implementation()
     {
         return;
     }
-
+    if (AMGButtonGameState* GS = GetWorld()->GetGameState<AMGButtonGameState>())
+    {
+        if (GS->CurrentPhase != EGamePhase::Playing)
+        {
+            return;
+        }
+    }
     if (!PressSound)
     {
         return;

@@ -51,7 +51,7 @@ void AMGGameModeBase::PostLogin(APlayerController* NewPlayer)
 	Super::PostLogin(NewPlayer);
 
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
-	if (ensure(IsValid(MGGameState)) == false)
+	if (IsValid(MGGameState) == false)
 	{
 		return;
 	}
@@ -76,7 +76,7 @@ void AMGGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 	Super::HandleSeamlessTravelPlayer(C);
     
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
-	if (ensure(IsValid(MGGameState)) == false)
+	if (IsValid(MGGameState) == false)
 	{
 		return;
 	}
