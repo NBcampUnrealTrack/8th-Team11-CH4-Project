@@ -42,7 +42,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Event")
 	FOnWaitingStarted OnWaitingStarted;
 	
-protected:
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState, VisibleAnywhere, BlueprintReadOnly, Category = "GameFlow")
 	EMatchState MatchState = EMatchState::Entering;
 };
