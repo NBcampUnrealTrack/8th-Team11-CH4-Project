@@ -14,12 +14,32 @@ void AMGHUDBase::BeginPlay()
 		return;
 	}	// Dedicated Server는 조기 return
 
-	AMGGameStateBase* MGGameState = GetWorld()->GetGameState<AMGGameStateBase>();
-	if (ensure(IsValid(MGGameState)) == false)
+	GetWorld()->GetTimerManager().SetTimer(
+		BindTimerHandler,
+		this,
+		&AMGHUDBase::TryBindGameStateDelegate,
+		0.1f,
+		true // 성공할 때까지 반복
+	);
+}
+
+void AMGHUDBase::TryBindGameStateDelegate()
+{
+	AMGGameStateBase* MGGameState = GetWorld() ? GetWorld()->GetGameState<AMGGameStateBase>() : nullptr;
+	if (IsValid(MGGameState))
 	{
-		return;
+		// Delegate Broadcast를 전달받지 못했음에도 이미 상태가 바뀌었으면
+		if (MGGameState->MatchState == EMatchState::Playing)
+		{
+			InitializeMinimap();	// 즉시 실행
+		}
+		else
+		{	// 아직 Delegate Broadcast가 실행되지 않았고, 클래스가 정상적으로 존재할 때 Delegate Binding
+			MGGameState->OnMinigameStarted.AddDynamic(this, &AMGHUDBase::InitializeMinimap);
+		}
+		// 어떤식으로든 처리 완료하면 Try 타이머 종료
+		GetWorld()->GetTimerManager().ClearTimer(BindTimerHandler);
 	}
-	MGGameState->OnMinigameStarted.AddDynamic(this, &AMGHUDBase::InitializeMinimap);
 }
 
 void AMGHUDBase::InitializeMinimap()
@@ -43,4 +63,10 @@ void AMGHUDBase::InitializeMinimap()
 	{
 		MG_LOG_ROLE(LogMGNet, Log, TEXT("Fail to add Widget to Viewport"));
 	}
+}
+
+
+void AMGHUDBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearTimer(DelegateBindTimerHandler);
 }

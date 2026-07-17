@@ -16,6 +16,11 @@ class MINIGAMES_API AMGHUDBase : public AHUD
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	UFUNCTION()
+	void TryBindGameStateDelegate();
+
 	UFUNCTION()
 	void InitializeMinimap();
 
@@ -25,5 +30,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "UI")
 	TObjectPtr<UUW_MiniMapLayout> MinimapWidget;
+
+protected:
+	FTimerHandle BindTimerHandler;
 
 };
