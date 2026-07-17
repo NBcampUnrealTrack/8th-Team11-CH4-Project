@@ -35,6 +35,26 @@ void AMGGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 void AMGGameStateBase::OnRep_MatchState()
 {
+	if (APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController())
+	{
+		if (APawn* Pawn = PC->GetPawn())
+		{
+			const bool bShouldBlockMove = 
+				(MatchState == EMatchState::Entering ||
+				 MatchState == EMatchState::Waiting ||
+				 MatchState == EMatchState::Ending);
+			
+			if (bShouldBlockMove)
+			{
+				Pawn->DisableInput(PC);
+			}
+			else
+			{
+				Pawn->EnableInput(PC);
+			}
+		}
+	}
+	
 	// 게임이 시작(또는 그 이후)됐으면 인트로 숨김.
 	// PlayingCutScene/Playing만 보면, 폭탄게임처럼 시작과 동시에 Ending으로 넘어가는 경우
 	// 수동 OnRep 시점엔 이미 Ending이라 숨김을 놓침 → Entering/Waiting이 아니면 전부 숨김.
@@ -54,5 +74,14 @@ void AMGGameStateBase::OnRep_MatchState()
 		{
 			GI->PlayCurrentLevelBGM();
 		}
+	}
+}
+
+void AMGGameStateBase::SetMatchState(EMatchState NewState)
+{
+	MatchState = NewState;
+	if (HasAuthority())
+	{
+		OnRep_MatchState();
 	}
 }

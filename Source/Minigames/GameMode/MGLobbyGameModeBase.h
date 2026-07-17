@@ -42,11 +42,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 MaxPlayerCount = 10;
 	
+	// 로비에서 게임 입장 카운트다운
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 CountdownTime = 10;
-
-	// UPROPERTY(EditDefaultsOnly)
-	// FString MinigameLevelName;
+	int32 CountdownTime = 3;
 	
 	UPROPERTY(EditDefaultsOnly)
 	int32 TotalRoundCount = 3;
