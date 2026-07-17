@@ -6,6 +6,9 @@
 #include "InputActionValue.h"
 #include "MGPlayerCharacter.generated.h"
 
+// 플레이어가 폭탄넘기기 동작을 취할때 수신받는 델리게이트
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnTryPassBomb, bool /*CollisionEnabledValue*/);
+
 class UCameraComponent;
 class USpringArmComponent;
 class UInputMappingContext;
@@ -128,6 +131,9 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPC_PlayPassBombAnim(bool Value);
+
+	FOnTryPassBomb OnTryPassBombDelegate;	// 폭탄넘기기를 시도할 때 실행하는 델리게이트
+
 private:
 	bool IsCarrying = false;	// 규칙 핵심 아이템(폭탄, 깃발)을 들고있는가?
 	bool IsPlayingPassBomb = false;	// 폭탄을 넘기는 동작을 취하고있는가?

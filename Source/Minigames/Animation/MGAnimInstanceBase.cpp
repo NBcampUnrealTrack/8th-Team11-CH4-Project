@@ -64,3 +64,11 @@ void UMGAnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 		CurrentHeadRot = FMath::RInterpTo(CurrentHeadRot, TargetHeadRot, DeltaSeconds, HeadInterpSpeed);
 	}
 }
+
+void UMGAnimInstanceBase::AnimNotify_PassBombCollision()
+{
+	if (IsValid(OwnerCharacter) && OwnerCharacter->HasAuthority())
+	{
+		OwnerCharacter->OnTryPassBombDelegate.Broadcast(true);
+	}
+}

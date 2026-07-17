@@ -36,14 +36,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Minigame|Rule")
 	int32 ExplodeTime;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Minigame|Rule")
+	TObjectPtr<AMGBombActor> BombActor;
+
 	// 라운드 전환 타이머
 	FTimerHandle RoundTimerHandle;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Minigame|Rule")
 	TSubclassOf<AMGBombActor> BombActorClass;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Minigame|Rule")
-	TObjectPtr<AMGBombActor> BombActor;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Minigame")
 	TArray<TObjectPtr<AMGPlayerController>> AlivePlayers;
@@ -52,6 +52,9 @@ private:
 	bool TryFinishByLastManStanding();
 	
 	void AssignBombToRandomAlive();
+
+	UFUNCTION()
+	void SetBombActorCollisionEnabled(bool Value);
 	
 	FTimerHandle CutSceneTimerHandler;
 };

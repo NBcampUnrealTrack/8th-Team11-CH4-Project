@@ -280,6 +280,10 @@ void AMGPlayerCharacter::ServerRPC_SendPlayPassBombRequest_Implementation(bool V
 void AMGPlayerCharacter::MulticastRPC_PlayPassBombAnim_Implementation(bool Value)
 {
 	IsPlayingPassBomb = Value;
+	if (HasAuthority() == true && Value == false)
+	{
+		OnTryPassBombDelegate.Broadcast(false);
+	}
 	if (IsValid(GetMesh()))
 	{
 		UMGAnimInstanceBase* AnimInstance = Cast<UMGAnimInstanceBase>(GetMesh()->GetAnimInstance());

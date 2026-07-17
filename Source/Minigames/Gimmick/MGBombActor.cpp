@@ -101,7 +101,6 @@ void AMGBombActor::OnTriggerOverlap(
 		return;
 	}	// Authority가 없거나 Pass를 할 수 없다면 조기 종료
 
-	// 범용 Character로 Cast
 	AMGPlayerCharacter* OverlappedCharacter = Cast<AMGPlayerCharacter>(OtherActor);
 
 	// Overlapped된 Character이고 && 현재 폭탄을 들고 있지 않다면
@@ -234,7 +233,7 @@ void AMGBombActor::ActivateBomb(AMGPlayerCharacter* InitialHolder, float Explode
 
 	SetBombHolder(InitialHolder);
 	SetActorHiddenInGame(false);
-	SetActorEnableCollision(true);
+	SetActorEnableCollision(false);
 
 	BombRemainTime = FMath::CeilToInt(ExplodeTime);
 	OnRep_BombRemainTime();		// 서버도 최초 갱신

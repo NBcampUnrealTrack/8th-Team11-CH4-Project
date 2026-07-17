@@ -7,6 +7,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Character/MGSpectatorPawn.h"
+#include "Gimmick/MGBombActor.h"
 #include "Net/UnrealNetwork.h"
 #include "Minigames.h"
 

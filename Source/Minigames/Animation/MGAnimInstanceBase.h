@@ -20,6 +20,10 @@ public:
 	virtual void NativeInitializeAnimation() override;
 
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	
+protected:
+	UFUNCTION()
+	void AnimNotify_PassBombCollision();
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)

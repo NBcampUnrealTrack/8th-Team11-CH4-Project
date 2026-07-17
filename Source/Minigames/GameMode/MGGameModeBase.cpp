@@ -45,6 +45,7 @@ void AMGGameModeBase::PreLogin(const FString& Options, const FString& Address, c
 void AMGGameModeBase::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
+	MG_LOG_NET(LogMGNet, Log, TEXT("%s has Login."), *NewPlayer->GetName());
 
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
 	if (IsValid(MGGameState) == false)

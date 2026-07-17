@@ -29,9 +29,6 @@ public:
 	UFUNCTION()
 	void OnRep_BombHolder();
 
-	// OnRep_BombHolder() 내부에서 Broadcast 할 델리게이트
-	FOnBombHolderChanged OnBombHolderChanged;
-
 	// 폭탄이 터질 때 실행될 함수, [폭발 나이아가라 이펙트, 사운드] 등
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_OnExplode();
@@ -45,6 +42,9 @@ public:
 
 	// OnRep_BombRemainTime() 내부에서 남은 시간을 Client HUD에 Broadcast 할 델리게이트
 	FOnBombTimeChanged OnBombTimeChanged;
+
+	// OnRep_BombHolder() 내부에서 Broadcast 할 델리게이트
+	FOnBombHolderChanged OnBombHolderChanged;
 
 	// 1초마다 BombRemainTime 값을 줄이는 타이머 함수
 	void TickBombTimer();
@@ -84,7 +84,7 @@ public:
 	UStaticMeshComponent* BombMesh;
 
 	// BombActor를 다른 사람에게 부착하기 위해 Collision 감지용 Sphere Component
-	UPROPERTY() 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
 	class USphereComponent* PassTrigger;
 
 	// PassTrigger의 반지름

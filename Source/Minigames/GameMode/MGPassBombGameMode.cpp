@@ -23,6 +23,11 @@ void AMGPassBombGameMode::StartMinigame()
 	for (int32 i = 0; i < AlivePlayers.Num(); i++)
 	{
 		MGGS->AliveCharacters.Add(AlivePlayers[i]->GetCharacter());
+		AMGPlayerCharacter* MGPC = Cast<AMGPlayerCharacter>(AlivePlayers[i]->GetCharacter());
+		if (ensure(IsValid(MGPC)))
+		{
+			MGPC->OnTryPassBombDelegate.AddUObject(this, &AMGPassBombGameMode::SetBombActorCollisionEnabled);
+		}
 	}
 
 	NextRound();
@@ -173,6 +178,14 @@ void AMGPassBombGameMode::AssignBombToRandomAlive()
 				BombActor->ActivateBomb(MGPC, ExplodeTime);
 			}
 		}
+	}
+}
+
+void AMGPassBombGameMode::SetBombActorCollisionEnabled(bool Value)
+{
+	if (BombActor != nullptr)
+	{
+		BombActor->SetActorEnableCollision(Value);
 	}
 }
 
