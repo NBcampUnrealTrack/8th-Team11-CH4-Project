@@ -32,6 +32,9 @@ protected:
 	
 	UFUNCTION()
 	void OnJoinButtonClicked();
+	
+	UFUNCTION()
+	void OnHostButtonClicked();
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = USTitleWidget, Meta = (AllowPrivateAccess, BindWidget))
@@ -51,5 +54,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = USTitleWidget, Meta = (AllowPrivateAccess, BindWidget))
 	TObjectPtr<UButton> JoinButton;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = USTitleWidget, Meta = (AllowPrivateAccess, BindWidget))
+	TObjectPtr<UButton> HostButton;
 
 };

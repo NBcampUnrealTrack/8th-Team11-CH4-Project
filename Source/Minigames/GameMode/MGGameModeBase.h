@@ -64,6 +64,10 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<TObjectPtr<AMGPlayerController>> AllPlayerControllers;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "GameFlow")
+	int32 EnteringMaxWaitTime = 30;   // 낙오자 대비 최대 대기(초)
+	int32 RemainEnteringWaitTime = 30;
 
 #pragma region CutScene
 

@@ -15,7 +15,13 @@ void AMGFlagGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 void AMGFlagGameStateBase::SetCurrentFlagHolder(AMGFlagPlayerState* NewHolder)
 {
 	CurrentFlagHolder = NewHolder;
-	OnRep_CurrentFlagHolder(); // 리슨,로컬 대비
+	OnRep_CurrentFlagHolder();
+}
+
+void AMGFlagGameStateBase::SetRemainGameTime(int32 NewTime)
+{
+	RemainGameTime = NewTime;
+	OnRep_RemainGameTime();
 }
 
 void AMGFlagGameStateBase::OnRep_RemainGameTime()

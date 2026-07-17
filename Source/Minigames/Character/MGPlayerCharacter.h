@@ -91,8 +91,9 @@ private:
 	UFUNCTION(Server, Unreliable) // 한 두번 정도는 씹혀도 되기 때문.
 	void ServerRPCUpdateCamRot(const FRotator& InCamRot);
 
-	// 깃발 뺏기 액션
-	void HandleTakeFlagInput(const FInputActionValue& InValue);
+	// 상호작용 액션 (깃발 뺏기 등)
+	void HandleInteractionInput(const FInputActionValue& InValue);
+	void HandleInteractionEndInput(const FInputActionValue& InValue);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Input")
@@ -114,6 +115,21 @@ protected:
 
 	// 깃발 뺏기 입력 액션
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Input")
-	TObjectPtr<UInputAction> TakeFlagAction;
+	TObjectPtr<UInputAction> InteractionAction;
+#pragma endregion
 
+#pragma region Gimmick
+public:
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_SetCarryState(bool Value);
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_SendPlayPassBombRequest(bool Value);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_PlayPassBombAnim(bool Value);
+private:
+	bool IsCarrying = false;	// 규칙 핵심 아이템(폭탄, 깃발)을 들고있는가?
+	bool IsPlayingPassBomb = false;	// 폭탄을 넘기는 동작을 취하고있는가?
+#pragma endregion
 };

@@ -33,6 +33,7 @@ enum class ERoundState : uint8
 UENUM(BlueprintType)
 enum class EMinigameType : uint8
 {
+	NONE,
 	PassBomb UMETA(DisplayName = "PassTheBomb"),
 	ButtonOwnership UMETA(DisplayName = "ButtonOwnership"),
 	FlagGame UMETA(DisplayName = "FlagGame")

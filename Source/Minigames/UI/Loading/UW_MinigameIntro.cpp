@@ -1,4 +1,4 @@
-// UW_MinigameIntro.cpp
+﻿// UW_MinigameIntro.cpp
 
 
 #include "UI/Loading/UW_MinigameIntro.h"
@@ -57,4 +57,7 @@ void UUW_MinigameIntro::Setup(const FMGMinigameInfoRow& Row)
 			}
 		}
 	}
+
+	this->RemoveFromParent();
+	this->AddToViewport(9999);
 }

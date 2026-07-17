@@ -13,7 +13,7 @@ void AMGPassBombGameMode::StartMinigame()
 {
 	Super::StartMinigame();
 
-	ExplodeTime = 5.f;
+	ExplodeTime = 15.f;
 
 	AMGPassBombGameState* MGGS = GetGameState<AMGPassBombGameState>();
 	checkf(IsValid(MGGS), TEXT("GameState is Invalid."));
@@ -23,6 +23,12 @@ void AMGPassBombGameMode::StartMinigame()
 	for (int32 i = 0; i < AlivePlayers.Num(); i++)
 	{
 		MGGS->AliveCharacters.Add(AlivePlayers[i]->GetCharacter());
+
+		AMGPassBombPlayerState* MGPS = AlivePlayers[i]->GetPlayerState<AMGPassBombPlayerState>();
+		if (IsValid(MGPS))
+		{
+			MGPS->SpawnSpectator();
+		}
 	}
 
 	NextRound();
@@ -167,7 +173,11 @@ void AMGPassBombGameMode::AssignBombToRandomAlive()
 		AMGPlayerController* Target = AlivePlayers[BombIndex];
 		if (IsValid(Target) && IsValid(Target->GetCharacter()))
 		{
-			BombActor->ActivateBomb(Target->GetCharacter(), ExplodeTime);
+			AMGPlayerCharacter* MGPC = Cast<AMGPlayerCharacter>(Target->GetCharacter());
+			if (IsValid(MGPC))
+			{
+				BombActor->ActivateBomb(MGPC, ExplodeTime);
+			}
 		}
 	}
 }

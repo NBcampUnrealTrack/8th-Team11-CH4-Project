@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/GameStateBase.h"
+
 #include "Type/MGTypes.h"
 #include "MGGameStateBase.generated.h"
 
@@ -14,12 +15,14 @@ class MINIGAMES_API AMGGameStateBase : public AGameStateBase
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	EMinigameType GetCurrentMinigameType();
+
 	UFUNCTION()
 	void OnRep_MatchState();
 	
 public:
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState, VisibleAnywhere, BlueprintReadOnly, Category = "GameFlow")
-	EMatchState MatchState = EMatchState::Waiting;
+	EMatchState MatchState = EMatchState::Entering;
 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "GameFlow")
 	ERoundState RoundState = ERoundState::None;

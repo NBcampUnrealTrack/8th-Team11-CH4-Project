@@ -80,7 +80,9 @@ void AMGSpectatorPawn::DeathCamFollowCharacter(ACharacter* Character)
 {
 	const float CamBlendTime = 0.5;
 
-	if (HasAuthority() == true)
+	MG_LOG_NET(LogMGNet, Verbose, TEXT("[SpecDBG] DeathCamFollow called. HasAuth=%d OwnerPCValid=%d"), HasAuthority(), IsValid(OwnerPC));
+
+	if (IsValid(OwnerPC) == false || OwnerPC->IsLocalController() == false)
 	{
 		return;
 	}

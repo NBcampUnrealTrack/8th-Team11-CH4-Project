@@ -45,7 +45,7 @@ void AMGFlagGameModeBase::OnGameTimerElapsed()
 	--RemainGameTime;
 	if (AMGFlagGameStateBase* FGS = GetGameState<AMGFlagGameStateBase>())
 	{
-		FGS->RemainGameTime = RemainGameTime;
+		FGS->SetRemainGameTime(RemainGameTime);
 	}
 	
 	UpdateFlagHoldingTime();

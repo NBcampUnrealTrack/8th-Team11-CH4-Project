@@ -31,5 +31,11 @@ protected:
 	UTextBlock* FlagHolderText;
 	
 	UPROPERTY(meta = (BindWidget))
+	FText FlagHolder;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
+	FText LastFlagHolder;
+
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* FlagTimerText;
 };
