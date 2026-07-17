@@ -30,11 +30,13 @@ private:
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Minimap")
-	EMinimapTargetType TargetType = EMinimapTargetType::None;
+	EMinimapTargetType TargetType = EMinimapTargetType::Enemy;
 
 
 
 private:
 	FTimerHandle BindTimerHandler;
+
+	FTimerHandle RetryTimerHandler;
 
 };
