@@ -373,6 +373,13 @@ void AMGPlayerController::ClientRPC_PlayCutScene_Implementation(int32 MGCutScene
 
 		// 컷신 재생
 		SequencePlayer->Play();
+
+		UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
+		if (ensure(IsValid(GI)))
+		{
+			GI->PlayCurrentLevelBGM();
+		}
+
 	}
 }
 
@@ -386,6 +393,7 @@ void AMGPlayerController::OnCutSceneFinished()
 	SetViewTarget(GetPawn());
 
 	RestoreAllWidgets();
+
 }
 
 #pragma endregion
