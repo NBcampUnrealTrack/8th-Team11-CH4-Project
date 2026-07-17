@@ -12,6 +12,10 @@
 enum class EMGPlayerColor : uint8;
 class UDataTable;
 
+// 레벨 사운드
+class UAudioComponent;
+class USoundBase;
+
 UCLASS()
 class MINIGAMES_API UMGGameInstance : public UGameInstance
 {
@@ -58,4 +62,54 @@ public:
 private:
 	void HandleSeamlessTravelStart(UWorld* CurrentWorld, const FString& LevelName);
 
+#pragma region Sound
+public:
+	virtual void Shutdown() override;
+	virtual void OnStart() override;
+
+	// 페이드로 BGM 교체. nullptr을 주면 페이드 아웃만.
+	UFUNCTION(BlueprintCallable, Category = "Audio|BGM")
+	void PlayBGM(USoundBase* NewBGM, float FadeTime = 1.0f);
+
+	// 현재 레벨
+	UFUNCTION(BlueprintCallable, Category = "Audio|BGM")
+	void PlayCurrentLevelBGM();
+
+	// 미니게임 설명 UI 
+	UFUNCTION(BlueprintCallable, Category = "Audio|BGM")
+	void PlayTutorialBGM();
+
+	// 컷씬
+	UFUNCTION(BlueprintCallable, Category = "Audio|BGM")
+	void PlayCutsceneBGM();
+
+
+protected:
+	// 레벨 로드 완료 시 자동 호출
+	void HandlePostLoadMap(UWorld* LoadedWorld);
+
+	// 현재 맵 이름
+	FName GetCurrentMapName() const;
+
+	// 레벨별 곡. 키 = 맵 이름.
+	UPROPERTY(EditDefaultsOnly, Category = "Audio|BGM")
+	TMap<FName, TObjectPtr<USoundBase>> LevelBGMs;
+
+	// 미니게임 설명 UI
+	UPROPERTY(EditDefaultsOnly, Category = "Audio|BGM")
+	TObjectPtr<USoundBase> TutorialBGM;
+
+	//컷씬
+	UPROPERTY(EditDefaultsOnly, Category = "Audio|BGM")
+	TObjectPtr<USoundBase> CutsceneBGM;
+
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> BGMComponent;
+
+private:
+	FDelegateHandle PostLoadMapHandle;
+
+	// 오디오를 실제로 재생해야 하는 컨텍스트인지 (데디 서버 제외용 리슨 서버 문제 없음)
+	bool IsAudioContext() const;
+#pragma endregion
 };

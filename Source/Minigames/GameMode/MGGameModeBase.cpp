@@ -195,6 +195,7 @@ void AMGGameModeBase::StartMinigame()
 	if (IsValid(MGGameState))
 	{
 		MGGameState->MatchState = EMatchState::Playing;
+		MGGameState->OnRep_MatchState();
 	}
 }
 

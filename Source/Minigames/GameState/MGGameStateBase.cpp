@@ -6,6 +6,8 @@
 #include "Controller/MGPlayerController.h"
 #include "Net/UnrealNetwork.h"
 
+#include "GameInstance/MGGameInstance.h"
+
 void AMGGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -28,6 +30,13 @@ void AMGGameStateBase::OnRep_MatchState()
 			{
 				MGPC->HideMinigameIntro();
 			}
+		}
+	}
+	if (MatchState == EMatchState::Playing)
+	{
+		if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
+		{
+			GI->PlayCurrentLevelBGM();
 		}
 	}
 }
