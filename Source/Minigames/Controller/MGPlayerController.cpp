@@ -75,6 +75,14 @@ void AMGPlayerController::BeginPlay()
 	}
 	else
 	{
+
+		FInputModeGameOnly GameOnly;
+		SetInputMode(GameOnly);
+		bShowMouseCursor = false;
+
+		CreateChatWidget();
+		ShowMinigameIntro();
+		/*
 		GetWorld()->GetTimerManager().SetTimer(
 			DelegateBindTimerHandler, 
 			this, 
@@ -82,6 +90,7 @@ void AMGPlayerController::BeginPlay()
 			0.1f, 
 			true
 		);
+		*/
 	}
 
 	if (IsValid(NotificationTextUIClass) == true)
@@ -412,6 +421,12 @@ void AMGPlayerController::OnCutSceneFinished()
 	SetViewTarget(GetPawn());
 
 	RestoreAllWidgets();
+	
+	AMGGameModeBase* MGGameMode = Cast<AMGGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (IsValid(MGGameMode))
+	{
+		MGGameMode->OnFinishedCutScene();
+	}
 }
 
 #pragma endregion
