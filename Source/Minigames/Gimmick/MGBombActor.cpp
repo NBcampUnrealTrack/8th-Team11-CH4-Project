@@ -80,22 +80,6 @@ void AMGBombActor::OnTriggerOverlap(
 	int32 OtherBodyIndex, bool bFromSweep, 
 	const FHitResult& SweepResult)
 {
-
-	if (bShowDebug)	// Debug가 켜져있으면
-	{
-		DrawDebugSphere(
-			GetWorld(),
-			GetActorLocation(),             // 구체의 중심점 (폭탄의 현재 위치)
-			PassTriggerRadius,              // 구체의 반지름
-			16,                             // 세그먼트 수
-			FColor::Red,                    // 선 색상
-			false,                          // 영구 지속 여부 (false면 특정 시간 뒤 사라짐)
-			1.5f,                           // 지속 시간
-			0,                              // 깊이 우선순위, 0순위면 어떠한 경우에도 보임
-			1.5f                            // 선 두께
-		);
-	}
-
 	if (!HasAuthority() || !bCanPass)
 	{
 		return;
