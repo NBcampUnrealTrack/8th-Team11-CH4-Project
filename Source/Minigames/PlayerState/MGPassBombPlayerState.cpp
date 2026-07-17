@@ -11,11 +11,17 @@
 #include "Net/UnrealNetwork.h"
 #include "Minigames.h"
 
-void AMGPassBombPlayerState::OnRep_Owner()
+void AMGPassBombPlayerState::BeginPlay()
 {
-	Super::OnRep_Owner();
+	Super::BeginPlay();
+
 	// 플레이어만 생성
-	if (HasAuthority() == false)
+	bool bLocalControlled = GetOwningController() != nullptr && GetOwningController()->IsLocalController();
+	MG_LOG_NET(LogMGNet, Log, TEXT("IsDedicatedServer: %s / LocalControlled: %s"), 
+		GetNetMode() == ENetMode::NM_DedicatedServer ? TEXT("True") : TEXT("False"),
+		bLocalControlled ? TEXT("True") : TEXT("False"));
+
+	if (bLocalControlled)
 	{
 		ServerRPC_SetSpectator();
 	}
@@ -56,7 +62,7 @@ void AMGPassBombPlayerState::MulticastRPC_RetireCharacter_Implementation()
 		MGPC->GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
 
 		// 탈락 대상자의 컨트롤러
-		if (IsValid(GetPlayerController()))
+		if (GetOwningController() != nullptr && GetOwningController()->IsLocalController())
 		{
 			// 캐릭터의 입력을 막고 관찰자 모드로 전환
 			MGPC->DisableInput(GetPlayerController());

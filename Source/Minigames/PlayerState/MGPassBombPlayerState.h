@@ -15,8 +15,7 @@ class MINIGAMES_API AMGPassBombPlayerState : public AMGPlayerState
 {
 	GENERATED_BODY()
 public:
-
-	virtual void OnRep_Owner() override;
+	virtual void BeginPlay() override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
