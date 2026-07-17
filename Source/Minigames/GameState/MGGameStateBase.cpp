@@ -7,6 +7,8 @@
 #include "Controller/MGPlayerController.h"
 #include "Net/UnrealNetwork.h"
 
+#include "GameInstance/MGGameInstance.h"
+
 EMinigameType AMGGameStateBase::GetCurrentMinigameType()
 {
 	if (Cast<AMGPassBombGameState>(this))
@@ -83,5 +85,12 @@ void AMGGameStateBase::SetMatchState(EMatchState NewState)
 	if (HasAuthority())
 	{
 		OnRep_MatchState();
+	}
+	if (MatchState == EMatchState::Playing || MatchState == EMatchState::Ending)
+	{
+		if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
+		{
+			GI->PlayCurrentLevelBGM();
+		}
 	}
 }
