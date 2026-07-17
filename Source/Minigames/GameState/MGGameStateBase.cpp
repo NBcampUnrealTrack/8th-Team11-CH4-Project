@@ -32,7 +32,7 @@ void AMGGameStateBase::OnRep_MatchState()
 			}
 		}
 	}
-	if (MatchState == EMatchState::Playing)
+	if (MatchState == EMatchState::Playing || MatchState == EMatchState::Ending)
 	{
 		if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
 		{

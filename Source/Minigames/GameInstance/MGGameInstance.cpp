@@ -141,11 +141,6 @@ void UMGGameInstance::PlayTutorialBGM()
 	PlayBGM(TutorialBGM,0.5f);
 }
 
-void UMGGameInstance::PlayCutsceneBGM()
-{
-	PlayBGM(CutsceneBGM, 0.5f);
-}
-
 void UMGGameInstance::PlayBGM(USoundBase* NewBGM, float FadeTime)
 {
 	if (IsAudioContext() == false)
@@ -154,12 +149,11 @@ void UMGGameInstance::PlayBGM(USoundBase* NewBGM, float FadeTime)
 	}
 
 	// 같은 곡이 이미 재생 중이면 무시 (재시작/중복 방지)
-	if (IsValid(BGMComponent) == true
-		&& BGMComponent->GetSound() == NewBGM
-		&& BGMComponent->IsPlaying() == true)
+	if (LastRequestedBGM == NewBGM)
 	{
 		return;
 	}
+	LastRequestedBGM = NewBGM;
 
 	if (IsValid(BGMComponent) == true && BGMComponent->IsPlaying() == true)
 	{

@@ -79,11 +79,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Audio|BGM")
 	void PlayTutorialBGM();
 
-	// 컷씬
-	UFUNCTION(BlueprintCallable, Category = "Audio|BGM")
-	void PlayCutsceneBGM();
-
-
 protected:
 	// 레벨 로드 완료 시 자동 호출
 	void HandlePostLoadMap(UWorld* LoadedWorld);
@@ -99,10 +94,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Audio|BGM")
 	TObjectPtr<USoundBase> TutorialBGM;
 
-	//컷씬
-	UPROPERTY(EditDefaultsOnly, Category = "Audio|BGM")
-	TObjectPtr<USoundBase> CutsceneBGM;
-
 	UPROPERTY()
 	TObjectPtr<UAudioComponent> BGMComponent;
 
@@ -111,5 +102,9 @@ private:
 
 	// 오디오를 실제로 재생해야 하는 컨텍스트인지 (데디 서버 제외용 리슨 서버 문제 없음)
 	bool IsAudioContext() const;
+
+	UPROPERTY()
+	TObjectPtr<USoundBase> LastRequestedBGM;
+
 #pragma endregion
 };
