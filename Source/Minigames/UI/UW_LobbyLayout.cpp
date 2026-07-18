@@ -96,7 +96,7 @@ void UUW_LobbyLayout::BuildColorPalette()
 		return;
 	}
 
-	// Red ~ Gray 10색만 (None/End 제외) — ChangeColor의 범위와 동일
+	// Red ~ Gray 10색만 (None/End 제외)
 	const uint8 First = static_cast<uint8>(EMGPlayerColor::Red);
 	const uint8 Last = static_cast<uint8>(EMGPlayerColor::Gray);
 

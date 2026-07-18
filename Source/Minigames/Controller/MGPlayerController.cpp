@@ -285,16 +285,6 @@ void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
 	}
 }
 
-void AMGPlayerController::ChangeColor(uint8 ColorIndex)
-{
-	if (ColorIndex < static_cast<uint8>(EMGPlayerColor::Red) || static_cast<uint8>(EMGPlayerColor::Gray) < ColorIndex)
-	{
-		return;
-	}
-
-	ServerRPCSetColor(static_cast<EMGPlayerColor>(ColorIndex));
-}
-
 void AMGPlayerController::ClearInputMapping()
 {
 	if (IsLocalController() == false)
