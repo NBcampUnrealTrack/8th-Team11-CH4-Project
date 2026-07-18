@@ -136,7 +136,6 @@ void AMGSpectatorPawn::SpectateOtherPlayer(int32 idx)
 			OwnerPC->ClearInputMapping();
 			OwnerPC->ServerRPCPossess(this);
 		}
-		MG_LOG_NET(LogMGNet, Log, TEXT("OwnerPC's Pawn: %s"), *OwnerPC->GetPawn()->GetName());
 	}
 }
 
