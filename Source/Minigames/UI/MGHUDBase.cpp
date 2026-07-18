@@ -68,5 +68,5 @@ void AMGHUDBase::InitializeMinimap()
 
 void AMGHUDBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	GetWorld()->GetTimerManager().ClearTimer(DelegateBindTimerHandler);
+	GetWorld()->GetTimerManager().ClearTimer(BindTimerHandler);
 }
