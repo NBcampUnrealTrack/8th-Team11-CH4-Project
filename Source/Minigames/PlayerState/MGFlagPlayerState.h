@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -18,5 +18,5 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
-	float HoldingTime = 0.f;
+	int32 HoldingTime = 0;
 };

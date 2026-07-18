@@ -84,7 +84,7 @@ void AMGFlagGameModeBase::DetermineWinner()
 		}
 		FlagPlayerStates[i]->Rank = Rank;
 		
-		UE_LOG(LogTemp, Log, TEXT("[Flag][최종순위] %s | HoldingTime %.1f | Rank %d"),
+		UE_LOG(LogTemp, Log, TEXT("[Flag][최종순위] %s | HoldingTime %d | Rank %d"),
 	   *FlagPlayerStates[i]->GetPlayerName(), FlagPlayerStates[i]->HoldingTime, Rank);
 		
 		GiveScore(FlagPlayerStates[i], Rank);
@@ -136,7 +136,7 @@ void AMGFlagGameModeBase::UpdateFlagHoldingTime()
 		
 		FlagPS->HoldingTime += 1.f;
 		
-		UE_LOG(LogTemp, Verbose, TEXT("[Flag] Owner: %s | HoldingTime: %.1f"),
+		UE_LOG(LogTemp, Verbose, TEXT("[Flag] Owner: %s | HoldingTime: %d"),
 			*FlagPS->GetPlayerName(), FlagPS->HoldingTime);
 	}
 }
