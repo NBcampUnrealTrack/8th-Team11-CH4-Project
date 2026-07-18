@@ -80,6 +80,8 @@ void AMGSpectatorPawn::DeathCamFollowCharacter(ACharacter* Character)
 {
 	const float CamBlendTime = 0.5;
 
+	MG_LOG_NET(LogMGNet, Verbose, TEXT("[SpecDBG] DeathCamFollow called. HasAuth=%d OwnerPCValid=%d"), HasAuthority(), IsValid(OwnerPC));
+
 	if (GetNetMode() == NM_DedicatedServer)
 	{
 		return;

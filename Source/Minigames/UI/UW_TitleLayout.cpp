@@ -21,7 +21,8 @@ void UUW_TitleLayout::NativeConstruct()
 	PlayButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnPlayButtonClicked);
 	ExitButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnExitButtonClicked);
 	JoinButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnJoinButtonClicked);
-
+	HostButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnHostButtonClicked);
+	
 	TitleSwitcher->SetActiveWidgetIndex(0);
 }
 
@@ -52,7 +53,27 @@ void UUW_TitleLayout::OnJoinButtonClicked()
 			GI->PlayerNickname = Nickname;
 		}
 		
-		FText ServerIP = ServerIPEditableText->GetText();
-		PlayerController->JoinServer(ServerIP.ToString());
+		PlayerController->JoinGame();
+	}
+}
+
+void UUW_TitleLayout::OnHostButtonClicked()
+{
+	AMGTitlePlayerController* PlayerController = GetOwningPlayer<AMGTitlePlayerController>();
+	if (IsValid(PlayerController) == true)
+	{
+		const FString Nickname = NicknameEditableText->GetText().ToString();
+		if (Nickname.IsEmpty() == true)
+		{
+			return;
+		}
+
+		UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
+		if (IsValid(GI) == true)
+		{
+			GI->PlayerNickname = Nickname;
+		}
+
+		PlayerController->HostGame();
 	}
 }

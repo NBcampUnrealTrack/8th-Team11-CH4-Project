@@ -20,10 +20,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	void SetCurrentFlagHolder(AMGFlagPlayerState* NewHolder);
-	FORCEINLINE AMGFlagPlayerState* GetCurrentFlagHolder() const { return CurrentFlagHolder; }
+	void SetRemainGameTime(int32 NewTime);
 	
-	UPROPERTY(ReplicatedUsing = OnRep_RemainGameTime, VisibleAnywhere, BlueprintReadOnly)
-	int32 RemainGameTime;
+	FORCEINLINE AMGFlagPlayerState* GetCurrentFlagHolder() const { return CurrentFlagHolder; }
+	FORCEINLINE int32 GetRemainGameTime() const { return RemainGameTime; }
 	
 	FOnRemainTimeChanged OnRemainTimeChanged;
 	FOnFlagHolderChanged OnFlagHolderChanged;
@@ -37,4 +37,7 @@ protected:
 	
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentFlagHolder, VisibleAnywhere, BlueprintReadOnly)
 	AMGFlagPlayerState* CurrentFlagHolder = nullptr;
+
+	UPROPERTY(ReplicatedUsing = OnRep_RemainGameTime, VisibleAnywhere, BlueprintReadOnly)
+	int32 RemainGameTime = 0;
 };

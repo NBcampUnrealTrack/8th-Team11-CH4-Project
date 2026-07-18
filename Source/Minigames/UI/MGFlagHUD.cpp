@@ -50,7 +50,7 @@ void AMGFlagHUD::BindWithGameState(AMGFlagGameStateBase* FGS)
 	FGS->OnFlagHolderChanged.AddUObject(this, &AMGFlagHUD::OnFlagHolderUpdated);
 
 	// 구독 직후 현재값으로 즉시 1회 갱신
-	OnRemainTimeUpdated(FGS->RemainGameTime);
+	OnRemainTimeUpdated(FGS->GetRemainGameTime());
 	OnFlagHolderUpdated(FGS->GetCurrentFlagHolder());
 
 	//0.2초마다 깃발 소유자와 거리 체크

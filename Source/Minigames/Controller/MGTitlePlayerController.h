@@ -15,8 +15,10 @@ class MINIGAMES_API AMGTitlePlayerController : public APlayerController
 
 public:
 	virtual void BeginPlay() override;
-
-	void JoinServer(const FString& InIPAddress);
+	
+	void HostGame();
+	
+	void JoinGame();
 
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ASUIPlayerController, Meta = (AllowPrivateAccess))

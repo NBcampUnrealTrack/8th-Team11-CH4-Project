@@ -27,12 +27,14 @@
 #include "EngineUtils.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
-#include "UI/Chat/MGChatPopup.h"
 #include "UI/Chat/MGChatPopupList.h"
 
 #include "Data/MGMinigameInfoRow.h"
 #include "UI/Loading/UW_MinigameIntro.h"
 #include "Engine/DataTable.h"
+
+#include "Minigames.h"							// LogMGNet
+#include "GameState/MGGameStateBase.h"
 
 void AMGPlayerController::BeginPlay()
 {
@@ -80,6 +82,7 @@ void AMGPlayerController::BeginPlay()
 		bShowMouseCursor = false;
 		
 		CreateChatWidget();
+		ShowMinigameIntro();
 	}
 
 	if (IsValid(NotificationTextUIClass) == true)
@@ -112,6 +115,9 @@ void AMGPlayerController::OnCharacterDead()
 
 void AMGPlayerController::ShowMinigameIntro()
 {
+	UE_LOG(LogMGNet, Verbose, TEXT("[IntroDBG] Show ENTER | Local=%d | IntroClass=%d | Map=%s"),
+		IsLocalController(), MinigameIntroClass != nullptr, *GetWorld()->GetMapName());
+
 	if (IsLocalController() == false || MinigameIntroClass == nullptr)
 	{
 		return;
@@ -120,12 +126,27 @@ void AMGPlayerController::ShowMinigameIntro()
 	UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
 	if (IsValid(GI) == false || IsValid(GI->MinigameInfoTable) == false)
 	{
+		UE_LOG(LogMGNet, Verbose, TEXT("[IntroDBG] Show ABORT | GI=%d | Table=%d"),
+			IsValid(GI), (GI != nullptr) ? IsValid(GI->MinigameInfoTable) : 0);
 		return;
 	}
 
+	if (AMGGameStateBase* GS = GetWorld()->GetGameState<AMGGameStateBase>())
+	{
+		if (GS->GetMatchState() != EMatchState::Entering && GS->GetMatchState() != EMatchState::Waiting)
+		{
+			return;
+		}
+	}
+	
 	// 현재 맵(=목적지) 이름으로 행 조회. 행 없으면(로비 등) 그냥 안 띄움 → 자연스러운 가드
-	const FName RowName(*GI->PendingDestinationMapName);
+	const FString CleanMapName = UWorld::RemovePIEPrefix(GetWorld()->GetMapName());
+	const FName RowName(*CleanMapName);
 	FMGMinigameInfoRow* Row = GI->MinigameInfoTable->FindRow<FMGMinigameInfoRow>(RowName, TEXT("ShowMinigameIntro"));
+
+	UE_LOG(LogMGNet, Verbose, TEXT("[IntroDBG] Show | RowName=%s | Found=%d"),
+		*RowName.ToString(), Row != nullptr);
+
 	if (Row == nullptr)
 	{
 		return;
@@ -145,6 +166,8 @@ void AMGPlayerController::ShowMinigameIntro()
 
 void AMGPlayerController::HideMinigameIntro()
 {
+	UE_LOG(LogMGNet, Verbose, TEXT("[IntroDBG] Hide called. Valid=%d"), IsValid(MinigameIntroInstance));
+
 	if (IsValid(MinigameIntroInstance))
 	{
 		MinigameIntroInstance->RemoveFromParent();
@@ -161,42 +184,71 @@ void AMGPlayerController::ClientRPCReturnToTitle_Implementation()
 
 void AMGPlayerController::ClientRPCShowGameResultWidget_Implementation(int32 InRanking)
 {
-	if (IsLocalController() == true)
+	if (IsLocalController() == false)
 	{
-		if (IsValid(GameResultUIClass) == true)
-		{
-			UUW_GameResult* GameResultUI = CreateWidget<UUW_GameResult>(this, GameResultUIClass);
-			if (IsValid(GameResultUI) == true)
-			{
-				GameResultUI->AddToViewport(3);
+		return;
+	}
+	if (IsValid(GameResultUIClass) == false)
+	{
+		return;
+	}
+	
+	UUW_GameResult* GameResultUI = CreateWidget<UUW_GameResult>(this, GameResultUIClass);
+	if (IsValid(GameResultUI) == true)
+	{
+		GameResultUI->AddToViewport(3);
 
-				FString GameResultString = FString::Printf(TEXT("%s"), InRanking == 1 ? TEXT("Winner Winner!") : TEXT("Looser..."));
-				GameResultUI->ResultText->SetText(FText::FromString(GameResultString));
+		FString GameResultString = FString::Printf(TEXT("%s"), InRanking == 1 ? TEXT("Winner Winner!") : TEXT("Loser..."));
+		GameResultUI->ResultText->SetText(FText::FromString(GameResultString));
 
-				FString RankingString = FString::Printf(TEXT("#%02d"), InRanking);
-				GameResultUI->RankingText->SetText(FText::FromString(RankingString));
+		FString RankingString = FString::Printf(TEXT("#%02d"), InRanking);
+		GameResultUI->RankingText->SetText(FText::FromString(RankingString));
 
-				FInputModeUIOnly Mode;
-				Mode.SetWidgetToFocus(GameResultUI->GetCachedWidget());
-				SetInputMode(Mode);
+		FInputModeUIOnly Mode;
+		Mode.SetWidgetToFocus(GameResultUI->GetCachedWidget());
+		SetInputMode(Mode);
 
-				bShowMouseCursor = true;
-			}
-		}
+		bShowMouseCursor = true;
 	}
 }
 
 void AMGPlayerController::ClientRPC_SetResultCamera_Implementation()
 {
+	ResultCameraRetryCount = 0;
+	TrySetResultCamera();
+}
+
+void AMGPlayerController::TrySetResultCamera()
+{
 	TArray<AActor*> Cams;
 	UGameplayStatics::GetAllActorsWithTag(this, TEXT("ResultCamera"), Cams);
-	if (Cams.Num() == 0)
-	{
-		return;
-	}
 	
-	bAutoManageActiveCameraTarget = false;
-	SetViewTargetWithBlend(Cams[0], 0.5f);
+	UE_LOG(LogMGNet, Verbose, TEXT("[ResultCam] Try #%d | Found=%d | Local=%d"),
+		ResultCameraRetryCount, Cams.Num(), IsLocalController());
+	
+	if (Cams.Num() > 0 && IsValid(Cams[0]))
+	{
+		bAutoManageActiveCameraTarget = false;
+		
+		if (GetViewTarget() != Cams[0])
+		{
+			SetViewTargetWithBlend(Cams[0], 0.5f);
+		}
+		UE_LOG(LogMGNet, Verbose, TEXT("[ResultCam] SET view -> %s"), *Cams[0]->GetName());
+	}
+
+	// 카메라 액터가 아직 스폰 안 됨(레벨 로딩 중) → 재시도 (0.2초 * 20 = 최대 4초)
+	if (ResultCameraRetryCount < 20)
+	{
+		++ResultCameraRetryCount;
+		GetWorldTimerManager().SetTimer(
+			ResultCameraRetryHandle,
+			this,
+			&ThisClass::TrySetResultCamera,
+			0.2f,
+			false
+		);
+	}
 }
 
 void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
@@ -205,23 +257,32 @@ void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
 	{
 		return;
 	}
-	if (IsValid(FinalResultWidgetClass) == false)
+	if (ensure(IsValid(FinalResultWidgetClass)) == false)
 	{
 		return;
 	}
-	
-	UUW_FinalResult* FinalResultUI = CreateWidget<UUW_FinalResult>(this, FinalResultWidgetClass);
-	if (IsValid(FinalResultUI) == false)
+
+	// 위젯은 최초 1회만 생성
+	if (IsValid(FinalResultWidget) == false)
 	{
-		return;
+		FinalResultWidget = CreateWidget<UUW_FinalResult>(this, FinalResultWidgetClass);
+		if (ensure(IsValid(FinalResultWidget)) == false)
+		{
+			return;
+		}
+		FinalResultWidget->AddToViewport(3);
 	}
-	
-	FinalResultUI->AddToViewport(3);
-	
+
+	// 마우스/입력 모드/이동 차단은 매 호출마다 재적용 (폰·뷰포트 준비 타이밍 대응)
 	FInputModeGameAndUI InputMode;
 	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 	SetInputMode(InputMode);
 	bShowMouseCursor = true;
+
+	if (APawn* MyPawn = GetPawn())
+	{
+		MyPawn->DisableInput(this);
+	}
 }
 
 void AMGPlayerController::ChangeColor(uint8 ColorIndex)
@@ -331,6 +392,13 @@ void AMGPlayerController::ClientRPC_PlayCutScene_Implementation(int32 MGCutScene
 
 		// 컷신 재생
 		SequencePlayer->Play();
+
+		UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
+		if (ensure(IsValid(GI)))
+		{
+			GI->PlayCurrentLevelBGM();
+		}
+
 	}
 }
 
@@ -344,6 +412,7 @@ void AMGPlayerController::OnCutSceneFinished()
 	SetViewTarget(GetPawn());
 
 	RestoreAllWidgets();
+
 }
 
 #pragma endregion
@@ -463,9 +532,9 @@ void AMGPlayerController::ServerRPCPrintChatMessageString_Implementation(const F
 		UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
 		if (IsValid(GI) == true)
 		{
-			if (const EMGPlayerColor* FoundColor = GI->PlayerColors.Find(PlayerState->GetUniqueId()))
+			if (const FMGPlayerSaveData* FoundData = GI->SavedPlayerData.Find(PlayerState->GetUniqueId()))
 			{
-				ChatMessage.SenderColor = *FoundColor;
+				ChatMessage.SenderColor = FoundData->Color;
 			}
 		}
 	}
@@ -482,6 +551,9 @@ void AMGPlayerController::ServerRPCPrintChatMessageString_Implementation(const F
 
 void AMGPlayerController::ClientRPCOnSeamlessTravelCompleted_Implementation()
 {
+	UE_LOG(LogMGNet, Verbose, TEXT("[IntroDBG] RPC received. Map=%s | Local=%d"),
+		*GetWorld()->GetMapName(), IsLocalController());
+
 	CreateChatWidget();
 	ShowMinigameIntro();
 }
@@ -571,4 +643,11 @@ void AMGPlayerController::RestoreAllWidgets()
 		}
 	}
 	SavedWidgetVisibilities.Empty();
+}
+
+void AMGPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearTimer(ResultCameraRetryHandle);
+
+	Super::EndPlay(EndPlayReason);
 }

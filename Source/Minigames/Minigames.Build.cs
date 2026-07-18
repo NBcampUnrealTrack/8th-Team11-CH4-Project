@@ -17,7 +17,10 @@ public class Minigames : ModuleRules
 			"UMG","Slate", "SlateCore",
 
 			// Level Sequence
-			"LevelSequence", "MovieScene", 
+			"LevelSequence", "MovieScene",
+			
+			// Online (EOS)
+			"OnlineSubsystem", "OnlineSubsystemUtils",
 
 			// Particle Effect
 			"Niagara", 

@@ -5,10 +5,8 @@
 
 #include "Controller/MGPlayerController.h"
 #include "GameState/MGGameStateBase.h"
-#include "Kismet/GameplayStatics.h"
 #include "PlayerState/MGFlagPlayerState.h"
 #include "GameInstance/MGGameInstance.h"
-#include "Type/MGPlayerColor.h"
 
 #include "Minigames.h"				// 커스텀 Log
 
@@ -32,8 +30,14 @@ void AMGGameModeBase::PreLogin(const FString& Options, const FString& Address, c
 		// 로비 상태가 아니라면 (Round1, Round2, Round3, FinalResult) 접속 차단
 		if (MGGameInstance->CurrentRoundState != ERoundState::Lobby)
 		{
-			ErrorMessage = TEXT("The tournament has already started. You can only join in the Lobby.");
-			// 에러 메세지에 유효한 값이 있으면 접속 차단
+			// 로비를 거친 플레이어면 재접속 허용 (심리스 실패 대비)
+			const bool bIsKnownPlayer = UniqueId.IsValid()
+				&& MGGameInstance->LobbyPlayerIds.Contains(UniqueId.GetUniqueNetId()->ToString());
+			if (bIsKnownPlayer == false)
+			{
+				// 모르는 외부인만 차단
+				ErrorMessage = TEXT("The tournament has already started. You can only join in the Lobby.");
+			}
 			return;
 		}
 	}
@@ -59,6 +63,11 @@ void AMGGameModeBase::PostLogin(APlayerController* NewPlayer)
 		AllPlayerControllers.Add(NewPlayerController);
 
 		NewPlayerController->NotificationText = FText::FromString(TEXT("Connected to the game server."));
+
+		if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
+		{
+			GI->RestorePlayerData(NewPlayerController->GetPlayerState<AMGPlayerState>());
+		}
 	}
 }
 
@@ -66,7 +75,7 @@ void AMGGameModeBase::PostLogin(APlayerController* NewPlayer)
 void AMGGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 {
 	Super::HandleSeamlessTravelPlayer(C);
-	
+    
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
 	if (IsValid(MGGameState) == false)
 	{
@@ -79,15 +88,10 @@ void AMGGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 		AllPlayerControllers.AddUnique(NewPlayerController);
 
 		NewPlayerController->NotificationText = FText::FromString(TEXT("Connected to the game server."));
-	
-		AMGPlayerState* PS = NewPlayerController->GetPlayerState<AMGPlayerState>();
-		UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
-		if (IsValid(PS) && IsValid(GI))
+
+		if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
 		{
-			if (const EMGPlayerColor* FoundColor = GI->PlayerColors.Find(PS->GetUniqueId()))
-			{
-				PS->PlayerColor = *FoundColor;
-			}
+			GI->RestorePlayerData(NewPlayerController->GetPlayerState<AMGPlayerState>());
 		}
 		NewPlayerController->ClientRPCOnSeamlessTravelCompleted();
 	}
@@ -119,8 +123,8 @@ void AMGGameModeBase::BeginPlay()
 	);
 
 	RemainWaitingTimeForPlaying = WaitingTime;
-
 	RemainWaitingTimeForEnding = EndingTime;
+	RemainEnteringWaitTime = EnteringMaxWaitTime;
 }
 
 #pragma region CutScene
@@ -130,7 +134,7 @@ void AMGGameModeBase::PlayCutScene()
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
 	if (IsValid(MGGameState))
 	{
-		MGGameState->MatchState = EMatchState::PlayingCutScene;
+		MGGameState->SetMatchState(EMatchState::PlayingCutScene);
 	}
 
 	for (TObjectPtr<AMGPlayerController> PC : AllPlayerControllers)
@@ -195,14 +199,14 @@ void AMGGameModeBase::StartMinigame()
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
 	if (IsValid(MGGameState))
 	{
-		MGGameState->MatchState = EMatchState::Playing;
+		MGGameState->SetMatchState(EMatchState::Playing);
 	}
 }
 
 void AMGGameModeBase::EndMinigame()
 {
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
-	MGGameState->MatchState = EMatchState::Ending;
+	MGGameState->SetMatchState(EMatchState::Ending);
 }
 
 void AMGGameModeBase::OnCharacterDead(AMGPlayerController* InController)
@@ -239,7 +243,7 @@ void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 	PS->TotalScore += AddScore;
 	PS->RoundScores.Add(AddScore);
 	
-	UE_LOG(LogTemp, Log, TEXT("[GiveScore] %s | Rank %d/%d | +%d점 | MGScore %d->%d | TotalScore %d->%d"),
+	UE_LOG(LogMGNet, Log, TEXT("[GiveScore] %s | Rank %d/%d | +%d점 | MGScore %d->%d | TotalScore %d->%d"),
 		*PS->GetPlayerName(), Rank, PlayerCount, AddScore,
 		PrevMGScore, PS->GetMGScore(), PrevTotalScore, PS->TotalScore);
 }
@@ -247,31 +251,52 @@ void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
 void AMGGameModeBase::OnMainTimerElapsed()
 {
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
-	if (IsValid(MGGameState) == false)
+	if (ensure(IsValid(MGGameState)) == false)
 	{
 		return;
 	}
 
 	// Test Log
-	UE_LOG(LogTemp, Verbose, TEXT("[State Check] Current Map: %s | MatchState: %d"), 
-		*GetWorld()->GetMapName(), (int32)MGGameState->MatchState);
+	UE_LOG(LogMGNet, Verbose, TEXT("[State Check] Current Map: %s | MatchState: %d"), 
+		*GetWorld()->GetMapName(), (int32)MGGameState->GetMatchState());
 
 	// TODO : Lobby -> Minigame1, 2, 3, ..., -> FinalResult Level -> Lobby Level로
 	// 모든 레벨에서 Seamless Travel을 사용할 경우
 	// MGGameInstance->CurrentRoundState == ERoundState::Lobby인 경우
 	// 최초로 Lobby에서 Minigame으로 넘어왔을때 초기화 작업이 필요할 수도 있음
 
-	switch (MGGameState->MatchState)
+	switch (MGGameState->GetMatchState())
 	{
 	case EMatchState::None:
 		{
+			break;
+		}
+	case EMatchState::Entering:
+		{
+			UMGGameInstance* GI = Cast<UMGGameInstance>(GetGameInstance());
+			const int32 Expected = IsValid(GI) ? GI->TournamentPlayerCount : 0;
+
+			const bool bEveryoneArrived = (Expected > 0 && AllPlayerControllers.Num() >= Expected);
+			--RemainEnteringWaitTime;
+			const bool bTimedOut = (RemainEnteringWaitTime <= 0);
+
+			if (bEveryoneArrived || bTimedOut)
+			{
+				RemainWaitingTimeForPlaying = WaitingTime;   // 전원 도착 시점부터 카운트다운
+				MGGameState->SetMatchState(EMatchState::Waiting);
+			}
+			else
+			{
+				NotifyToAllPlayer(FString::Printf(TEXT("Waiting for players... (%d/%d)"),
+					AllPlayerControllers.Num(), Expected));
+			}
 			break;
 		}
 	case EMatchState::Waiting:
 		{
 			// Test Log
 			UE_LOG(LogTemp, Verbose, TEXT("[State Check] Current Map: %s | MatchState: %d | Players: %d | RemainWait: %d"),
-			 	*GetWorld()->GetMapName(), (int32)MGGameState->MatchState, AllPlayerControllers.Num(), RemainWaitingTimeForPlaying);
+			 	*GetWorld()->GetMapName(), (int32)MGGameState->GetMatchState(), AllPlayerControllers.Num(), RemainWaitingTimeForPlaying);
 
 			FString NotificationString = FString::Printf(TEXT("Round starts in %d seconds..."), RemainWaitingTimeForPlaying);
 	
@@ -350,6 +375,10 @@ void AMGGameModeBase::OnMainTimerElapsed()
 					// 심리스 트래블 실행 (클라이언트들은 자동으로 서버를 따라옴)
 					if (NextMapURL.IsEmpty() == false)
 					{
+						for (APlayerState* PS : MGGameState->PlayerArray)
+						{
+							MGGameInstance->SavePlayerData(PS);
+						}
 						UE_LOG(LogTemp, Warning, TEXT("[Travel Check] Executing ServerTravel..."));
 						GetWorld()->ServerTravel(NextMapURL);
 					}
@@ -383,9 +412,9 @@ void AMGGameModeBase::OnMainTimerElapsed()
 
 void AMGGameModeBase::NotifyToAllPlayer(const FString& NotificationString)
 {
-	for (auto MGPC : AllPlayerControllers)
+	for (auto PC : AllPlayerControllers)
 	{
-		MGPC->NotificationText = FText::FromString(NotificationString);
+		PC->NotificationText = FText::FromString(NotificationString);
 	}
 }
 

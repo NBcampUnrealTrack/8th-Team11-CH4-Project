@@ -9,6 +9,20 @@
 #include "Kismet/GameplayStatics.h"
 #include "PlayerState/MGPlayerState.h"
 
+
+void AMGFinalResultGameModeBase::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+	
+	PlacePlayersByRank(GetPlayersSortedByScore());
+	
+	if (AMGPlayerController* PC = Cast<AMGPlayerController>(NewPlayer))
+	{
+		PC->ClientRPC_SetResultCamera();
+		PC->ClientRPC_ShowFinalResult();
+	}
+}
+
 void AMGFinalResultGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 {
 	Super::HandleSeamlessTravelPlayer(C);
@@ -16,6 +30,7 @@ void AMGFinalResultGameModeBase::HandleSeamlessTravelPlayer(AController*& C)
 	if (AMGPlayerController* PC = Cast<AMGPlayerController>(C))
 	{
 		PC->ClientRPC_SetResultCamera();
+		PC->ClientRPC_ShowFinalResult();
 	}
 }
 
@@ -46,7 +61,7 @@ void AMGFinalResultGameModeBase::StartMinigame()
 
 void AMGFinalResultGameModeBase::OnPlayerReadyToReturn(AMGPlayerController* PC)
 {
-	if (IsValid(PC) == false)
+	if (ensure(IsValid(PC)) == false)
 	{
 		return;
 	}
@@ -62,7 +77,7 @@ void AMGFinalResultGameModeBase::CheckAllReadyToReturn()
 	// 이미 종료 진행 중이면 무시
 	if (AMGGameStateBase* GS = GetGameState<AMGGameStateBase>())
 	{
-		if (GS->MatchState == EMatchState::Ending)
+		if (GS->GetMatchState() == EMatchState::Ending)
 		{
 			return;
 		}
