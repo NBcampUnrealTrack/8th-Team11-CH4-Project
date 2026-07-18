@@ -180,9 +180,8 @@ void AMGPlayerCharacter::FillPlayerColor()
 
 void AMGPlayerCharacter::HandleMoveInput(const FInputActionValue& InValue)
 {
-	if (IsValid(Controller) == false)
+	if (ensure(IsValid(Controller)) == false)
 	{
-		MG_LOG_NET(LogMGNet, Error, TEXT("Controller is invalid."));
 		return;
 	}
 
@@ -200,9 +199,8 @@ void AMGPlayerCharacter::HandleMoveInput(const FInputActionValue& InValue)
 
 void AMGPlayerCharacter::HandleLookInput(const FInputActionValue& InValue)
 {
-	if (IsValid(Controller) == false)
+	if (ensure(IsValid(Controller)) == false)
 	{
-		MG_LOG_NET(LogMGNet, Error, TEXT("Controller is invalid."));
 		return;
 	}
 
@@ -214,9 +212,8 @@ void AMGPlayerCharacter::HandleLookInput(const FInputActionValue& InValue)
 
 void AMGPlayerCharacter::HandleInteractionInput(const FInputActionValue& InValue)
 {
-	if (IsValid(Controller) == false)
+	if (ensure(IsValid(Controller)) == false)
 	{
-		MG_LOG_NET(LogMGNet, Error, TEXT("Controller is invalid."));
 		return;
 	}
 
@@ -247,9 +244,8 @@ void AMGPlayerCharacter::HandleInteractionInput(const FInputActionValue& InValue
 
 void AMGPlayerCharacter::HandleInteractionEndInput(const FInputActionValue& InValue)
 {
-	if (IsValid(Controller) == false)
+	if (ensure(IsValid(Controller)) == false)
 	{
-		MG_LOG_NET(LogMGNet, Error, TEXT("Controller is invalid."));
 		return;
 	}
 

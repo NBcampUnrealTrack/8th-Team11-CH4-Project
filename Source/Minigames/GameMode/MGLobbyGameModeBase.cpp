@@ -195,7 +195,7 @@ void AMGLobbyGameModeBase::CheckAndStartCountdown()
 void AMGLobbyGameModeBase::OnCountdownElapsed()
 {
 	AMGLobbyGameStateBase* LGS = GetGameState<AMGLobbyGameStateBase>();
-	if (IsValid(LGS) == false)
+	if (ensure(IsValid(LGS)) == false)
 	{
 		return;
 	}
@@ -227,7 +227,7 @@ void AMGLobbyGameModeBase::CancelCountdown()
 void AMGLobbyGameModeBase::TravelToMinigameLevel()
 {
 	UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
-	if (IsValid(GI) == false)
+	if (ensure(IsValid(GI)) == false)
 	{
 		return;
 	}
@@ -246,11 +246,11 @@ void AMGLobbyGameModeBase::TravelToMinigameLevel()
 void AMGLobbyGameModeBase::GenerateMinigameSequence()
 {
 	UMGGameInstance* GI = GetGameInstance<UMGGameInstance>();
-	if (IsValid(GI) == false)
+	if (ensure(IsValid(GI)) == false)
 	{
 		return;
 	}
-	
+
 	TArray<EMinigameType> Pool;
 	GI->MinigameLevels.GenerateKeyArray(Pool);
 	

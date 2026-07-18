@@ -52,14 +52,12 @@ public:
 	FTimerHandle MainTimerHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 WaitingTime = 10;
-
-	int32 RemainWaitingTimeForPlaying = 10;
+	int32 WaitingTime = 8;
+	int32 RemainWaitingTimeForPlaying = 8;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 EndingTime = 15;
-
-	int32 RemainWaitingTimeForEnding = 15;
+	int32 EndingTime = 10;
+	int32 RemainWaitingTimeForEnding = 10;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
