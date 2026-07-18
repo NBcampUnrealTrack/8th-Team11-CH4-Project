@@ -82,7 +82,7 @@ void AMGSpectatorPawn::DeathCamFollowCharacter(ACharacter* Character)
 
 	MG_LOG_NET(LogMGNet, Verbose, TEXT("[SpecDBG] DeathCamFollow called. HasAuth=%d OwnerPCValid=%d"), HasAuthority(), IsValid(OwnerPC));
 
-	if (GetNetMode() == NM_DedicatedServer)
+	if (IsValid(OwnerPC) == false || GetNetMode() == NM_DedicatedServer)
 	{
 		return;
 	}

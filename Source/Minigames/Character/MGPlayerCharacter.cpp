@@ -344,15 +344,15 @@ void AMGPlayerCharacter::MulticastRPC_SetCarryState_Implementation(bool Value)
 		if (IsValid(AnimInstance) == true)
 		{
 			AnimInstance->bIsCarrying = Value;
-		}
 
-		if (IsCarrying == false && AnimInstance->GetCurrentActiveMontage() == PassBombMontage)
-		{
-			ServerRPC_SendPlayPassBombRequest(false);
-
-			if (HasAuthority() == false && IsLocallyControlled() == true)
+			if (IsCarrying == false && AnimInstance->GetCurrentActiveMontage() == PassBombMontage)
 			{
-				PlayPassBombMontage(false);
+				ServerRPC_SendPlayPassBombRequest(false);
+
+				if (HasAuthority() == false && IsLocallyControlled() == true)
+				{
+					PlayPassBombMontage(false);
+				}
 			}
 		}
 	}
