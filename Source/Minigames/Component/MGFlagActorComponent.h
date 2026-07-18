@@ -36,6 +36,13 @@ public:
 	FOnFlagStateChanged OnFlagStateChanged;
 	FOnFlagProtectionChanged OnFlagProtectionChanged;
 
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	TObjectPtr<USoundBase> FlagGetSound;
+
+	UFUNCTION(Client, Reliable)
+	void Client_PlaySoundLocal(USoundBase* SoundToPlay);
+
 private:
 
 	// 색 정보를 같이 넘겨줄 수 있도록 기존 OnRep_FlagState() 함수를 대체

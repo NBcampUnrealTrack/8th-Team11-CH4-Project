@@ -12,6 +12,8 @@
 #include "Gimmick/MGFlagActor.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "PlayerState/MGPlayerState.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 
 UMGFlagActorComponent::UMGFlagActorComponent()
 {
@@ -51,6 +53,8 @@ bool UMGFlagActorComponent::SetHasFlag(bool bHasFlag, AMGFlagActor* InFlagActor)
 					ReplicatedFlagColor = PS->GetPlayerLinearColor();
 				}
 			}
+
+			Client_PlaySoundLocal(FlagGetSound);
 		}
 		else
 		{
@@ -194,4 +198,12 @@ void UMGFlagActorComponent::OnRep_FlagVisuals()
 	}
 
 	OnFlagStateChanged.Broadcast(bFlagState);
+}
+
+void UMGFlagActorComponent::Client_PlaySoundLocal_Implementation(USoundBase* SoundToPlay)
+{
+	if (SoundToPlay)
+	{
+		UGameplayStatics::PlaySound2D(this, SoundToPlay);
+	}
 }
