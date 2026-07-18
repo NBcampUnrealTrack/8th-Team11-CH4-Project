@@ -7,5 +7,6 @@
 UCLASS()
 class MINIGAMES_API AMGButtonPlayerState : public AMGPlayerState
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
+
 };

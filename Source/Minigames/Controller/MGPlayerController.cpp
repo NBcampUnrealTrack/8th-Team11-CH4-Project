@@ -163,6 +163,7 @@ void AMGPlayerController::ShowMinigameIntro()
 	}
 }
 
+
 void AMGPlayerController::HideMinigameIntro()
 {
 	UE_LOG(LogMGNet, Verbose, TEXT("[IntroDBG] Hide called. Valid=%d"), IsValid(MinigameIntroInstance));
