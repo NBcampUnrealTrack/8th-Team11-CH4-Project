@@ -80,12 +80,6 @@ void AMGBombActor::OnTriggerOverlap(
 	int32 OtherBodyIndex, bool bFromSweep, 
 	const FHitResult& SweepResult)
 {
-	TArray<AActor*> test;
-	PassTrigger->GetOverlappingActors(test);
-	for (AActor* atest : test)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Emerald, FString::Printf(TEXT("%s"), *atest->GetName()));
-	}
 	if (bShowDebug)	// Debug가 켜져있으면
 	{
 		DrawDebugSphere(
@@ -184,8 +178,15 @@ void AMGBombActor::SetBombCollision(bool Value)
 	}
 	PassTrigger->SetCollisionEnabled(Value ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 
+	// 물리월드와 게임월드는 병렬로 돌아감. 이때 특정한 상황에서 SetCollisionEnabled를 실행해도 두 월드의 충돌로 적용되지 않는 현상이 발생할 수 있음.
+	// 그래서 다음 틱에 오버랩을 업데이트하는 것임.
+	GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+		PassTrigger->UpdateOverlaps(nullptr, true);
+		}
+	);
+
 	//디버깅 코드
-	
+	/*
 	if (PassTrigger->GetCollisionEnabled())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Collision: True"));
@@ -194,7 +195,7 @@ void AMGBombActor::SetBombCollision(bool Value)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Collision: False"));
 	}
-	
+	*/
 }
 
 void AMGBombActor::OnRep_BombRemainTime()

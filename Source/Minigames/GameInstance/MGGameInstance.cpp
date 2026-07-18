@@ -199,7 +199,7 @@ bool UMGGameInstance::IsAudioContext() const
 FName UMGGameInstance::GetCurrentMapName() const
 {
 	UWorld* World = GetWorld();
-	if (!ensure(IsValid(World)))
+	if (MG_USE_EOS == 0 || !ensure(IsValid(World)))	// MG_USE_EOS == 0 이면 디버깅용. 테스트 중인 레벨에서 그대로 종료해도 ensure에 의한 중단 발생하지 않음.
 	{
 		return NAME_None;
 	}

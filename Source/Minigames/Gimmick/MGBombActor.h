@@ -106,7 +106,7 @@ public:
 
 	// Debug 할지 여부
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb")
-	bool bShowDebug = true;
+	bool bShowDebug = false;
 
 	//------------------------------------------------ Dynamic
 	// 폭탄을 소유한 Character, 서버에서 BombHolder가 바뀌면 Replication되고

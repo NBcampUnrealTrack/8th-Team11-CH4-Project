@@ -12,7 +12,6 @@ void UMGAnimInstanceBase::NativeInitializeAnimation()
 
 	OwnerCharacter = Cast<AMGPlayerCharacter>(GetOwningActor());
 	bHeadDirection = true;
-	bPassBomb = false;
 	bIsCarrying = false;
 	if (IsValid(OwnerCharacter) == true)
 	{

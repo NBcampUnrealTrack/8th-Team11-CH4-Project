@@ -28,9 +28,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	uint8 bIsCarrying : 1;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bomb")
-	uint8 bPassBomb : 1;
-
 protected:
 	UPROPERTY()
 	TObjectPtr<AMGPlayerCharacter> OwnerCharacter;
