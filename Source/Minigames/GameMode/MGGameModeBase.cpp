@@ -8,6 +8,7 @@
 #include "PlayerState/MGFlagPlayerState.h"
 #include "GameInstance/MGGameInstance.h"
 
+#include "MGNetConfig.h"
 #include "Minigames.h"				// 커스텀 Log
 
 AMGGameModeBase::AMGGameModeBase()
@@ -49,6 +50,7 @@ void AMGGameModeBase::PreLogin(const FString& Options, const FString& Address, c
 void AMGGameModeBase::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
+	MG_LOG_NET(LogMGNet, Log, TEXT("%s has Login."), *NewPlayer->GetName());
 
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
 	if (IsValid(MGGameState) == false)
@@ -279,7 +281,9 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			--RemainEnteringWaitTime;
 			const bool bTimedOut = (RemainEnteringWaitTime <= 0);
 
-			if (bEveryoneArrived || bTimedOut)
+			const bool bForDebug = MG_USE_EOS == 0;	// MG_USE_EOS == 0이면 디버깅으로 인식하여 인원 수 상관없이 시작이 가능.
+
+			if (bEveryoneArrived || bTimedOut || bForDebug)
 			{
 				RemainWaitingTimeForPlaying = WaitingTime;   // 전원 도착 시점부터 카운트다운
 				MGGameState->SetMatchState(EMatchState::Waiting);
