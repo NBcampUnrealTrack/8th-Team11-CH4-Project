@@ -123,19 +123,25 @@ protected:
 
 #pragma region Gimmick
 public:
+	void PlayPassBombMontage(bool Value);
+
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPC_SetCarryState(bool Value);
 
 	UFUNCTION(Server, Reliable)
 	void ServerRPC_SendPlayPassBombRequest(bool Value);
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastRPC_PlayPassBombAnim(bool Value);
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_PlayPassBombMontage(AMGPlayerCharacter* TargetCharacter, bool Value);
 
+public:
 	FOnTryPassBomb OnTryPassBombDelegate;	// 폭탄넘기기를 시도할 때 실행하는 델리게이트
+
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UAnimMontage> PassBombMontage;
 
 private:
 	bool IsCarrying = false;	// 규칙 핵심 아이템(폭탄, 깃발)을 들고있는가?
-	bool IsPlayingPassBomb = false;	// 폭탄을 넘기는 동작을 취하고있는가?
 #pragma endregion
 };

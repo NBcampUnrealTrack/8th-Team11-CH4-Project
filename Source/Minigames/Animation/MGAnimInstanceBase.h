@@ -20,8 +20,7 @@ public:
 	virtual void NativeInitializeAnimation() override;
 
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
-	
-protected:
+
 	UFUNCTION()
 	void AnimNotify_PassBombCollision();
 
@@ -59,4 +58,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Head")
 	uint8 bHeadDirection : 1;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Montage")
+	float MontagePositionRate = 0.f;	// 0~1
 };

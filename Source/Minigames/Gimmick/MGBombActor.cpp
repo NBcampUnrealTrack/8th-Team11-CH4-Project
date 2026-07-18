@@ -38,7 +38,7 @@ AMGBombActor::AMGBombActor() :
 	AttachSocketName = NAME_None;
 
 	SetActorHiddenInGame(true);
-	SetActorEnableCollision(false);
+	PassTrigger->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AMGBombActor::BeginPlay()
@@ -80,7 +80,12 @@ void AMGBombActor::OnTriggerOverlap(
 	int32 OtherBodyIndex, bool bFromSweep, 
 	const FHitResult& SweepResult)
 {
-
+	TArray<AActor*> test;
+	PassTrigger->GetOverlappingActors(test);
+	for (AActor* atest : test)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Emerald, FString::Printf(TEXT("%s"), *atest->GetName()));
+	}
 	if (bShowDebug)	// Debug가 켜져있으면
 	{
 		DrawDebugSphere(
@@ -100,7 +105,7 @@ void AMGBombActor::OnTriggerOverlap(
 	{
 		return;
 	}	// Authority가 없거나 Pass를 할 수 없다면 조기 종료
-
+	
 	AMGPlayerCharacter* OverlappedCharacter = Cast<AMGPlayerCharacter>(OtherActor);
 
 	// Overlapped된 Character이고 && 현재 폭탄을 들고 있지 않다면
@@ -111,6 +116,10 @@ void AMGBombActor::OnTriggerOverlap(
 			*OverlappedCharacter->GetName());
 
 		SetBombHolder(OverlappedCharacter);		// 폭탄을 Overlapped된 Character에 부착
+	}
+	else
+	{
+		return;
 	}
 }
 
@@ -165,6 +174,27 @@ void AMGBombActor::TickBombTimer()
 	{
 		GetWorldTimerManager().ClearTimer(BombCountdownTimerHandler);
 	}
+}
+
+void AMGBombActor::SetBombCollision(bool Value)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+	PassTrigger->SetCollisionEnabled(Value ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+
+	//디버깅 코드
+	
+	if (PassTrigger->GetCollisionEnabled())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Collision: True"));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Collision: False"));
+	}
+	
 }
 
 void AMGBombActor::OnRep_BombRemainTime()
@@ -233,7 +263,7 @@ void AMGBombActor::ActivateBomb(AMGPlayerCharacter* InitialHolder, float Explode
 
 	SetBombHolder(InitialHolder);
 	SetActorHiddenInGame(false);
-	SetActorEnableCollision(false);
+	SetBombCollision(false);
 
 	BombRemainTime = FMath::CeilToInt(ExplodeTime);
 	OnRep_BombRemainTime();		// 서버도 최초 갱신
@@ -282,6 +312,9 @@ void AMGBombActor::ExplodeBomb()
 	MG_LOG_ROLE(LogMGNet, Warning, TEXT("Bomb explode : %s"),
 		BombHolder ? *BombHolder->GetName() : TEXT("Initial Point"));
 
+	SetActorHiddenInGame(true);
+	SetBombCollision(false);
+
 	if (BombHolder)
 	{
 		AMGPassBombGameMode* CurrentGameMode = Cast<AMGPassBombGameMode>(GetWorld()->GetAuthGameMode());
@@ -299,8 +332,6 @@ void AMGBombActor::ExplodeBomb()
 	// Destroy();			// Multicast 함수 호출 직후에 Destroy를 할 경우 패킷이 보내지지 않을 수 있음
 	// SetLifeSpan(0.1f);		// Multicast가 될 수 있도록 약간의 딜레이 후 Destroy
 
-	SetActorHiddenInGame(true);
-	SetActorEnableCollision(false);
 	BombHolder = nullptr;		// BombHolder 초기화
 }
 

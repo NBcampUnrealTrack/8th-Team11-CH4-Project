@@ -49,6 +49,9 @@ public:
 	// 1초마다 BombRemainTime 값을 줄이는 타이머 함수
 	void TickBombTimer();
 
+	// 콜리전 작동
+	void SetBombCollision(bool Value);
+
 	// Replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 

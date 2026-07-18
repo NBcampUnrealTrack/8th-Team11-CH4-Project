@@ -233,7 +233,13 @@ void AMGPlayerCharacter::HandleInteractionInput(const FInputActionValue& InValue
 		if (IsCarrying)
 		{
 			ServerRPC_SendPlayPassBombRequest(true);
-			IsPlayingPassBomb = true;
+
+			if (HasAuthority() == false && IsLocallyControlled() == true)
+			{
+				PlayPassBombMontage(true);
+			}
+			
+			//IsPlayingPassBomb = true;
 		}
 		break;
 	case EMinigameType::FlagGame:
@@ -266,31 +272,70 @@ void AMGPlayerCharacter::HandleInteractionEndInput(const FInputActionValue& InVa
 		if (IsCarrying)
 		{
 			ServerRPC_SendPlayPassBombRequest(false);
-			IsPlayingPassBomb = false;
+
+			if (HasAuthority() == false && IsLocallyControlled() == true)
+			{
+				PlayPassBombMontage(false);
+			}
+			//IsPlayingPassBomb = false;
 		}
 		break;
 	}
 }
 
-void AMGPlayerCharacter::ServerRPC_SendPlayPassBombRequest_Implementation(bool Value)
+void AMGPlayerCharacter::PlayPassBombMontage(bool Value)
 {
-	MulticastRPC_PlayPassBombAnim(Value);
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (IsValid(AnimInstance) == true)
+	{
+		FMontageBlendSettings BlendSetting;
+		if (AnimInstance->Montage_IsActive(PassBombMontage))
+		{
+			BlendSetting.Blend.BlendTime = 0.f;
+		}
+		float InitPos = AnimInstance->Montage_IsActive(PassBombMontage) ? AnimInstance->Montage_GetPosition(PassBombMontage) : 0.f;
+		AnimInstance->Montage_PlayWithBlendSettings(PassBombMontage, BlendSetting, Value ? 1.f : -1.f, EMontagePlayReturnType::MontageLength, InitPos);
+		//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Magenta, FString::Printf(TEXT("InitPos: %f"), InitPos));
+
+		if (HasAuthority() == true)
+		{
+			if (Value == true)
+			{
+				if (AnimInstance->Montage_GetPosition(PassBombMontage) >= 0.1f)
+				{
+					OnTryPassBombDelegate.Broadcast(true);
+				}
+			}
+			else
+			{
+				OnTryPassBombDelegate.Broadcast(false);
+			}
+		}
+	}
 }
 
-void AMGPlayerCharacter::MulticastRPC_PlayPassBombAnim_Implementation(bool Value)
+void AMGPlayerCharacter::ServerRPC_SendPlayPassBombRequest_Implementation(bool Value)
 {
-	IsPlayingPassBomb = Value;
-	if (HasAuthority() == true && Value == false)
+	PlayPassBombMontage(Value);
+
+	for (APlayerController* PC : TActorRange<APlayerController>(GetWorld()))
 	{
-		OnTryPassBombDelegate.Broadcast(false);
-	}
-	if (IsValid(GetMesh()))
-	{
-		UMGAnimInstanceBase* AnimInstance = Cast<UMGAnimInstanceBase>(GetMesh()->GetAnimInstance());
-		if (IsValid(AnimInstance) == true)
+		if (IsValid(PC) == true && GetController() != PC)  // 이 캐릭터는 공격한 플레이어의 캐릭터임. 공격한 플레이어의 컨트롤러 외의 컨트롤러들을 찾기 위한 조건문.
 		{
-			AnimInstance->bPassBomb = Value;
+			AMGPlayerCharacter* OtherPlayerCharacter = Cast<AMGPlayerCharacter>(PC->GetPawn());
+			if (OtherPlayerCharacter)
+			{
+				OtherPlayerCharacter->ClientRPC_PlayPassBombMontage(this, Value); // 다른 플레이어 컨트롤러의 캐릭터에 공격한 클라이언트의 캐릭터를 넘겨줘서, 애니메이션이 재생되게끔 함.
+			}
 		}
+	}
+}
+
+void AMGPlayerCharacter::ClientRPC_PlayPassBombMontage_Implementation(AMGPlayerCharacter* TargetCharacter, bool Value)
+{
+	if (IsValid(TargetCharacter) == true)
+	{
+		TargetCharacter->PlayPassBombMontage(Value);
 	}
 }
 
@@ -304,11 +349,16 @@ void AMGPlayerCharacter::MulticastRPC_SetCarryState_Implementation(bool Value)
 		{
 			AnimInstance->bIsCarrying = Value;
 		}
-	}
 
-	if (HasAuthority() == true && IsCarrying == false)
-	{
-		MulticastRPC_PlayPassBombAnim(false);
+		if (IsCarrying == false && AnimInstance->GetCurrentActiveMontage() == PassBombMontage)
+		{
+			ServerRPC_SendPlayPassBombRequest(false);
+
+			if (HasAuthority() == false && IsLocallyControlled() == true)
+			{
+				PlayPassBombMontage(false);
+			}
+		}
 	}
 }
 

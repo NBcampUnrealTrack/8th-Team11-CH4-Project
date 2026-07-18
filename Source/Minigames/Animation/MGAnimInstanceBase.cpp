@@ -63,12 +63,27 @@ void UMGAnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 		bHeadDirection = (TargetHeadRot.Yaw >= 0.f);
 		CurrentHeadRot = FMath::RInterpTo(CurrentHeadRot, TargetHeadRot, DeltaSeconds, HeadInterpSpeed);
 	}
+
+	UAnimMontage* CurrentActiveMontage = GetCurrentActiveMontage();
+	if (CurrentActiveMontage != nullptr)
+	{
+		MontagePositionRate = Montage_GetPosition(CurrentActiveMontage) / CurrentActiveMontage->GetPlayLength();
+	}
+
+	if (Montage_GetPlayRate(nullptr) < 0.f && Montage_GetPosition(nullptr) <= 0.f)
+	{
+		Montage_Stop(0.f);
+	}
 }
 
 void UMGAnimInstanceBase::AnimNotify_PassBombCollision()
 {
-	if (IsValid(OwnerCharacter) && OwnerCharacter->HasAuthority())
+	if (OwnerCharacter != nullptr && OwnerCharacter->HasAuthority())
 	{
-		OwnerCharacter->OnTryPassBombDelegate.Broadcast(true);
+		if (Montage_GetPlayRate(nullptr) > 0.f)
+		{
+			//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("Notify"));
+			OwnerCharacter->OnTryPassBombDelegate.Broadcast(true);
+		}
 	}
 }

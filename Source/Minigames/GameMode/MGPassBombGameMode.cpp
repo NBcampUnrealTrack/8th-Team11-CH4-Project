@@ -13,7 +13,7 @@ void AMGPassBombGameMode::StartMinigame()
 {
 	Super::StartMinigame();
 
-	ExplodeTime = 5.f;
+	ExplodeTime = InitExplodeTime;
 
 	AMGPassBombGameState* MGGS = GetGameState<AMGPassBombGameState>();
 	checkf(IsValid(MGGS), TEXT("GameState is Invalid."));
@@ -185,7 +185,7 @@ void AMGPassBombGameMode::SetBombActorCollisionEnabled(bool Value)
 {
 	if (BombActor != nullptr)
 	{
-		BombActor->SetActorEnableCollision(Value);
+		BombActor->SetBombCollision(Value);
 	}
 }
 
