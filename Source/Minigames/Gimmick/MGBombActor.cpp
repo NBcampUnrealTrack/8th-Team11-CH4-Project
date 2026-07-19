@@ -95,6 +95,7 @@ void AMGBombActor::OnTriggerOverlap(
 		);
 	}
 
+
 	if (!HasAuthority() || !bCanPass)
 	{
 		return;

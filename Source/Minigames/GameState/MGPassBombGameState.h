@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// MGPassBombGameState.h
 
 #pragma once
 
@@ -6,9 +6,6 @@
 #include "GameState/MGGameStateBase.h"
 #include "MGPassBombGameState.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class MINIGAMES_API AMGPassBombGameState : public AMGGameStateBase
 {
@@ -16,4 +13,14 @@ class MINIGAMES_API AMGPassBombGameState : public AMGGameStateBase
 
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION()
+	void OnRep_PlayerCount();
+
+public:
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerCount)
+	int32 TotalPlayerCount;
+
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerCount)
+	int32 AlivePlayerCount;
 };
