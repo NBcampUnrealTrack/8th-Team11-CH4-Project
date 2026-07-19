@@ -84,7 +84,7 @@ void UUW_LobbyLayout::RefreshHeader()
 	}
 	else if (T < 0)   // "Start!" 상태
 	{
-		CountdownText->SetText(NSLOCTEXT("Lobby", "Start", "Start!"));
+		CountdownText->SetText(NSLOCTEXT("Lobby", "Start", "START!"));
 		ReadyButton->SetIsEnabled(false);
 	}
 	else              // 0 = 대기 상태
