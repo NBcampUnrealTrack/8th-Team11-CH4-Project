@@ -22,7 +22,7 @@ protected:
 	void TryBindGameStateDelegate();
 
 	UFUNCTION()
-	void InitializeMinimap();
+	virtual void InitializeMinimap();
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
