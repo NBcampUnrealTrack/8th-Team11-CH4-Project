@@ -20,8 +20,6 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
 	void CopyProperties(APlayerState* PlayerState) override;
 	
 	void SetMGScore(int32 InMGScore) { MGScore = InMGScore; }
@@ -54,7 +52,4 @@ public:
 private:
 	UFUNCTION()
 	void OnRep_PlayerColor();
-
-	FTSTicker::FDelegateHandle PlayerColorTickDelegateHandle;
-	bool SendColorToPlayerCharacter(float DeltaTime);
 };

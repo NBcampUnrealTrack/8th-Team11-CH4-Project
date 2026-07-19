@@ -28,6 +28,8 @@ class MINIGAMES_API AMGPlayerCharacter : public ACharacter
 public:
 	AMGPlayerCharacter();
 
+	virtual void PostInitializeComponents() override;
+
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 	virtual void BeginPlay() override;
@@ -49,7 +51,8 @@ public:
 
 	UMGStatusComponent* GetMGStatusComponent() const { return StatusComponent; }
 
-	void FillPlayerColor();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_FillPlayerColor();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Components")
