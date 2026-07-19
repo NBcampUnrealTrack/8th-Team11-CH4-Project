@@ -2,6 +2,7 @@
 
 
 #include "Controller/MGPlayerController.h"
+#include "EnhancedInputSubsystems.h"
 
 #include "Blueprint/UserWidget.h"
 #include "Net/UnrealNetwork.h"
@@ -314,14 +315,16 @@ void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
 	}
 }
 
-void AMGPlayerController::ChangeColor(uint8 ColorIndex)
+void AMGPlayerController::ClearInputMapping()
 {
-	if (ColorIndex < static_cast<uint8>(EMGPlayerColor::Red) || static_cast<uint8>(EMGPlayerColor::Gray) < ColorIndex)
+	if (IsLocalController() == false)
 	{
 		return;
 	}
+	UEnhancedInputLocalPlayerSubsystem* EILPS = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+	checkf(IsValid(EILPS) == true, TEXT("EnhancedInputLocalPlayerSubsystem is invalid."));
 
-	ServerRPCSetColor(static_cast<EMGPlayerColor>(ColorIndex));
+	EILPS->ClearAllMappings();
 }
 
 void AMGPlayerController::ServerRPC_ReadyToReturn_Implementation()
@@ -349,6 +352,7 @@ void AMGPlayerController::ServerRPCPossess_Implementation(APawn* InPawn)
 {
 	if (InPawn != nullptr)
 	{
+		UnPossess();
 		Possess(InPawn);
 	}
 }

@@ -41,7 +41,9 @@ protected:
 	UFUNCTION()
 	void OnDeathTimerEnd();
 
-	virtual void OnRep_Owner() override;
+	virtual void PossessedBy(AController* NewController) override;	// 서버 빙의감지
+	virtual void OnRep_Controller() override;	// 클라이언트 빙의 감지
+	void HandlePossession(AController* NewController);	// 컨트롤러 변경 제어 함수
 	
 private:
 	void HandleLookInput(const FInputActionValue& InValue);
