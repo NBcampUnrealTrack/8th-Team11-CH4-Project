@@ -85,6 +85,17 @@ AMGPlayerCharacter::AMGPlayerCharacter()
 
 }
 
+void AMGPlayerCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	MG_LOG_NET(LogMGNet, Log, TEXT(""));
+
+	UMaterialInterface* BaseMaterial = GetMesh()->GetMaterial(0);
+	PlayerColorMat = UMaterialInstanceDynamic::Create(BaseMaterial, this);
+	GetMesh()->SetMaterial(0, PlayerColorMat);
+}
+
 void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -116,8 +127,6 @@ void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void AMGPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	PlayerColorMat = GetMesh()->CreateDynamicMaterialInstance(0, GetMesh()->GetMaterial(0));
 
 	if (IsLocallyControlled() == true)
 	{
@@ -166,14 +175,15 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 	}
 }
 
-void AMGPlayerCharacter::FillPlayerColor()
+void AMGPlayerCharacter::MulticastRPC_FillPlayerColor_Implementation()
 {
+	AMGPlayerState* MGPS = GetPlayerState<AMGPlayerState>();
 	if (IsValid(PlayerColorMat))
 	{
-		AMGPlayerState* MGPS = GetPlayerState<AMGPlayerState>();
 		if (IsValid(MGPS))
 		{
-			PlayerColorMat->SetVectorParameterValue("PlayerColor", MGPlayerColorToLinear(MGPS->PlayerColor));
+			MG_LOG_NET(LogMGNet, Log, TEXT("%s's Color: %s"), *GetName(), *MGPlayerColorToLinear(MGPS->PlayerColor).ToString());
+			PlayerColorMat->SetVectorParameterValue(TEXT("PlayerColor"), MGPlayerColorToLinear(MGPS->PlayerColor));
 		}
 	}
 }

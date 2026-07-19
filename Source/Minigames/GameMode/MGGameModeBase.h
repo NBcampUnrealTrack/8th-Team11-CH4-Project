@@ -39,11 +39,12 @@ public:
 
 protected:
 	void NotifyToAllPlayer(const FString& NotificationString);
-	
+
 private:
 	UFUNCTION()
 	void OnMainTimerElapsed();
 
+	void FillColorPlayers();
 
 public:
 	FTimerHandle MainTimerHandle;

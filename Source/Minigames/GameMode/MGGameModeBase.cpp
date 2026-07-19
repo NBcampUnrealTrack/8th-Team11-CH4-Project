@@ -4,6 +4,7 @@
 #include "GameMode/MGGameModeBase.h"
 
 #include "Controller/MGPlayerController.h"
+#include "Character/MGPlayerCharacter.h"
 #include "GameState/MGGameStateBase.h"
 #include "PlayerState/MGFlagPlayerState.h"
 #include "GameInstance/MGGameInstance.h"
@@ -199,6 +200,7 @@ void AMGGameModeBase::OnFinishedCutScene()
 
 void AMGGameModeBase::StartMinigame()
 {
+	FillColorPlayers();
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
 	if (IsValid(MGGameState))
 	{
@@ -307,6 +309,8 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			{
 				NotificationString = FString::Printf(TEXT(""));
 				UMGGameInstance* GI = Cast<UMGGameInstance>(GetGameInstance());
+				FillColorPlayers();
+
 				if (ensure(GI) && GI->CurrentRoundState == ERoundState::FinalResult)
 				{
 					StartMinigame();
@@ -415,6 +419,22 @@ void AMGGameModeBase::OnMainTimerElapsed()
 	default:
 		{
 			break;
+		}
+	}
+}
+
+void AMGGameModeBase::FillColorPlayers()
+{
+	// 플레이어 색칠
+	for (TObjectPtr<AMGPlayerController> PC : AllPlayerControllers)
+	{
+		if (IsValid(PC))
+		{
+			AMGPlayerCharacter* MGPC = Cast<AMGPlayerCharacter>(PC->GetCharacter());
+			if (IsValid(MGPC))
+			{
+				MGPC->MulticastRPC_FillPlayerColor();
+			}
 		}
 	}
 }
