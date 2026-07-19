@@ -71,5 +71,7 @@ private:
 	
 	FTimerHandle CountdownTimerHandle;
 	
+	FTimerHandle StartDelayTimerHandle;
+	
 	TArray<EMGPlayerColor> AvailableColors;
 };

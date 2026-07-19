@@ -76,16 +76,22 @@ void UUW_LobbyLayout::RefreshHeader()
     );
 
     // 카운트다운 중이면 숫자+잠금, 아니면 READY+활성
-    if (GS->GetRemainCountdownTime() > 0)
-    {
-        CountdownText->SetText(FText::AsNumber(GS->GetRemainCountdownTime()));
-        ReadyButton->SetIsEnabled(false);
-    }
-    else
-    {
-        CountdownText->SetText(NSLOCTEXT("Lobby", "Ready", "READY"));
-        ReadyButton->SetIsEnabled(true);
-    }
+	const int32 T = GS->GetRemainCountdownTime();
+	if (T > 0)
+	{
+		CountdownText->SetText(FText::AsNumber(T));
+		ReadyButton->SetIsEnabled(false);
+	}
+	else if (T < 0)   // "Start!" 상태
+	{
+		CountdownText->SetText(NSLOCTEXT("Lobby", "Start", "START!"));
+		ReadyButton->SetIsEnabled(false);
+	}
+	else              // 0 = 대기 상태
+	{
+		CountdownText->SetText(NSLOCTEXT("Lobby", "Ready", "READY"));
+		ReadyButton->SetIsEnabled(true);
+	}
 }
 
 
