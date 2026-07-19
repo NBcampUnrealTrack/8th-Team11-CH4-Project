@@ -44,8 +44,6 @@ private:
 	UFUNCTION()
 	void OnMainTimerElapsed();
 
-	void FillColorPlayers();
-
 public:
 	FTimerHandle MainTimerHandle;
 

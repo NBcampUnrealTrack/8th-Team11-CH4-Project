@@ -21,6 +21,17 @@ void AMGPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(ThisClass, Rank);
 }
 
+void AMGPlayerState::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    if (PlayerColorTickDelegateHandle.IsValid())
+    {
+        FTSTicker::GetCoreTicker().RemoveTicker(PlayerColorTickDelegateHandle);
+        PlayerColorTickDelegateHandle.Reset();
+    }
+
+    Super::EndPlay(EndPlayReason);
+}
+
 void AMGPlayerState::CopyProperties(APlayerState* PlayerState)
 {
     Super::CopyProperties(PlayerState);
@@ -50,7 +61,29 @@ FLinearColor AMGPlayerState::GetPlayerLinearColor() const
 
 void AMGPlayerState::OnRep_PlayerColor()
 {
-    // TestLog
-    // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White,
-    //     FString::Printf(TEXT("[Player %d] Color: %d"), GetPlayerId(), (uint8)PlayerColor));
+    MG_LOG_NET(LogMGNet, Log, TEXT("[Player %d] Color: %d"), GetPlayerId(), (uint8)PlayerColor);
+
+    if (PlayerColorTickDelegateHandle.IsValid())
+    {
+        FTSTicker::GetCoreTicker().RemoveTicker(PlayerColorTickDelegateHandle);
+    }
+    PlayerColorTickDelegateHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &ThisClass::SendColorToPlayerCharacter), 0.0f);
+}
+
+bool AMGPlayerState::SendColorToPlayerCharacter(float DeltaTime)
+{
+    // Pawn이 지연 스폰되는 리슨 서버 환경에서 색 설정을 계속 시도
+    APawn* Pawn = GetPawn();
+    if (!Pawn)
+    {
+        return true;  // Pawn 생성될 때까지 재시도
+    }
+
+    AMGPlayerCharacter* MGPC = Cast<AMGPlayerCharacter>(Pawn);
+    if (MGPC)
+    {
+        return MGPC->FillCharacterColor();  // Pawn에서 false를 반환할 때 까지 반복
+    }
+
+    return true;
 }

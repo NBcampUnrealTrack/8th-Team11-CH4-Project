@@ -28,8 +28,6 @@ class MINIGAMES_API AMGPlayerCharacter : public ACharacter
 public:
 	AMGPlayerCharacter();
 
-	virtual void PostInitializeComponents() override;
-
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 	virtual void BeginPlay() override;
@@ -51,8 +49,7 @@ public:
 
 	UMGStatusComponent* GetMGStatusComponent() const { return StatusComponent; }
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastRPC_FillPlayerColor();
+	bool FillCharacterColor();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Components")
@@ -81,9 +78,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MGPlayerCharacter|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UNiagaraComponent> FlagNiagaraComponent;
-
-	UPROPERTY()
-	UMaterialInstanceDynamic* PlayerColorMat;
 
 #pragma endregion
 

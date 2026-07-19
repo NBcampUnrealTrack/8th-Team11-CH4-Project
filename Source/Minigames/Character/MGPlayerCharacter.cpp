@@ -79,21 +79,9 @@ AMGPlayerCharacter::AMGPlayerCharacter()
 	FlagNiagaraComponent->SetupAttachment(FlagMeshComponent);
 	FlagNiagaraComponent->SetAutoActivate(false);
 
-
 	//버튼 게임 관련
 	GetCharacterMovement()->bImpartBaseVelocityZ = false;
 
-}
-
-void AMGPlayerCharacter::PostInitializeComponents()
-{
-	Super::PostInitializeComponents();
-
-	MG_LOG_NET(LogMGNet, Log, TEXT(""));
-
-	UMaterialInterface* BaseMaterial = GetMesh()->GetMaterial(0);
-	PlayerColorMat = UMaterialInstanceDynamic::Create(BaseMaterial, this);
-	GetMesh()->SetMaterial(0, PlayerColorMat);
 }
 
 void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -175,17 +163,30 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 	}
 }
 
-void AMGPlayerCharacter::MulticastRPC_FillPlayerColor_Implementation()
+bool AMGPlayerCharacter::FillCharacterColor()
 {
-	AMGPlayerState* MGPS = GetPlayerState<AMGPlayerState>();
-	if (IsValid(PlayerColorMat))
+	MG_LOG_NET(LogMGNet, Log, TEXT("Progressing..."));
+
+	if (!ensure(IsValid(GetMesh())))
 	{
-		if (IsValid(MGPS))
-		{
-			MG_LOG_NET(LogMGNet, Log, TEXT("%s's Color: %s"), *GetName(), *MGPlayerColorToLinear(MGPS->PlayerColor).ToString());
-			PlayerColorMat->SetVectorParameterValue(TEXT("PlayerColor"), MGPlayerColorToLinear(MGPS->PlayerColor));
-		}
+		return true;
 	}
+	
+	AMGPlayerState* MGPS = GetPlayerState<AMGPlayerState>();
+	if (IsValid(MGPS))
+	{
+		FVector4 PColor = MGPlayerColorToLinear(MGPS->PlayerColor);
+		MG_LOG_NET(LogMGNet, Log, TEXT("%s's Color: %s"), *GetName(), *PColor.ToString());
+		GetMesh()->SetCustomPrimitiveDataVector4(0, PColor);
+		GetMesh()->MarkRenderStateDirty();
+	}
+	else
+	{
+		return false;
+	}
+	MG_LOG_NET(LogMGNet, Log, TEXT("Complete"));
+	
+	return false;
 }
 
 void AMGPlayerCharacter::HandleMoveInput(const FInputActionValue& InValue)
