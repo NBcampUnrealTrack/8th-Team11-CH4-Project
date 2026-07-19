@@ -44,13 +44,11 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetReady(bool bReady);
 
-	// [임시 테스트용] 콘솔에서 "ChangeColor 0"~"ChangeColor 9" 입력 → 색 변경 검증용. 나중에 색상 버튼 UI로 대체
-	UFUNCTION(Exec)
-	void ChangeColor(uint8 ColorIndex);
-
-	// [정식] 클라 → 서버로 색 변경 요청.
+	// 클라 → 서버로 색 변경 요청.
 	UFUNCTION(Server, Reliable)
 	void ServerRPCSetColor(EMGPlayerColor NewColor);
+
+	void ClearInputMapping();
 
 	// [정식] 클라 → 서버로 해당 폰 빙의 요청. Possess는 서버에서 실행되어야함.
 	UFUNCTION(Server, Reliable)
@@ -67,6 +65,12 @@ public:
 	void ShowMinigameIntro();
 
 	void HideMinigameIntro();
+
+	UFUNCTION()
+	void SetupMinigameEnv();
+
+protected:
+	void TryBindGameStateDelegate();
 	
 public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
@@ -99,6 +103,9 @@ private:
 	int32 ResultCameraRetryCount = 0;
 	
 	FTimerHandle ResultCameraRetryHandle;
+
+	FTimerHandle DelegateBindTimerHandler;
+
 #pragma region CutScene
 
 public:

@@ -8,6 +8,7 @@
 #include "PlayerState/MGFlagPlayerState.h"
 #include "GameInstance/MGGameInstance.h"
 
+#include "MGNetConfig.h"
 #include "Minigames.h"				// 커스텀 Log
 
 AMGGameModeBase::AMGGameModeBase()
@@ -49,6 +50,7 @@ void AMGGameModeBase::PreLogin(const FString& Options, const FString& Address, c
 void AMGGameModeBase::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
+	MG_LOG_NET(LogMGNet, Log, TEXT("%s has Login."), *NewPlayer->GetName());
 
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
 	if (IsValid(MGGameState) == false)
@@ -166,19 +168,6 @@ void AMGGameModeBase::PlayCutScene()
 				PC->ClientRPC_PlayCutScene(0);
 			}
 		}
-
-		// TODO : 현재 CutsceneDuration 하드코딩
-		// 추후 Level Sequence 추가 시 Game Instance에서 관리 필요
-		// 실제 Level Sequence 길이보다 1~2초 길게 설정 필요
-		const float CutsceneDuration = 23.f;
-
-		GetWorldTimerManager().SetTimer(
-			CutSceneTimerHandler,
-			this,
-			&AMGGameModeBase::OnFinishedCutScene,
-			CutsceneDuration,
-			false
-		);
 	}
 	else
 	{
@@ -216,8 +205,6 @@ void AMGGameModeBase::OnCharacterDead(AMGPlayerController* InController)
 	}
 
 	InController->ClientRPCShowGameResultWidget(AllPlayerControllers.Num());
-
-	// AllPlayerControllers.Remove(InController);
 }
 
 void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
@@ -279,7 +266,9 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			--RemainEnteringWaitTime;
 			const bool bTimedOut = (RemainEnteringWaitTime <= 0);
 
-			if (bEveryoneArrived || bTimedOut)
+			const bool bForDebug = MG_USE_EOS == 0;	// MG_USE_EOS == 0이면 디버깅으로 인식하여 인원 수 상관없이 시작이 가능.
+
+			if (bEveryoneArrived || bTimedOut || bForDebug)
 			{
 				RemainWaitingTimeForPlaying = WaitingTime;   // 전원 도착 시점부터 카운트다운
 				MGGameState->SetMatchState(EMatchState::Waiting);
@@ -302,9 +291,15 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			if (RemainWaitingTimeForPlaying <= 0)
 			{
 				NotificationString = FString::Printf(TEXT(""));
-	
-				PlayCutScene();
-				MGGameState->OnRep_MatchState();
+				UMGGameInstance* GI = Cast<UMGGameInstance>(GetGameInstance());
+				if (ensure(GI) && GI->CurrentRoundState == ERoundState::FinalResult)
+				{
+					StartMinigame();
+				}
+				else 
+				{
+					PlayCutScene();
+				}
 			}
 	
 			NotifyToAllPlayer(NotificationString);

@@ -11,25 +11,28 @@
 
 void AMGPassBombGameMode::StartMinigame()
 {
-	Super::StartMinigame();
-
-	ExplodeTime = 15.f;
+	ExplodeTime = InitExplodeTime;
 
 	AMGPassBombGameState* MGGS = GetGameState<AMGPassBombGameState>();
 	checkf(IsValid(MGGS), TEXT("GameState is Invalid."));
 	AlivePlayers = AllPlayerControllers;
 
 	MGGS->AliveCharacters.Empty();
+
+	MGGS->TotalPlayerCount = AlivePlayers.Num();
+	MGGS->AlivePlayerCount = AlivePlayers.Num();
+
 	for (int32 i = 0; i < AlivePlayers.Num(); i++)
 	{
 		MGGS->AliveCharacters.Add(AlivePlayers[i]->GetCharacter());
-
-		AMGPassBombPlayerState* MGPS = AlivePlayers[i]->GetPlayerState<AMGPassBombPlayerState>();
-		if (IsValid(MGPS))
+		AMGPlayerCharacter* MGPC = Cast<AMGPlayerCharacter>(AlivePlayers[i]->GetCharacter());
+		if (ensure(IsValid(MGPC)))
 		{
-			MGPS->SpawnSpectator();
+			MGPC->OnTryPassBombDelegate.AddUObject(this, &AMGPassBombGameMode::SetBombActorCollisionEnabled);
 		}
 	}
+
+	Super::StartMinigame();
 
 	NextRound();
 }
@@ -60,6 +63,12 @@ void AMGPassBombGameMode::Logout(AController* Exiting)
 		if (IsValid(MGGS) && IsValid(LeaverChar))
 		{
 			MGGS->AliveCharacters.Remove(LeaverChar);
+		}
+
+		MGGS->AlivePlayerCount = AlivePlayers.Num();
+		if (GetNetMode() == NM_ListenServer)
+		{
+			MGGS->OnRep_PlayerCount();
 		}
 
 		// 승리 재확인 → 아니면 폭탄 보유자였으면 재부여
@@ -105,6 +114,12 @@ void AMGPassBombGameMode::EliminatePlayer(ACharacter* TargetPlayer)
 
 				AlivePlayers.Remove(MGPC);
 				MGGS->AliveCharacters.Remove(TargetPlayer);
+
+				MGGS->AlivePlayerCount = AlivePlayers.Num(); // GameState 동기화
+				if (GetNetMode() == NM_ListenServer)
+				{
+					MGGS->OnRep_PlayerCount();
+				}
 			}
 
 			FString UserName = MGPC->GetPlayerState<AMGPassBombPlayerState>()->GetPlayerName();
@@ -182,3 +197,19 @@ void AMGPassBombGameMode::AssignBombToRandomAlive()
 	}
 }
 
+void AMGPassBombGameMode::SetBombActorCollisionEnabled(bool Value)
+{
+	if (BombActor != nullptr)
+	{
+		BombActor->SetBombCollision(Value);
+	}
+}
+
+
+void AMGPassBombGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearTimer(RoundTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(CutSceneTimerHandler);
+
+	Super::EndPlay(EndPlayReason);
+}

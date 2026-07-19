@@ -15,18 +15,15 @@ class MINIGAMES_API AMGPassBombPlayerState : public AMGPlayerState
 {
 	GENERATED_BODY()
 public:
-
-	// virtual void OnRep_Owner() override;
+	virtual void BeginPlay() override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPC_RetireCharacter();
 
-	// UFUNCTION(Server, Reliable)
-	// void ServerRPC_SetSpectator();
-
-	void SpawnSpectator();
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_SetSpectator();
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Spectator")
