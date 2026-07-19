@@ -65,6 +65,12 @@ public:
 	void ShowMinigameIntro();
 
 	void HideMinigameIntro();
+
+	UFUNCTION()
+	void SetupMinigameEnv();
+
+protected:
+	void TryBindGameStateDelegate();
 	
 public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
@@ -97,6 +103,9 @@ private:
 	int32 ResultCameraRetryCount = 0;
 	
 	FTimerHandle ResultCameraRetryHandle;
+
+	FTimerHandle DelegateBindTimerHandler;
+
 #pragma region CutScene
 
 public:

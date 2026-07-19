@@ -76,13 +76,22 @@ void AMGPlayerController::BeginPlay()
 	}
 	else
 	{
-		// 미니게임
+
 		FInputModeGameOnly GameOnly;
 		SetInputMode(GameOnly);
 		bShowMouseCursor = false;
-		
+
 		CreateChatWidget();
 		ShowMinigameIntro();
+		/*
+		GetWorld()->GetTimerManager().SetTimer(
+			DelegateBindTimerHandler, 
+			this, 
+			&AMGPlayerController::TryBindGameStateDelegate, 
+			0.1f, 
+			true
+		);
+		*/
 	}
 
 	if (IsValid(NotificationTextUIClass) == true)
@@ -95,6 +104,27 @@ void AMGPlayerController::BeginPlay()
 			NotificationTextUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		}
 	}
+}
+
+void AMGPlayerController::TryBindGameStateDelegate()
+{
+	AMGGameStateBase* GameState = GetWorld() ? GetWorld()->GetGameState<AMGGameStateBase>() : nullptr;
+
+	if (IsValid(GameState))
+	{
+		GameState->OnWaitingStarted.AddDynamic(this, &AMGPlayerController::SetupMinigameEnv);
+		GetWorld()->GetTimerManager().ClearTimer(DelegateBindTimerHandler); // 바인딩 성공 시 ClearTimer
+	}
+}
+
+void AMGPlayerController::SetupMinigameEnv()
+{
+	FInputModeGameOnly GameOnly;
+	SetInputMode(GameOnly);
+	bShowMouseCursor = false;
+
+	CreateChatWidget();
+	ShowMinigameIntro();
 }
 
 void AMGPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -402,7 +432,12 @@ void AMGPlayerController::OnCutSceneFinished()
 	SetViewTarget(GetPawn());
 
 	RestoreAllWidgets();
-
+	
+	AMGGameModeBase* MGGameMode = Cast<AMGGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (IsValid(MGGameMode))
+	{
+		MGGameMode->OnFinishedCutScene();
+	}
 }
 
 #pragma endregion
@@ -638,6 +673,7 @@ void AMGPlayerController::RestoreAllWidgets()
 void AMGPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorld()->GetTimerManager().ClearTimer(ResultCameraRetryHandle);
+	GetWorld()->GetTimerManager().ClearTimer(DelegateBindTimerHandler);
 
 	Super::EndPlay(EndPlayReason);
 }

@@ -8,9 +8,6 @@
 class AMGPlayerState;
 class AMGPlayerController;
 
-/**
- *
- */
 UCLASS()
 class MINIGAMES_API AMGGameModeBase : public AGameModeBase
 {

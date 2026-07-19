@@ -168,19 +168,6 @@ void AMGGameModeBase::PlayCutScene()
 				PC->ClientRPC_PlayCutScene(0);
 			}
 		}
-
-		// TODO : 현재 CutsceneDuration 하드코딩
-		// 추후 Level Sequence 추가 시 Game Instance에서 관리 필요
-		// 실제 Level Sequence 길이보다 1~2초 길게 설정 필요
-		const float CutsceneDuration = 23.f;
-
-		GetWorldTimerManager().SetTimer(
-			CutSceneTimerHandler,
-			this,
-			&AMGGameModeBase::OnFinishedCutScene,
-			CutsceneDuration,
-			false
-		);
 	}
 	else
 	{
@@ -218,8 +205,6 @@ void AMGGameModeBase::OnCharacterDead(AMGPlayerController* InController)
 	}
 
 	InController->ClientRPCShowGameResultWidget(AllPlayerControllers.Num());
-
-	// AllPlayerControllers.Remove(InController);
 }
 
 void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
@@ -306,9 +291,15 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			if (RemainWaitingTimeForPlaying <= 0)
 			{
 				NotificationString = FString::Printf(TEXT(""));
-	
-				PlayCutScene();
-				MGGameState->OnRep_MatchState();
+				UMGGameInstance* GI = Cast<UMGGameInstance>(GetGameInstance());
+				if (ensure(GI) && GI->CurrentRoundState == ERoundState::FinalResult)
+				{
+					StartMinigame();
+				}
+				else 
+				{
+					PlayCutScene();
+				}
 			}
 	
 			NotifyToAllPlayer(NotificationString);

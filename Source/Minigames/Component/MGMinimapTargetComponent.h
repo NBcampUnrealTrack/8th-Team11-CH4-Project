@@ -19,11 +19,24 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 private:
+	UFUNCTION()
+	void TryBindMinigameStart();
+
+	UFUNCTION()
 	void RegisterToMinimap();
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Minimap")
-	EMinimapTargetType TargetType = EMinimapTargetType::None;
+	EMinimapTargetType TargetType = EMinimapTargetType::Enemy;
+
+
+
+private:
+	FTimerHandle BindTimerHandler;
+
+	FTimerHandle RetryTimerHandler;
 
 };
