@@ -32,6 +32,7 @@ void AMGGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(ThisClass, MatchState);
 	DOREPLIFETIME(ThisClass, RoundState);
 	DOREPLIFETIME(ThisClass, AliveCharacters);
+	DOREPLIFETIME(ThisClass, EndingTimeRemaining);
 }
 
 void AMGGameStateBase::OnRep_MatchState()
@@ -108,6 +109,11 @@ void AMGGameStateBase::SetMatchState(EMatchState NewState)
 	*/
 }
 
+void AMGGameStateBase::OnRep_EndingTimeRemaining()
+{
+	OnEndingTimeChanged.Broadcast(EndingTimeRemaining);
+}
+
 TArray<AMGPlayerState*> AMGGameStateBase::GetSortedPlayerStatesByTotalScore()
 {
 	TArray<AMGPlayerState*> SortedPlayers;
@@ -126,6 +132,12 @@ TArray<AMGPlayerState*> AMGGameStateBase::GetSortedPlayerStatesByTotalScore()
 		{
 			return A.TotalScore > B.TotalScore;
 		});
+
+
+	for (int32 i = 0; i < SortedPlayers.Num(); i++)
+	{
+		SortedPlayers[i]->Rank = i + 1;
+	}
 
 	return SortedPlayers;
 }

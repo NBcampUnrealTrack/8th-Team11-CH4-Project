@@ -13,6 +13,7 @@ class AMGPlayerState;
 // DYNAMIC : 블루프린트에서도 가능   |   MULTICAST : 1대N 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMinigameStarted);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWaitingStarted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEndingTimeChanged, int32, RemainingTime);
 
 UCLASS()
 class MINIGAMES_API AMGGameStateBase : public AGameStateBase
@@ -22,10 +23,14 @@ class MINIGAMES_API AMGGameStateBase : public AGameStateBase
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	UFUNCTION(BlueprintCallable, Category = "GameFlow")
 	EMinigameType GetCurrentMinigameType();
 
 	UFUNCTION()
 	void OnRep_MatchState();
+
+	UFUNCTION()
+	void OnRep_EndingTimeRemaining();
 
 	void SetMatchState(EMatchState NewState);
 	EMatchState GetMatchState() const { return MatchState; };
@@ -43,6 +48,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Event")
 	FOnWaitingStarted OnWaitingStarted;
+
+	UPROPERTY(BlueprintAssignable, Category = "Event")
+	FOnEndingTimeChanged OnEndingTimeChanged;
+
+	UPROPERTY(ReplicatedUsing = OnRep_EndingTimeRemaining, BlueprintReadOnly, Category = "GameFlow")
+	int32 EndingTimeRemaining = 15;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState, VisibleAnywhere, BlueprintReadOnly, Category = "GameFlow")
 	EMatchState MatchState = EMatchState::Entering;

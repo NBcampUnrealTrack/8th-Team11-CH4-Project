@@ -8,7 +8,6 @@ AMGButtonGameState::AMGButtonGameState()
 
     CurrentPhase = EGamePhase::WaitingToStart;
     TimeRemaining = 0;
-    EndingTimeRemaining = 15;
 }
 
 void AMGButtonGameState::GetLifetimeReplicatedProps(
@@ -19,7 +18,6 @@ void AMGButtonGameState::GetLifetimeReplicatedProps(
 
     DOREPLIFETIME(AMGButtonGameState, CurrentPhase);
     DOREPLIFETIME(AMGButtonGameState, TimeRemaining);
-    DOREPLIFETIME(AMGButtonGameState, EndingTimeRemaining);
 }
 
 // 게임 페이즈 변경
@@ -32,12 +30,6 @@ void AMGButtonGameState::OnRep_CurrentPhase()
 // 현재는 Blueprint에서 값을 직접 참조
 void AMGButtonGameState::OnRep_TimeRemaining()
 {
-}
-
-// 게임 종료 카운트 변경
-void AMGButtonGameState::OnRep_EndingTimeRemaining()
-{
-    OnEndingTimeChanged.Broadcast(EndingTimeRemaining);
 }
 
 // 소유권 개수 순 정렬

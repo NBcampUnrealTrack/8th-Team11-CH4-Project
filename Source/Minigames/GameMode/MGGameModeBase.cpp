@@ -327,7 +327,13 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			FString NotificationString = FString::Printf(TEXT("Moving to next stage in %d seconds..."), RemainWaitingTimeForEnding);
 			NotifyToAllPlayer(NotificationString);
 	
+			if (AMGGameStateBase* GS = GetGameState<AMGGameStateBase>())
+			{
+				GS->EndingTimeRemaining = RemainWaitingTimeForEnding;
+			}
+
 			--RemainWaitingTimeForEnding;
+
 	
 			// 카운트다운 종료 시 맵 이동
 			if (RemainWaitingTimeForEnding <= 0)
