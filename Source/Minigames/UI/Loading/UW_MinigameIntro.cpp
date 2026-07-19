@@ -52,6 +52,10 @@ void UUW_MinigameIntro::Setup(const FMGMinigameInfoRow& Row)
 				Line->SetText(FText::FromString(LineText));
 				Line->SetColorAndOpacity(FSlateColor(FLinearColor::Black));
 				Line->SetAutoWrapText(true);
+				if (RuleLineFont.HasValidFont())
+				{
+					Line->SetFont(RuleLineFont);
+				}
 				
 				Box_Rules->AddChildToVerticalBox(Line);
 			}

@@ -11,9 +11,9 @@ class AMGLobbyGameStateBase;
 class UButton;
 class UTextBlock;
 class UUW_LobbyPlayerRow;
-/**
- * 
- */
+class UUW_ColorButton;
+enum class EMGPlayerColor : uint8;
+
 UCLASS()
 class MINIGAMES_API UUW_LobbyLayout : public UUserWidget
 {
@@ -25,12 +25,13 @@ protected:
 	
 	UFUNCTION()
 	void OnReadyClicked();
-	UFUNCTION()
-	void OnColorClicked();
-	
+
 private:
 	void RefreshRoster();
 	void RefreshHeader();
+
+	void BuildColorPalette();
+	void OnColorPicked(EMGPlayerColor NewColor);
 	
 	AMGLobbyGameStateBase* GetLobbyGameState() const;
 	
@@ -49,6 +50,12 @@ private:
 	UPROPERTY(Meta = (BindWidget))
 	TObjectPtr<UWrapBox> PlayerListBox;
 
+	UPROPERTY(Meta = (BindWidget))
+	TObjectPtr<UWrapBox> ColorPaletteBox;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUW_ColorButton> ColorButtonClass;
+	
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUW_LobbyPlayerRow> PlayerRowClass;
 

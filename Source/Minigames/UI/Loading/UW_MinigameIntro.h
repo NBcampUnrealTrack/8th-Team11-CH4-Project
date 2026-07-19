@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Data/MGMinigameInfoRow.h"   // FMGMinigameInfoRow
+#include "Data/MGMinigameInfoRow.h"
+#include "Fonts/SlateFontInfo.h"
 #include "UW_MinigameIntro.generated.h"
 
 class UVerticalBox;
@@ -20,6 +21,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Loading")
 	void Setup(const FMGMinigameInfoRow& Row);
 
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Loading")
+	FSlateFontInfo RuleLineFont;
+	
 private:
 	UPROPERTY(Meta = (BindWidget))
 	TObjectPtr<UTextBlock> Text_Title;
