@@ -77,6 +77,14 @@ void AMGGameStateBase::OnRep_MatchState()
 	{
 		OnMinigameStarted.Broadcast();
 	}
+
+	if (MatchState == EMatchState::Playing || MatchState == EMatchState::Ending)
+	{
+		if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
+		{
+			GI->PlayCurrentLevelBGM();
+		}
+	}
 }
 
 void AMGGameStateBase::SetMatchState(EMatchState NewState)
@@ -86,6 +94,8 @@ void AMGGameStateBase::SetMatchState(EMatchState NewState)
 	{
 		OnRep_MatchState();
 	}
+
+	/*
 	if (MatchState == EMatchState::Playing || MatchState == EMatchState::Ending)
 	{
 		if (UMGGameInstance* GI = GetGameInstance<UMGGameInstance>())
@@ -93,4 +103,5 @@ void AMGGameStateBase::SetMatchState(EMatchState NewState)
 			GI->PlayCurrentLevelBGM();
 		}
 	}
+	*/
 }
