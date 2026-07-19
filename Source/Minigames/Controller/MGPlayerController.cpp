@@ -215,31 +215,28 @@ void AMGPlayerController::ClientRPCReturnToTitle_Implementation()
 
 void AMGPlayerController::ClientRPCShowGameResultWidget_Implementation(int32 InRanking)
 {
-	if (IsLocalController() == false)
+	UE_LOG(LogTemp, Warning, TEXT("===== Result Widget RPC Called ====="));
+
+	if (!IsLocalController())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Not Local Controller"));
 		return;
 	}
-	if (IsValid(GameResultUIClass) == false)
+
+	if (!IsValid(GameResultUIClass))
 	{
+		UE_LOG(LogTemp, Error, TEXT("GameResultUIClass is NULL"));
 		return;
 	}
-	
-	UUW_GameResult* GameResultUI = CreateWidget<UUW_GameResult>(this, GameResultUIClass);
-	if (IsValid(GameResultUI) == true)
+
+	UE_LOG(LogTemp, Warning, TEXT("Creating Widget"));
+
+	UUserWidget* ResultWidget = CreateWidget<UUserWidget>(this, GameResultUIClass);
+
+	if (IsValid(ResultWidget))
 	{
-		GameResultUI->AddToViewport(3);
-
-		FString GameResultString = FString::Printf(TEXT("%s"), InRanking == 1 ? TEXT("Winner Winner!") : TEXT("Loser..."));
-		GameResultUI->ResultText->SetText(FText::FromString(GameResultString));
-
-		FString RankingString = FString::Printf(TEXT("#%02d"), InRanking);
-		GameResultUI->RankingText->SetText(FText::FromString(RankingString));
-
-		FInputModeUIOnly Mode;
-		Mode.SetWidgetToFocus(GameResultUI->GetCachedWidget());
-		SetInputMode(Mode);
-
-		bShowMouseCursor = true;
+		ResultWidget->AddToViewport(3);
+		UE_LOG(LogTemp, Warning, TEXT("Widget Added"));
 	}
 }
 

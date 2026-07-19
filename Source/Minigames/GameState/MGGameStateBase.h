@@ -7,6 +7,8 @@
 #include "Type/MGTypes.h"
 #include "MGGameStateBase.generated.h"
 
+class AMGPlayerState;
+
 // 미니게임이 본격적으로 시작될 때 Broadcast 할 delegate
 // DYNAMIC : 블루프린트에서도 가능   |   MULTICAST : 1대N 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMinigameStarted);
@@ -24,10 +26,10 @@ public:
 
 	UFUNCTION()
 	void OnRep_MatchState();
-	
+
 	void SetMatchState(EMatchState NewState);
-	EMatchState GetMatchState () const {return MatchState;};
-	
+	EMatchState GetMatchState() const { return MatchState; };
+
 public:
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "GameFlow")
 	ERoundState RoundState = ERoundState::None;
@@ -41,7 +43,10 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Event")
 	FOnWaitingStarted OnWaitingStarted;
-	
+
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState, VisibleAnywhere, BlueprintReadOnly, Category = "GameFlow")
 	EMatchState MatchState = EMatchState::Entering;
+
+	UFUNCTION(BlueprintCallable, Category = "Scoreboard")
+	TArray<AMGPlayerState*> GetSortedPlayerStatesByTotalScore();
 };

@@ -63,25 +63,3 @@ TArray<AMGButtonPlayerState*> AMGButtonGameState::GetSortedPlayerStatesByScore()
     return SortedPlayers;
 }
 
-// 최종 점수 순 정렬
-TArray<AMGButtonPlayerState*> AMGButtonGameState::GetSortedPlayerStatesByTotalScore()
-{
-    TArray<AMGButtonPlayerState*> SortedPlayers;
-
-    for (APlayerState* PS : PlayerArray)
-    {
-        if (AMGButtonPlayerState* ButtonPS = Cast<AMGButtonPlayerState>(PS))
-        {
-            SortedPlayers.Add(ButtonPS);
-        }
-    }
-
-    SortedPlayers.Sort([](
-        const AMGButtonPlayerState& A,
-        const AMGButtonPlayerState& B)
-        {
-            return A.TotalScore > B.TotalScore;
-        });
-
-    return SortedPlayers;
-}

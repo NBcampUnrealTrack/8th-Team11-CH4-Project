@@ -308,7 +308,21 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			break;
 		}
 	case EMatchState::Ending:
+	{
+		if (!bShowResultWidget)
 		{
+			bShowResultWidget = true;
+
+			for (AMGPlayerController* PC : AllPlayerControllers)
+			{
+				if (IsValid(PC))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("RPC Send To PC"));
+					PC->ClientRPCShowGameResultWidget(1);
+				}
+			}
+		}
+
 			// 남은 시간 알림
 			FString NotificationString = FString::Printf(TEXT("Moving to next stage in %d seconds..."), RemainWaitingTimeForEnding);
 			NotifyToAllPlayer(NotificationString);

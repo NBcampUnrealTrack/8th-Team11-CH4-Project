@@ -80,7 +80,7 @@ public:
 	TSubclassOf<UUserWidget> NotificationTextUIClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSubclassOf<UUW_GameResult> GameResultUIClass;
+	TSubclassOf<UUserWidget> GameResultUIClass;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUW_LobbyLayout> LobbyLayoutClass;
