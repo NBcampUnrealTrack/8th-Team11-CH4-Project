@@ -26,7 +26,8 @@ AMGLobbyGameModeBase::AMGLobbyGameModeBase()
 void AMGLobbyGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorldTimerManager().ClearTimer(CountdownTimerHandle);
-
+	GetWorldTimerManager().ClearTimer(StartDelayTimerHandle);
+	
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -38,7 +39,7 @@ void AMGLobbyGameModeBase::PreLogin(const FString& Options, const FString& Addre
 	if (AllPlayerControllers.Num() >= MaxPlayerCount)
 	{
 		ErrorMessage = TEXT("Lobby is full");
-		// TODO: 정원 초과 안내 UI. ErrorString을 위젯에 표시 (3~4주차 UI 작업 때 같이 처리)
+		// TODO: 정원 초과 안내 UI.
 	}
 }
 
@@ -69,9 +70,6 @@ void AMGLobbyGameModeBase::PostLogin(APlayerController* NewPlayer)
 		{
 			LGS->SetCurrentPlayerCount(AllPlayerControllers.Num());
 		}
-		
-		// TODO: 레디 버튼 기본값은 비활성화.
-		//       로그인 후 인원이 MinimumPlayerCount 이상이면 전원 레디 버튼 활성화 (Client RPC)
 	}
 }
 
@@ -209,8 +207,16 @@ void AMGLobbyGameModeBase::OnCountdownElapsed()
 	}
 
 	CancelCountdown();
-	// TODO: 모든 플레이어 알림
-	TravelToMinigameLevel();
+	
+	LGS->SetRemainCountdownTime(-1);
+
+	GetWorldTimerManager().SetTimer(
+		StartDelayTimerHandle,
+		this,
+		&ThisClass::TravelToMinigameLevel,
+		1.0f,
+		false
+	);
 }
 
 void AMGLobbyGameModeBase::CancelCountdown()
