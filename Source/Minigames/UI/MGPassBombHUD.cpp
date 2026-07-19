@@ -100,6 +100,13 @@ void AMGPassBombHUD::InitializeMinimap()
 	if (IsValid(MinimapWidget))
 	{
 		MinimapWidget->SetVisibility(ESlateVisibility::Hidden);
+
+		APawn* MyPawn = GetOwningPlayerController() ? GetOwningPlayerController()->GetPawn() : nullptr;
+
+		if (IsValid(MyPawn) && IsValid(CurrentBombHolder) && MyPawn == CurrentBombHolder)
+		{
+			MinimapWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		}
 	}
 }
 
@@ -107,6 +114,8 @@ void AMGPassBombHUD::InitializeMinimap()
 // MGBombActor에 존재하는 델리게이트에 바인딩 되어있음
 void AMGPassBombHUD::OnBombHolderUpdated(ACharacter* NewHolder)
 {
+	CurrentBombHolder = NewHolder;
+
 	UUW_PassBombLayout* MyBombWidget = Cast<UUW_PassBombLayout>(BombWidgetInstance);
 	if (!IsValid(MyBombWidget))
 	{

@@ -46,6 +46,9 @@ public:
 	UUserWidget* BombWidgetInstance;
 
 protected:
+	UPROPERTY()
+	ACharacter* CurrentBombHolder;	// HUD에서 따로 캐싱해둘 BombHolder
+
 	FTimerHandle BombDelegateTimerHandler;
 
 };
