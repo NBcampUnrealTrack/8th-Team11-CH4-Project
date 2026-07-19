@@ -4,12 +4,16 @@
 
 #include "Blueprint/UserWidget.h"
 
+#include "Character/MGPlayerCharacter.h"
 #include "UI/UW_PassBombLayout.h"
 #include "Gimmick/MGBombActor.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerState.h" // 닉네임을 가져오기 위해 추가
+#include "GameState/MGPassBombGameState.h"
+
+#include "UI/MiniMap/UW_MiniMapLayout.h"
 
 AMGPassBombHUD::AMGPassBombHUD() 
 //	: BombHolderText(NAME_None)
@@ -31,6 +35,43 @@ void AMGPassBombHUD::BeginPlay()
 	if (IsValid(BombWidgetInstance))
 	{
 		BombWidgetInstance->AddToViewport();
+
+		GetWorld()->GetTimerManager().SetTimer(
+			BombDelegateTimerHandler,
+			this,
+			&AMGPassBombHUD::TryBindBombGameState,
+			0.1f,
+			true
+		);
+	}
+}
+
+void AMGPassBombHUD::TryBindBombGameState()
+{
+	AMGPassBombGameState* PBGS = GetWorld() ? GetWorld()->GetGameState<AMGPassBombGameState>() : nullptr;
+
+	if (IsValid(PBGS))
+	{
+		if (PBGS->MatchState == EMatchState::Playing)
+		{
+			RefreshBombAliveCount();
+		}
+		else
+		{
+			PBGS->OnMinigameStarted.AddDynamic(this, &AMGPassBombHUD::RefreshBombAliveCount);
+		}
+		GetWorld()->GetTimerManager().ClearTimer(BombDelegateTimerHandler);
+	}
+}
+
+void AMGPassBombHUD::RefreshBombAliveCount()
+{
+	AMGPassBombGameState* PBGS = GetWorld() ? GetWorld()->GetGameState<AMGPassBombGameState>() : nullptr;
+	UUW_PassBombLayout* PassBombUI = Cast<UUW_PassBombLayout>(BombWidgetInstance);
+
+	if (IsValid(PBGS) && IsValid(PassBombUI))
+	{
+		PassBombUI->UpdateAliveCountText(PBGS->AlivePlayerCount, PBGS->TotalPlayerCount);
 	}
 }
 
@@ -52,6 +93,16 @@ void AMGPassBombHUD::BindWithBombActor(AMGBombActor* BombInstance)
 	}
 }
 
+void AMGPassBombHUD::InitializeMinimap()
+{
+	Super::InitializeMinimap();
+
+	if (IsValid(MinimapWidget))
+	{
+		MinimapWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
 
 // MGBombActor에 존재하는 델리게이트에 바인딩 되어있음
 void AMGPassBombHUD::OnBombHolderUpdated(ACharacter* NewHolder)
@@ -69,6 +120,20 @@ void AMGPassBombHUD::OnBombHolderUpdated(ACharacter* NewHolder)
 		FString PlayerName = NewHolder->GetPlayerState()->GetPlayerName();
 		MyBombWidget->UpdateBombHolderText(PlayerName);
 	}
+
+	if (IsValid(MinimapWidget))
+	{
+		APawn* MyPawn = GetOwningPlayerController() ? GetOwningPlayerController()->GetPawn() : nullptr;
+
+		if (IsValid(MyPawn) && MyPawn == NewHolder)
+		{
+			MinimapWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		}
+		else
+		{
+			MinimapWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
 }
 
 void AMGPassBombHUD::OnBombTimeUpdated(int32 RemainTime)
@@ -78,5 +143,12 @@ void AMGPassBombHUD::OnBombTimeUpdated(int32 RemainTime)
 	{
 		MyBombWidget->UpdateBombTimerText(RemainTime);
 	}
+}
+
+void AMGPassBombHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearTimer(BombDelegateTimerHandler);
+
+	Super::EndPlay(EndPlayReason);
 }
 
