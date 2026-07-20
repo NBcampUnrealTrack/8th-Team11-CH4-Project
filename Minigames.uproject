@@ -26,5 +26,8 @@
 			"Name": "OnlineSubsystemEOS",
 			"Enabled": true
 		}
+	],
+	"TargetPlatforms": [
+		"Windows"
 	]
 }
