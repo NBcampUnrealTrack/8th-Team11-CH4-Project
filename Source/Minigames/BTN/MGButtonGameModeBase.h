@@ -31,7 +31,7 @@ protected:
     FTimerHandle GameTimerHandle;
 
     UPROPERTY(EditAnywhere, Category = "Game Settings")
-    int32 GameDuration = 90;
+    int32 GameDuration = 60;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Settings")
     int32 TimeRemaining;

@@ -24,7 +24,7 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 RemainGameTime = 60;
+	int32 RemainGameTime = 50;
 	
 private:
 	UFUNCTION()
