@@ -94,16 +94,16 @@ void AMGPlayerController::BeginPlay()
 		*/
 	}
 
-	if (IsValid(NotificationTextUIClass) == true)
-	{
-		UUserWidget* NotificationTextUI = CreateWidget<UUserWidget>(this, NotificationTextUIClass);
-		if (IsValid(NotificationTextUI) == true)
-		{
-			NotificationTextUI->AddToViewport(1);
-
-			NotificationTextUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		}
-	}
+	// if (IsValid(NotificationTextUIClass) == true)
+	// {
+	// 	UUserWidget* NotificationTextUI = CreateWidget<UUserWidget>(this, NotificationTextUIClass);
+	// 	if (IsValid(NotificationTextUI) == true)
+	// 	{
+	// 		NotificationTextUI->AddToViewport(1);
+	// 
+	// 		NotificationTextUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	// 	}
+	// }
 }
 
 void AMGPlayerController::TryBindGameStateDelegate()
@@ -301,16 +301,11 @@ void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
 		FinalResultWidget->AddToViewport(3);
 	}
 
-	// 마우스/입력 모드/이동 차단은 매 호출마다 재적용 (폰·뷰포트 준비 타이밍 대응)
+	// 마우스/입력 모드는 매 호출마다 재적용 (폰·뷰포트 준비 타이밍 대응)
 	FInputModeGameAndUI InputMode;
 	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 	SetInputMode(InputMode);
 	bShowMouseCursor = true;
-
-	if (APawn* MyPawn = GetPawn())
-	{
-		MyPawn->DisableInput(this);
-	}
 }
 
 void AMGPlayerController::ClearInputMapping()

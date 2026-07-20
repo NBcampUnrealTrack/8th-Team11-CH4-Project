@@ -42,10 +42,10 @@ void AMGFinalResultGameModeBase::StartMinigame()
 	PlacePlayersByRank(SortedPlayers);
 	
 	GetWorldTimerManager().SetTimer(
-		AutoReturnTimerHandle, 
-		this, 
-		&ThisClass::ReturnToLobby, 
-		20.f, 
+		AutoReturnTimerHandle,
+		this,
+		&ThisClass::ReturnToLobby,
+		20.f,
 		false
 	);
 	

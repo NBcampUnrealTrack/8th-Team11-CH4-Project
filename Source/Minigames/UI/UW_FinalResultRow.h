@@ -39,4 +39,7 @@ private:
 	
 	UPROPERTY(Meta = (BindWidget))
 	TObjectPtr<UTextBlock> TotalText;
+	
+	UPROPERTY(Meta = (BindWidget))
+    TObjectPtr<UImage> RankBadge;
 };
