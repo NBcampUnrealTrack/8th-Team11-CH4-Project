@@ -3,6 +3,7 @@
 #include "GameState/MGGameStateBase.h"
 #include "GameState/MGPassBombGameState.h"
 #include "GameState/MGFlagGameStateBase.h"
+#include "BTN/MGButtonGameState.h"
 
 #include "PlayerState/MGPlayerState.h"
 
@@ -20,6 +21,10 @@ EMinigameType AMGGameStateBase::GetCurrentMinigameType()
 	if (Cast<AMGFlagGameStateBase>(this))
 	{
 		return EMinigameType::FlagGame;
+	}
+	if (Cast<AMGButtonGameState>(this))
+	{
+		return EMinigameType::ButtonOwnership;
 	}
 
 	return EMinigameType::NONE;
@@ -115,7 +120,7 @@ void AMGGameStateBase::OnRep_EndingTimeRemaining()
 }
 
 TArray<AMGPlayerState*> AMGGameStateBase::GetSortedPlayerStatesByTotalScore()
-{
+{ 
 	TArray<AMGPlayerState*> SortedPlayers;
 
 	for (APlayerState* PS : PlayerArray)
