@@ -56,6 +56,8 @@ public:
 	int32 EndingTime = 10;
 	int32 RemainWaitingTimeForEnding = 10;
 
+	bool bShowResultWidget = false;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<TObjectPtr<AMGPlayerController>> AllPlayerControllers;

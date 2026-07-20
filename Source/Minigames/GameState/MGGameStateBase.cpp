@@ -3,6 +3,9 @@
 #include "GameState/MGGameStateBase.h"
 #include "GameState/MGPassBombGameState.h"
 #include "GameState/MGFlagGameStateBase.h"
+#include "BTN/MGButtonGameState.h"
+
+#include "PlayerState/MGPlayerState.h"
 
 #include "Controller/MGPlayerController.h"
 #include "Net/UnrealNetwork.h"
@@ -19,6 +22,10 @@ EMinigameType AMGGameStateBase::GetCurrentMinigameType()
 	{
 		return EMinigameType::FlagGame;
 	}
+	if (Cast<AMGButtonGameState>(this))
+	{
+		return EMinigameType::ButtonOwnership;
+	}
 
 	return EMinigameType::NONE;
 }
@@ -30,6 +37,7 @@ void AMGGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(ThisClass, MatchState);
 	DOREPLIFETIME(ThisClass, RoundState);
 	DOREPLIFETIME(ThisClass, AliveCharacters);
+	DOREPLIFETIME(ThisClass, EndingTimeRemaining);
 }
 
 void AMGGameStateBase::OnRep_MatchState()
@@ -38,11 +46,11 @@ void AMGGameStateBase::OnRep_MatchState()
 	{
 		if (APawn* Pawn = PC->GetPawn())
 		{
-			const bool bShouldBlockMove = 
+			const bool bShouldBlockMove =
 				(MatchState == EMatchState::Entering ||
-				 MatchState == EMatchState::Waiting ||
-				 MatchState == EMatchState::Ending);
-			
+					MatchState == EMatchState::Waiting ||
+					MatchState == EMatchState::Ending);
+
 			if (bShouldBlockMove)
 			{
 				Pawn->DisableInput(PC);
@@ -53,7 +61,7 @@ void AMGGameStateBase::OnRep_MatchState()
 			}
 		}
 	}
-	
+
 	// 게임이 시작(또는 그 이후)됐으면 인트로 숨김.
 	// PlayingCutScene/Playing만 보면, 폭탄게임처럼 시작과 동시에 Ending으로 넘어가는 경우
 	// 수동 OnRep 시점엔 이미 Ending이라 숨김을 놓침 → Entering/Waiting이 아니면 전부 숨김.
@@ -104,4 +112,37 @@ void AMGGameStateBase::SetMatchState(EMatchState NewState)
 		}
 	}
 	*/
+}
+
+void AMGGameStateBase::OnRep_EndingTimeRemaining()
+{
+	OnEndingTimeChanged.Broadcast(EndingTimeRemaining);
+}
+
+TArray<AMGPlayerState*> AMGGameStateBase::GetSortedPlayerStatesByTotalScore()
+{ 
+	TArray<AMGPlayerState*> SortedPlayers;
+
+	for (APlayerState* PS : PlayerArray)
+	{
+		if (AMGPlayerState* MGPS = Cast<AMGPlayerState>(PS))
+		{
+			SortedPlayers.Add(MGPS);
+		}
+	}
+
+	SortedPlayers.Sort([](
+		const AMGPlayerState& A,
+		const AMGPlayerState& B)
+		{
+			return A.TotalScore > B.TotalScore;
+		});
+
+
+	for (int32 i = 0; i < SortedPlayers.Num(); i++)
+	{
+		SortedPlayers[i]->Rank = i + 1;
+	}
+
+	return SortedPlayers;
 }
