@@ -37,7 +37,7 @@ protected:
 protected:
 	// 폭탄 카운트다운이 시작된 후 터질 때까지 걸리는 시간
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minigame|Rule")
-	int32 InitExplodeTime = 15.f;
+	int32 InitExplodeTime = 20.f;
 
 	int32 ExplodeTime;
 
