@@ -82,6 +82,8 @@ AMGPlayerCharacter::AMGPlayerCharacter()
 	//버튼 게임 관련
 	GetCharacterMovement()->bImpartBaseVelocityZ = false;
 
+	bAlwaysRelevant = true;
+	NetCullDistanceSquared = 999999999999.0f;
 }
 
 void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
