@@ -79,7 +79,6 @@ AMGPlayerCharacter::AMGPlayerCharacter()
 	FlagNiagaraComponent->SetupAttachment(FlagMeshComponent);
 	FlagNiagaraComponent->SetAutoActivate(false);
 
-
 	//버튼 게임 관련
 	GetCharacterMovement()->bImpartBaseVelocityZ = false;
 
@@ -118,8 +117,6 @@ void AMGPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void AMGPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	PlayerColorMat = GetMesh()->CreateDynamicMaterialInstance(0, GetMesh()->GetMaterial(0));
 
 	if (IsLocallyControlled() == true)
 	{
@@ -160,24 +157,82 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 		}
 	}
 	
-	if (IsValid(NameWidgetComponent) == true && HasAuthority() == false)
+	if (IsValid(NameWidgetComponent) == true && GetNetMode() != NM_DedicatedServer)
 	{
 		FVector WidgetComponentLocation = NameWidgetComponent->GetComponentLocation();
 		FVector LocalPlayerCameraLocation = UGameplayStatics::GetPlayerCameraManager(this, 0)->GetCameraLocation();
 		NameWidgetComponent->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(WidgetComponentLocation, LocalPlayerCameraLocation));
 	}
-}
 
-void AMGPlayerCharacter::FillPlayerColor()
-{
-	if (IsValid(PlayerColorMat))
+	if (IsValid(StatusComponent) && IsValid(GetCharacterMovement()))
 	{
-		AMGPlayerState* MGPS = GetPlayerState<AMGPlayerState>();
-		if (IsValid(MGPS))
+		const float DefaultSpeed = 600.f;
+		if (!bFalling && GetCharacterMovement()->IsFalling())
 		{
-			PlayerColorMat->SetVectorParameterValue("PlayerColor", MGPlayerColorToLinear(MGPS->PlayerColor));
+			const float SpeedMul = 1.6f;
+			const float MaxSpeed = DefaultSpeed * SpeedMul;
+			
+			StatusComponent->SetOriginSpeed(MaxSpeed);
+			const FVector2D CurrentVel = FVector2D(GetCharacterMovement()->Velocity.X, GetCharacterMovement()->Velocity.Y);
+			float CurrentSpeed = CurrentVel.Length();
+			if (CurrentSpeed > MaxSpeed)
+			{
+				CurrentSpeed = MaxSpeed;
+			}
+			FVector2D UnitVel = FVector2D(GetCharacterMovement()->Velocity.X, GetCharacterMovement()->Velocity.Y);
+			UnitVel.Normalize();
+
+			const FVector2D FinalSpeed = UnitVel * CurrentSpeed * SpeedMul;
+			GetCharacterMovement()->Velocity.X = FinalSpeed.X;
+			GetCharacterMovement()->Velocity.Y = FinalSpeed.Y;
+			
+			bFalling = true;
+		}
+		else if (bFalling && !GetCharacterMovement()->IsFalling())
+		{
+			StatusComponent->SetOriginSpeed(DefaultSpeed);
+			const FVector2D CurrentVel = FVector2D(GetCharacterMovement()->Velocity.X, GetCharacterMovement()->Velocity.Y);
+			float CurrentSpeed = CurrentVel.Length();
+			if (CurrentSpeed > DefaultSpeed)
+			{
+				CurrentSpeed = DefaultSpeed;
+			}
+			FVector2D UnitVel = CurrentVel;
+			UnitVel.Normalize();
+
+			const FVector2D FinalSpeed = UnitVel * CurrentSpeed;
+			GetCharacterMovement()->Velocity.X = FinalSpeed.X;
+			GetCharacterMovement()->Velocity.Y = FinalSpeed.Y;
+
+			bFalling = false;
 		}
 	}
+}
+
+bool AMGPlayerCharacter::FillCharacterColor()
+{
+	MG_LOG_NET(LogMGNet, Log, TEXT("Progressing..."));
+
+	if (!ensure(IsValid(GetMesh())))
+	{
+		return true;
+	}
+	
+	AMGPlayerState* MGPS = GetPlayerState<AMGPlayerState>();
+	if (IsValid(MGPS))
+	{
+		FVector4 PColor = MGPlayerColorToLinear(MGPS->PlayerColor);
+		MG_LOG_NET(LogMGNet, Log, TEXT("%s's Color: %s"), *GetName(), *PColor.ToString());
+		GetMesh()->SetCustomPrimitiveDataVector4(0, PColor);
+		GetMesh()->MarkRenderStateDirty();
+	}
+	else
+	{
+		return false;
+	}
+	MG_LOG_NET(LogMGNet, Log, TEXT("Complete"));
+	
+	return false;
 }
 
 void AMGPlayerCharacter::HandleMoveInput(const FInputActionValue& InValue)
@@ -237,8 +292,6 @@ void AMGPlayerCharacter::HandleInteractionInput(const FInputActionValue& InValue
 			{
 				PlayPassBombMontage(true);
 			}
-			
-			//IsPlayingPassBomb = true;
 		}
 		break;
 	case EMinigameType::FlagGame:

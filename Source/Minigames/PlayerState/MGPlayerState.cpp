@@ -61,9 +61,7 @@ FLinearColor AMGPlayerState::GetPlayerLinearColor() const
 
 void AMGPlayerState::OnRep_PlayerColor()
 {
-    // TestLog
-    // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White,
-    //     FString::Printf(TEXT("[Player %d] Color: %d"), GetPlayerId(), (uint8)PlayerColor));
+    MG_LOG_NET(LogMGNet, Log, TEXT("[Player %d] Color: %d"), GetPlayerId(), (uint8)PlayerColor);
 
     if (PlayerColorTickDelegateHandle.IsValid())
     {
@@ -84,8 +82,8 @@ bool AMGPlayerState::SendColorToPlayerCharacter(float DeltaTime)
     AMGPlayerCharacter* MGPC = Cast<AMGPlayerCharacter>(Pawn);
     if (MGPC)
     {
-        MGPC->FillPlayerColor();
+        return MGPC->FillCharacterColor();  // Pawn에서 false를 반환할 때 까지 반복
     }
 
-    return false;  // Pawn 획득 후 종료
+    return true;
 }

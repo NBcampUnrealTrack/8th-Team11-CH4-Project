@@ -57,5 +57,6 @@ private:
 	void OnRep_PlayerColor();
 
 	FTSTicker::FDelegateHandle PlayerColorTickDelegateHandle;
+
 	bool SendColorToPlayerCharacter(float DeltaTime);
 };

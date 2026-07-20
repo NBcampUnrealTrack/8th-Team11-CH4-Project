@@ -49,7 +49,7 @@ public:
 
 	UMGStatusComponent* GetMGStatusComponent() const { return StatusComponent; }
 
-	void FillPlayerColor();
+	bool FillCharacterColor();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MGPlayerCharacter|Components")
@@ -79,8 +79,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MGPlayerCharacter|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UNiagaraComponent> FlagNiagaraComponent;
 
-	UPROPERTY()
-	UMaterialInstanceDynamic* PlayerColorMat;
+	uint8 bFalling : 1;
 
 #pragma endregion
 

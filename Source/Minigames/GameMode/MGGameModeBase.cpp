@@ -307,6 +307,7 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			{
 				NotificationString = FString::Printf(TEXT(""));
 				UMGGameInstance* GI = Cast<UMGGameInstance>(GetGameInstance());
+
 				if (ensure(GI) && GI->CurrentRoundState == ERoundState::FinalResult)
 				{
 					StartMinigame();
