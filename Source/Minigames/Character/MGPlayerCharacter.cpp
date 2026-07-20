@@ -162,11 +162,13 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 		NameWidgetComponent->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(WidgetComponentLocation, LocalPlayerCameraLocation));
 	}
 
+	/*
 	if (IsValid(StatusComponent) && IsValid(GetCharacterMovement()))
 	{
 		if (!bFalling && GetCharacterMovement()->IsFalling())
 		{
 			const float MaxSpeed = 900.f;
+			
 			StatusComponent->SetOriginSpeed(MaxSpeed);
 			float CurrentSpeed = GetCharacterMovement()->Velocity.Length();
 			if (CurrentSpeed > MaxSpeed)
@@ -196,6 +198,7 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 			bFalling = false;
 		}
 	}
+	*/
 }
 
 bool AMGPlayerCharacter::FillCharacterColor()
