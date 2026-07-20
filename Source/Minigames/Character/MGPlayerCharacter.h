@@ -79,6 +79,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MGPlayerCharacter|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UNiagaraComponent> FlagNiagaraComponent;
 
+	uint8 bFalling : 1;
+
 #pragma endregion
 
 #pragma region Input

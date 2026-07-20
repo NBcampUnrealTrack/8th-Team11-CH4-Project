@@ -173,3 +173,9 @@ void UMGStatusComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	ActiveSpeedEffects.Empty();
 }
+
+void UMGStatusComponent::SetOriginSpeed(float InSpeed)
+{
+	OriginSpeed = InSpeed;
+	UpdateSpeed();
+}

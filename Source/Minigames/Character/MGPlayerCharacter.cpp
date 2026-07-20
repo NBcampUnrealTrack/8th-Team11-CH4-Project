@@ -161,6 +161,22 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 		FVector LocalPlayerCameraLocation = UGameplayStatics::GetPlayerCameraManager(this, 0)->GetCameraLocation();
 		NameWidgetComponent->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(WidgetComponentLocation, LocalPlayerCameraLocation));
 	}
+
+	if (IsValid(StatusComponent) && IsValid(GetCharacterMovement()))
+	{
+		if (!bFalling && GetCharacterMovement()->IsFalling())
+		{
+			StatusComponent->SetOriginSpeed(900.f);
+			GetCharacterMovement()->Velocity.X *= 1.5;
+			GetCharacterMovement()->Velocity.Y *= 1.5;
+			bFalling = true;
+		}
+		else if (bFalling && !GetCharacterMovement()->IsFalling())
+		{
+			StatusComponent->SetOriginSpeed(600.f);
+			bFalling = false;
+		}
+	}
 }
 
 bool AMGPlayerCharacter::FillCharacterColor()
@@ -246,8 +262,6 @@ void AMGPlayerCharacter::HandleInteractionInput(const FInputActionValue& InValue
 			{
 				PlayPassBombMontage(true);
 			}
-			
-			//IsPlayingPassBomb = true;
 		}
 		break;
 	case EMinigameType::FlagGame:

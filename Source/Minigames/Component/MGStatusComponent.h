@@ -38,6 +38,9 @@ public:
 #pragma region MovementSpeed
 
 public:
+	UFUNCTION()
+	void SetOriginSpeed(float InSpeed);	// 캐릭터 전용, 캐릭터 외 다른곳에서 사용되면 안됨
+
 	UFUNCTION(BlueprintCallable, Category = "Status|Speed")
 	float GetOriginSpeed() const { return OriginSpeed; }
 
