@@ -27,6 +27,9 @@ protected:
 	UFUNCTION()
 	void OnEffectFinished(UParticleSystemComponent* ParticleSystem);
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_OnBoxConsumed();
+
 protected:
 	UPROPERTY(VisibleAnywhere, Category = Box)
 	TObjectPtr<UBoxComponent> TriggerBox;
@@ -37,8 +40,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = Effect)
 	TObjectPtr<UParticleSystemComponent> ParticleEffect;
 
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Effect")
-	const UMGEffectDataAsset* ItemEffectData;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|Effect")
+	TArray<TObjectPtr<UMGEffectDataAsset>> ItemEffectDataArray;
 
 };

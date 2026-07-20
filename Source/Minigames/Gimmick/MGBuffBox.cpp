@@ -39,10 +39,10 @@ void AMGBuffBox::BeginPlay()
 void AMGBuffBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
 {
-	ParticleEffect->Activate(true);
-	Mesh->SetHiddenInGame(true);
-	SetActorEnableCollision(false);
-	ParticleEffect->OnSystemFinished.AddDynamic(this, &ThisClass::OnEffectFinished);
+	if (!HasAuthority())
+	{
+		return;
+	}
 
 	AMGPlayerCharacter* OverlappingCharacter = Cast<AMGPlayerCharacter>(OtherActor);
 	if (!IsValid(OverlappingCharacter))
@@ -56,10 +56,35 @@ void AMGBuffBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor
 		return;
 	}
 
-	if (IsValid(ItemEffectData))
+	if (ItemEffectDataArray.Num() > 0)
 	{
-		StatusComp->AddEffectforDuration(ItemEffectData);
+		const int32 RandomIndex = FMath::RandRange(0, ItemEffectDataArray.Num() - 1);
+		UMGEffectDataAsset* SelectedEffect = ItemEffectDataArray[RandomIndex];
+
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			5.0f,
+			FColor::Yellow,
+			FString::Printf(TEXT("Selected Buff Index : %d"), RandomIndex)
+		);
+
+		if (IsValid(SelectedEffect))
+		{
+			StatusComp->AddEffectforDuration(SelectedEffect);
+		}
 	}
+
+	// 모든 플레이어 및 서버에 작동하는 로직
+	Multicast_OnBoxConsumed();
+}
+
+void AMGBuffBox::Multicast_OnBoxConsumed_Implementation()
+{
+	Mesh->SetHiddenInGame(true);
+	SetActorEnableCollision(false);
+
+	ParticleEffect->Activate(true);
+	ParticleEffect->OnSystemFinished.AddDynamic(this, &ThisClass::OnEffectFinished);
 }
 
 void AMGBuffBox::OnEffectFinished(UParticleSystemComponent* ParticleSystem)
