@@ -2,6 +2,7 @@
 
 
 #include "Controller/MGPlayerController.h"
+#include "EnhancedInputSubsystems.h"
 
 #include "Blueprint/UserWidget.h"
 #include "Net/UnrealNetwork.h"
@@ -75,25 +76,55 @@ void AMGPlayerController::BeginPlay()
 	}
 	else
 	{
-		// 미니게임
+
 		FInputModeGameOnly GameOnly;
 		SetInputMode(GameOnly);
 		bShowMouseCursor = false;
-		
+
 		CreateChatWidget();
 		ShowMinigameIntro();
+		/*
+		GetWorld()->GetTimerManager().SetTimer(
+			DelegateBindTimerHandler, 
+			this, 
+			&AMGPlayerController::TryBindGameStateDelegate, 
+			0.1f, 
+			true
+		);
+		*/
 	}
 
-	if (IsValid(NotificationTextUIClass) == true)
+	// if (IsValid(NotificationTextUIClass) == true)
+	// {
+	// 	UUserWidget* NotificationTextUI = CreateWidget<UUserWidget>(this, NotificationTextUIClass);
+	// 	if (IsValid(NotificationTextUI) == true)
+	// 	{
+	// 		NotificationTextUI->AddToViewport(1);
+	// 
+	// 		NotificationTextUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	// 	}
+	// }
+}
+
+void AMGPlayerController::TryBindGameStateDelegate()
+{
+	AMGGameStateBase* GameState = GetWorld() ? GetWorld()->GetGameState<AMGGameStateBase>() : nullptr;
+
+	if (IsValid(GameState))
 	{
-		UUserWidget* NotificationTextUI = CreateWidget<UUserWidget>(this, NotificationTextUIClass);
-		if (IsValid(NotificationTextUI) == true)
-		{
-			NotificationTextUI->AddToViewport(1);
-
-			NotificationTextUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		}
+		GameState->OnWaitingStarted.AddDynamic(this, &AMGPlayerController::SetupMinigameEnv);
+		GetWorld()->GetTimerManager().ClearTimer(DelegateBindTimerHandler); // 바인딩 성공 시 ClearTimer
 	}
+}
+
+void AMGPlayerController::SetupMinigameEnv()
+{
+	FInputModeGameOnly GameOnly;
+	SetInputMode(GameOnly);
+	bShowMouseCursor = false;
+
+	CreateChatWidget();
+	ShowMinigameIntro();
 }
 
 void AMGPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -272,26 +303,23 @@ void AMGPlayerController::ClientRPC_ShowFinalResult_Implementation()
 		FinalResultWidget->AddToViewport(3);
 	}
 
-	// 마우스/입력 모드/이동 차단은 매 호출마다 재적용 (폰·뷰포트 준비 타이밍 대응)
+	// 마우스/입력 모드는 매 호출마다 재적용 (폰·뷰포트 준비 타이밍 대응)
 	FInputModeGameAndUI InputMode;
 	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 	SetInputMode(InputMode);
 	bShowMouseCursor = true;
-
-	if (APawn* MyPawn = GetPawn())
-	{
-		MyPawn->DisableInput(this);
-	}
 }
 
-void AMGPlayerController::ChangeColor(uint8 ColorIndex)
+void AMGPlayerController::ClearInputMapping()
 {
-	if (ColorIndex < static_cast<uint8>(EMGPlayerColor::Red) || static_cast<uint8>(EMGPlayerColor::Gray) < ColorIndex)
+	if (IsLocalController() == false)
 	{
 		return;
 	}
+	UEnhancedInputLocalPlayerSubsystem* EILPS = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+	checkf(IsValid(EILPS) == true, TEXT("EnhancedInputLocalPlayerSubsystem is invalid."));
 
-	ServerRPCSetColor(static_cast<EMGPlayerColor>(ColorIndex));
+	EILPS->ClearAllMappings();
 }
 
 void AMGPlayerController::ServerRPC_ReadyToReturn_Implementation()
@@ -319,6 +347,7 @@ void AMGPlayerController::ServerRPCPossess_Implementation(APawn* InPawn)
 {
 	if (InPawn != nullptr)
 	{
+		UnPossess();
 		Possess(InPawn);
 	}
 }
@@ -398,7 +427,12 @@ void AMGPlayerController::OnCutSceneFinished()
 	SetViewTarget(GetPawn());
 
 	RestoreAllWidgets();
-
+	
+	AMGGameModeBase* MGGameMode = Cast<AMGGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (IsValid(MGGameMode))
+	{
+		MGGameMode->OnFinishedCutScene();
+	}
 }
 
 #pragma endregion
@@ -634,6 +668,7 @@ void AMGPlayerController::RestoreAllWidgets()
 void AMGPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorld()->GetTimerManager().ClearTimer(ResultCameraRetryHandle);
+	GetWorld()->GetTimerManager().ClearTimer(DelegateBindTimerHandler);
 
 	Super::EndPlay(EndPlayReason);
 }

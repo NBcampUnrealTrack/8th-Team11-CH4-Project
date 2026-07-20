@@ -82,10 +82,11 @@ void AMGSpectatorPawn::DeathCamFollowCharacter(ACharacter* Character)
 
 	MG_LOG_NET(LogMGNet, Verbose, TEXT("[SpecDBG] DeathCamFollow called. HasAuth=%d OwnerPCValid=%d"), HasAuthority(), IsValid(OwnerPC));
 
-	if (IsValid(OwnerPC) == false || OwnerPC->IsLocalController() == false)
+	if (IsValid(OwnerPC) == false || GetNetMode() == NM_DedicatedServer)
 	{
 		return;
 	}
+
 	MG_LOG_NET(LogMGNet, Log, TEXT("SpectatorPawn: %s"), *GetName());
 
 	if (IsValid(Character))
@@ -113,6 +114,7 @@ void AMGSpectatorPawn::DeathCamFollowCharacter(ACharacter* Character)
 
 void AMGSpectatorPawn::SpectateOtherPlayer(int32 idx)
 {
+	MG_LOG_NET(LogMGNet, Log, TEXT(""));
 	AMGGameStateBase* GS = GetWorld()->GetGameState<AMGGameStateBase>();
 	if (IsValid(GS) && IsValid(OwnerPC))
 	{
@@ -131,6 +133,7 @@ void AMGSpectatorPawn::SpectateOtherPlayer(int32 idx)
 		}
 		if (GetOwner() == nullptr)
 		{
+			OwnerPC->ClearInputMapping();
 			OwnerPC->ServerRPCPossess(this);
 		}
 	}
@@ -164,11 +167,23 @@ void AMGSpectatorPawn::OnDeathTimerEnd()
 	}
 }
 
-void AMGSpectatorPawn::OnRep_Owner()
+void AMGSpectatorPawn::PossessedBy(AController* NewController)
 {
-	Super::OnRep_Owner();
+	Super::PossessedBy(NewController);
 
-	if (IsValid(OwnerPC) && GetOwner() != nullptr)
+	HandlePossession(NewController);
+}
+
+void AMGSpectatorPawn::OnRep_Controller()
+{
+	Super::OnRep_Controller();
+
+	HandlePossession(GetController());
+}
+
+void AMGSpectatorPawn::HandlePossession(AController* NewController)
+{
+	if (IsValid(NewController) && NewController->IsLocalController())
 	{
 		CamArm->bUsePawnControlRotation = true;
 

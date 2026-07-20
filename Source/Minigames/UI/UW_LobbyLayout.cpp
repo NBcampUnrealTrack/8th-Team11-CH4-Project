@@ -9,6 +9,7 @@
 #include "Components/WrapBox.h"
 #include "Controller/MGPlayerController.h"
 #include "GameState/MGLobbyGameStateBase.h"
+#include "Lobby/UW_ColorButton.h"
 #include "PlayerState/MGLobbyPlayerState.h"
 
 void UUW_LobbyLayout::NativeConstruct()
@@ -29,6 +30,8 @@ void UUW_LobbyLayout::NativeConstruct()
 	// 3) 초기 1회 — 이미 복제돼 있던 상태 반영 (타이밍 함정 대응)
 	RefreshRoster();
 	RefreshHeader();
+
+	BuildColorPalette();
 }
 
 void UUW_LobbyLayout::NativeDestruct()
@@ -58,11 +61,6 @@ void UUW_LobbyLayout::OnReadyClicked()
 	PC->ServerRPCSetReady(!bCurrentReady);
 }
 
-void UUW_LobbyLayout::OnColorClicked()
-{
-	// TODO
-}
-
 void UUW_LobbyLayout::RefreshHeader()
 {
     AMGLobbyGameStateBase* GS = GetLobbyGameState();
@@ -78,16 +76,56 @@ void UUW_LobbyLayout::RefreshHeader()
     );
 
     // 카운트다운 중이면 숫자+잠금, 아니면 READY+활성
-    if (GS->GetRemainCountdownTime() > 0)
-    {
-        CountdownText->SetText(FText::AsNumber(GS->GetRemainCountdownTime()));
-        ReadyButton->SetIsEnabled(false);
-    }
-    else
-    {
-        CountdownText->SetText(NSLOCTEXT("Lobby", "Ready", "READY"));
-        ReadyButton->SetIsEnabled(true);
-    }
+	const int32 T = GS->GetRemainCountdownTime();
+	if (T > 0)
+	{
+		CountdownText->SetText(FText::AsNumber(T));
+		ReadyButton->SetIsEnabled(false);
+	}
+	else if (T < 0)   // "Start!" 상태
+	{
+		CountdownText->SetText(NSLOCTEXT("Lobby", "Start", "START!"));
+		ReadyButton->SetIsEnabled(false);
+	}
+	else              // 0 = 대기 상태
+	{
+		CountdownText->SetText(NSLOCTEXT("Lobby", "Ready", "READY"));
+		ReadyButton->SetIsEnabled(true);
+	}
+}
+
+
+void UUW_LobbyLayout::BuildColorPalette()
+{
+	if (!IsValid(ColorPaletteBox) || !ColorButtonClass)
+	{
+		return;
+	}
+
+	// Red ~ Gray 10색만 (None/End 제외)
+	const uint8 First = static_cast<uint8>(EMGPlayerColor::Red);
+	const uint8 Last = static_cast<uint8>(EMGPlayerColor::Gray);
+
+	for (uint8 i = First; i <= Last; ++i)
+	{
+		UUW_ColorButton* Btn = CreateWidget<UUW_ColorButton>(this, ColorButtonClass);
+		if (!IsValid(Btn))
+		{
+			continue;
+		}
+
+		Btn->Setup(static_cast<EMGPlayerColor>(i));
+		Btn->OnColorButtonClicked.AddUObject(this, &ThisClass::OnColorPicked);
+		ColorPaletteBox->AddChild(Btn);
+	}
+}
+
+void UUW_LobbyLayout::OnColorPicked(EMGPlayerColor NewColor)
+{
+	if (AMGPlayerController* PC = GetOwningPlayer<AMGPlayerController>())
+	{
+		PC->ServerRPCSetColor(NewColor);
+	}
 }
 
 void UUW_LobbyLayout::RefreshRoster()

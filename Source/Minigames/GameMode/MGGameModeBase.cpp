@@ -8,6 +8,7 @@
 #include "PlayerState/MGFlagPlayerState.h"
 #include "GameInstance/MGGameInstance.h"
 
+#include "MGNetConfig.h"
 #include "Minigames.h"				// 커스텀 Log
 
 AMGGameModeBase::AMGGameModeBase()
@@ -49,6 +50,7 @@ void AMGGameModeBase::PreLogin(const FString& Options, const FString& Address, c
 void AMGGameModeBase::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
+	MG_LOG_NET(LogMGNet, Log, TEXT("%s has Login."), *NewPlayer->GetName());
 
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
 	if (IsValid(MGGameState) == false)
@@ -147,8 +149,8 @@ void AMGGameModeBase::PlayCutScene()
 
 		const TArray<TObjectPtr<ULevelSequence>>& Assets = PC->GetCutSceneAssets();
 
-		// 컷씬 에셋이 없거나 0번 인덱스가 유효하지 않으면 컷씬 사용 안 함
-		if (Assets.Num() == 0 || Assets[0] == nullptr)
+		// 컷씬 에셋이 없거나 유효하지 않으면 컷씬 사용 안 함
+		if (Assets.Num() < 3 || Assets[0] == nullptr || Assets[1] == nullptr || Assets[2] == nullptr)
 		{
 			bUseCutScene = false;
 			break;
@@ -157,28 +159,30 @@ void AMGGameModeBase::PlayCutScene()
 
 	if (bUseCutScene)
 	{
+		// 현재 맵 이름을 가져와서 컷씬 인덱스를 결정
+		int32 CutSceneIndex = 0;
+		FString CurrentMapName = GetWorld()->GetMapName();
+
+		if (CurrentMapName.Contains(TEXT("L_MG_01")))
+		{
+			CutSceneIndex = 0;
+		}
+		else if (CurrentMapName.Contains(TEXT("L_MG_02")))
+		{
+			CutSceneIndex = 1;
+		}
+		else if (CurrentMapName.Contains(TEXT("L_MG_03")))
+		{
+			CutSceneIndex = 2;
+		}
+
 		for (TObjectPtr<AMGPlayerController> PC : AllPlayerControllers)
 		{
 			if (IsValid(PC))
 			{
-				// TODO : 현재는 0번 Index의 Level Sequence 사용
-				// 추후 Level Sequence가 추가된다면 Game Instance에서 Index 관리 필요
-				PC->ClientRPC_PlayCutScene(0);
+				PC->ClientRPC_PlayCutScene(CutSceneIndex);
 			}
 		}
-
-		// TODO : 현재 CutsceneDuration 하드코딩
-		// 추후 Level Sequence 추가 시 Game Instance에서 관리 필요
-		// 실제 Level Sequence 길이보다 1~2초 길게 설정 필요
-		const float CutsceneDuration = 23.f;
-
-		GetWorldTimerManager().SetTimer(
-			CutSceneTimerHandler,
-			this,
-			&AMGGameModeBase::OnFinishedCutScene,
-			CutsceneDuration,
-			false
-		);
 	}
 	else
 	{
@@ -216,8 +220,6 @@ void AMGGameModeBase::OnCharacterDead(AMGPlayerController* InController)
 	}
 
 	InController->ClientRPCShowGameResultWidget(AllPlayerControllers.Num());
-
-	// AllPlayerControllers.Remove(InController);
 }
 
 void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
@@ -279,7 +281,9 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			--RemainEnteringWaitTime;
 			const bool bTimedOut = (RemainEnteringWaitTime <= 0);
 
-			if (bEveryoneArrived || bTimedOut)
+			const bool bForDebug = MG_USE_EOS == 0;	// MG_USE_EOS == 0이면 디버깅으로 인식하여 인원 수 상관없이 시작이 가능.
+
+			if (bEveryoneArrived || bTimedOut || bForDebug)
 			{
 				RemainWaitingTimeForPlaying = WaitingTime;   // 전원 도착 시점부터 카운트다운
 				MGGameState->SetMatchState(EMatchState::Waiting);
@@ -302,9 +306,15 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			if (RemainWaitingTimeForPlaying <= 0)
 			{
 				NotificationString = FString::Printf(TEXT(""));
-	
-				PlayCutScene();
-				MGGameState->OnRep_MatchState();
+				UMGGameInstance* GI = Cast<UMGGameInstance>(GetGameInstance());
+				if (ensure(GI) && GI->CurrentRoundState == ERoundState::FinalResult)
+				{
+					StartMinigame();
+				}
+				else 
+				{
+					PlayCutScene();
+				}
 			}
 	
 			NotifyToAllPlayer(NotificationString);

@@ -32,18 +32,23 @@ public:
 	void NextRound();
 
 protected:
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+protected:
 	// 폭탄 카운트다운이 시작된 후 터질 때까지 걸리는 시간
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Minigame|Rule")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minigame|Rule")
+	int32 InitExplodeTime = 15.f;
+
 	int32 ExplodeTime;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Minigame|Rule")
+	TObjectPtr<AMGBombActor> BombActor;
 
 	// 라운드 전환 타이머
 	FTimerHandle RoundTimerHandle;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Minigame|Rule")
 	TSubclassOf<AMGBombActor> BombActorClass;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Minigame|Rule")
-	TObjectPtr<AMGBombActor> BombActor;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Minigame")
 	TArray<TObjectPtr<AMGPlayerController>> AlivePlayers;
@@ -52,6 +57,9 @@ private:
 	bool TryFinishByLastManStanding();
 	
 	void AssignBombToRandomAlive();
+
+	UFUNCTION()
+	void SetBombActorCollisionEnabled(bool Value);
 	
 	FTimerHandle CutSceneTimerHandler;
 };

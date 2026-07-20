@@ -2,6 +2,7 @@
 
 #include "UI/UW_PassBombLayout.h"
 #include "Components/TextBlock.h"
+#include "GameState/MGPassBombGameState.h"
 
 void UUW_PassBombLayout::UpdateBombHolderText(const FString& NewHolderName)
 {
@@ -18,5 +19,14 @@ void UUW_PassBombLayout::UpdateBombTimerText(int32 RemainTime)
 	{
 		FString TimeString = FString::Printf(TEXT("%d"), RemainTime);
 		BombTimerText->SetText(FText::FromString(TimeString));
+	}
+}
+
+void UUW_PassBombLayout::UpdateAliveCountText(int32 AliveCount, int32 TotalCount)
+{
+	if (IsValid(AliveCountText))
+	{
+		FString FormatText = FString::Printf(TEXT("%d / %d"), AliveCount, TotalCount);
+		AliveCountText->SetText(FText::FromString(FormatText));
 	}
 }
