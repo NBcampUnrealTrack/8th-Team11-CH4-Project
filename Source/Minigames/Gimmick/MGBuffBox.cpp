@@ -11,6 +11,7 @@
 #include "Data/MGEffectDataAsset.h"
 
 AMGBuffBox::AMGBuffBox()
+	: RespawnTime(20.f)
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
@@ -61,21 +62,23 @@ void AMGBuffBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor
 		const int32 RandomIndex = FMath::RandRange(0, ItemEffectDataArray.Num() - 1);
 		UMGEffectDataAsset* SelectedEffect = ItemEffectDataArray[RandomIndex];
 
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			5.0f,
-			FColor::Yellow,
-			FString::Printf(TEXT("Selected Buff Index : %d"), RandomIndex)
-		);
-
 		if (IsValid(SelectedEffect))
 		{
 			StatusComp->AddEffectforDuration(SelectedEffect);
 		}
 	}
 
-	// 모든 플레이어 및 서버에 작동하는 로직
+	// 서버 + 모든 클라이언트
 	Multicast_OnBoxConsumed();
+
+	// 리스폰 타이머
+	GetWorld()->GetTimerManager().SetTimer(
+		RespawnTimerHandler, 
+		this, 
+		&ThisClass::RespawnBox, 
+		RespawnTime, 
+		false
+	);
 }
 
 void AMGBuffBox::Multicast_OnBoxConsumed_Implementation()
@@ -84,13 +87,22 @@ void AMGBuffBox::Multicast_OnBoxConsumed_Implementation()
 	SetActorEnableCollision(false);
 
 	ParticleEffect->Activate(true);
-	ParticleEffect->OnSystemFinished.AddDynamic(this, &ThisClass::OnEffectFinished);
 }
 
-void AMGBuffBox::OnEffectFinished(UParticleSystemComponent* ParticleSystem)
+void AMGBuffBox::RespawnBox()
 {
-	if (HasAuthority() == true)
-	{
-		Destroy();
-	}
+	Multicast_RespawnBox();
+}
+
+void AMGBuffBox::Multicast_RespawnBox_Implementation()
+{
+	Mesh->SetHiddenInGame(false);
+	SetActorEnableCollision(true);
+}
+
+void AMGBuffBox::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearTimer(RespawnTimerHandler);
+
+	Super::EndPlay(EndPlayReason);
 }
