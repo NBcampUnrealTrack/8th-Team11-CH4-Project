@@ -164,43 +164,49 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 		NameWidgetComponent->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(WidgetComponentLocation, LocalPlayerCameraLocation));
 	}
 
-	/*
 	if (IsValid(StatusComponent) && IsValid(GetCharacterMovement()))
 	{
+		const float DefaultSpeed = 600.f;
 		if (!bFalling && GetCharacterMovement()->IsFalling())
 		{
-			const float MaxSpeed = 900.f;
+			const float SpeedMul = 1.6f;
+			const float MaxSpeed = DefaultSpeed * SpeedMul;
 			
 			StatusComponent->SetOriginSpeed(MaxSpeed);
-			float CurrentSpeed = GetCharacterMovement()->Velocity.Length();
+			const FVector2D CurrentVel = FVector2D(GetCharacterMovement()->Velocity.X, GetCharacterMovement()->Velocity.Y);
+			float CurrentSpeed = CurrentVel.Length();
 			if (CurrentSpeed > MaxSpeed)
 			{
 				CurrentSpeed = MaxSpeed;
 			}
-			FVector UnitVel = GetCharacterMovement()->Velocity;
+			FVector2D UnitVel = FVector2D(GetCharacterMovement()->Velocity.X, GetCharacterMovement()->Velocity.Y);
 			UnitVel.Normalize();
 
-			GetCharacterMovement()->Velocity = UnitVel * CurrentSpeed * 1.5f;
+			const FVector2D FinalSpeed = UnitVel * CurrentSpeed * SpeedMul;
+			GetCharacterMovement()->Velocity.X = FinalSpeed.X;
+			GetCharacterMovement()->Velocity.Y = FinalSpeed.Y;
 			
 			bFalling = true;
 		}
 		else if (bFalling && !GetCharacterMovement()->IsFalling())
 		{
-			const float DefaultSpeed = 600.f;
 			StatusComponent->SetOriginSpeed(DefaultSpeed);
-			float CurrentSpeed = GetCharacterMovement()->Velocity.Length();
+			const FVector2D CurrentVel = FVector2D(GetCharacterMovement()->Velocity.X, GetCharacterMovement()->Velocity.Y);
+			float CurrentSpeed = CurrentVel.Length();
 			if (CurrentSpeed > DefaultSpeed)
 			{
 				CurrentSpeed = DefaultSpeed;
 			}
-			FVector UnitVel = GetCharacterMovement()->Velocity;
+			FVector2D UnitVel = CurrentVel;
 			UnitVel.Normalize();
 
-			GetCharacterMovement()->Velocity = UnitVel * CurrentSpeed;
+			const FVector2D FinalSpeed = UnitVel * CurrentSpeed;
+			GetCharacterMovement()->Velocity.X = FinalSpeed.X;
+			GetCharacterMovement()->Velocity.Y = FinalSpeed.Y;
+
 			bFalling = false;
 		}
 	}
-	*/
 }
 
 bool AMGPlayerCharacter::FillCharacterColor()
