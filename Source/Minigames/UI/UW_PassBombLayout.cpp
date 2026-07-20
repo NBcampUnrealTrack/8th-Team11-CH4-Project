@@ -26,7 +26,7 @@ void UUW_PassBombLayout::UpdateAliveCountText(int32 AliveCount, int32 TotalCount
 {
 	if (IsValid(AliveCountText))
 	{
-		FString FormatText = FString::Printf(TEXT("생존자 : %d / %d"), AliveCount, TotalCount);
+		FString FormatText = FString::Printf(TEXT("%d / %d"), AliveCount, TotalCount);
 		AliveCountText->SetText(FText::FromString(FormatText));
 	}
 }

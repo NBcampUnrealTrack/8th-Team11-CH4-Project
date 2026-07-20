@@ -57,7 +57,11 @@ void UUW_MinigameIntro::Setup(const FMGMinigameInfoRow& Row)
 					Line->SetFont(RuleLineFont);
 				}
 				
-				Box_Rules->AddChildToVerticalBox(Line);
+				if (UVerticalBoxSlot* LineSlot = Box_Rules->AddChildToVerticalBox(Line))
+                {
+                    LineSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 4.f));
+                }
+				Line->SetLineHeightPercentage(1.2f);   // 1.0 = 기본, 1.2 = 20% 넓게
 			}
 		}
 	}

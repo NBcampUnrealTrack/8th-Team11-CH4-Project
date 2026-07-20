@@ -149,8 +149,8 @@ void AMGGameModeBase::PlayCutScene()
 
 		const TArray<TObjectPtr<ULevelSequence>>& Assets = PC->GetCutSceneAssets();
 
-		// 컷씬 에셋이 없거나 0번 인덱스가 유효하지 않으면 컷씬 사용 안 함
-		if (Assets.Num() == 0 || Assets[0] == nullptr)
+		// 컷씬 에셋이 없거나 유효하지 않으면 컷씬 사용 안 함
+		if (Assets.Num() < 3 || Assets[0] == nullptr || Assets[1] == nullptr || Assets[2] == nullptr)
 		{
 			bUseCutScene = false;
 			break;
@@ -159,13 +159,28 @@ void AMGGameModeBase::PlayCutScene()
 
 	if (bUseCutScene)
 	{
+		// 현재 맵 이름을 가져와서 컷씬 인덱스를 결정
+		int32 CutSceneIndex = 0;
+		FString CurrentMapName = GetWorld()->GetMapName();
+
+		if (CurrentMapName.Contains(TEXT("L_MG_01")))
+		{
+			CutSceneIndex = 0;
+		}
+		else if (CurrentMapName.Contains(TEXT("L_MG_02")))
+		{
+			CutSceneIndex = 1;
+		}
+		else if (CurrentMapName.Contains(TEXT("L_MG_03")))
+		{
+			CutSceneIndex = 2;
+		}
+
 		for (TObjectPtr<AMGPlayerController> PC : AllPlayerControllers)
 		{
 			if (IsValid(PC))
 			{
-				// TODO : 현재는 0번 Index의 Level Sequence 사용
-				// 추후 Level Sequence가 추가된다면 Game Instance에서 Index 관리 필요
-				PC->ClientRPC_PlayCutScene(0);
+				PC->ClientRPC_PlayCutScene(CutSceneIndex);
 			}
 		}
 	}
