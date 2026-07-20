@@ -21,7 +21,7 @@ void UUW_FinalResultRow::Setup(AMGPlayerState* PS, int32 Rank)
 	case 1:  { BadgeColor = FLinearColor(1.00f, 0.84f, 0.00f); break; } // 금
 	case 2:  { BadgeColor = FLinearColor(0.75f, 0.75f, 0.78f); break; } // 은
 	case 3:  { BadgeColor = FLinearColor(0.80f, 0.50f, 0.20f); break; } // 동
-	default: { BadgeColor = FLinearColor(0.80f, 0.80f, 0.82f); break; } // 회색
+	default: { BadgeColor = FLinearColor(0.45f, 0.45f, 0.47f); break; } // 회색
 	}
 	RankBadge->SetColorAndOpacity(BadgeColor);
 	
