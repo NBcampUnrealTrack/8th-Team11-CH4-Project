@@ -166,14 +166,33 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 	{
 		if (!bFalling && GetCharacterMovement()->IsFalling())
 		{
-			StatusComponent->SetOriginSpeed(900.f);
-			GetCharacterMovement()->Velocity.X *= 1.5;
-			GetCharacterMovement()->Velocity.Y *= 1.5;
+			const float MaxSpeed = 900.f;
+			StatusComponent->SetOriginSpeed(MaxSpeed);
+			float CurrentSpeed = GetCharacterMovement()->Velocity.Length();
+			if (CurrentSpeed > MaxSpeed)
+			{
+				CurrentSpeed = MaxSpeed;
+			}
+			FVector UnitVel = GetCharacterMovement()->Velocity;
+			UnitVel.Normalize();
+
+			GetCharacterMovement()->Velocity = UnitVel * CurrentSpeed * 1.5f;
+			
 			bFalling = true;
 		}
 		else if (bFalling && !GetCharacterMovement()->IsFalling())
 		{
-			StatusComponent->SetOriginSpeed(600.f);
+			const float DefaultSpeed = 600.f;
+			StatusComponent->SetOriginSpeed(DefaultSpeed);
+			float CurrentSpeed = GetCharacterMovement()->Velocity.Length();
+			if (CurrentSpeed > DefaultSpeed)
+			{
+				CurrentSpeed = DefaultSpeed;
+			}
+			FVector UnitVel = GetCharacterMovement()->Velocity;
+			UnitVel.Normalize();
+
+			GetCharacterMovement()->Velocity = UnitVel * CurrentSpeed;
 			bFalling = false;
 		}
 	}
