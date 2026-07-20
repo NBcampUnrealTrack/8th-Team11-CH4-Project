@@ -328,12 +328,18 @@ void AMGGameModeBase::OnMainTimerElapsed()
 		{
 			bShowResultWidget = true;
 
-			for (AMGPlayerController* PC : AllPlayerControllers)
+			UMGGameInstance* GI = Cast<UMGGameInstance>(GetGameInstance());
+			
+			const bool bIsMinigameRound = 
+			(ensure(IsValid(GI)) && GI->CurrentRoundState != ERoundState::FinalResult);
+			if (bIsMinigameRound)
 			{
-				if (IsValid(PC))
+				for (AMGPlayerController* PC : AllPlayerControllers)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("RPC Send To PC"));
-					PC->ClientRPCShowGameResultWidget(1);
+					if (IsValid(PC))
+					{
+						PC->ClientRPCShowGameResultWidget(1);
+					}
 				}
 			}
 		}

@@ -30,6 +30,7 @@ public:
 
 	int32 GetMGScore() { return MGScore; }
 
+	UFUNCTION(BlueprintPure, Category = "Player")
 	FLinearColor GetPlayerLinearColor() const;
 
 public:
