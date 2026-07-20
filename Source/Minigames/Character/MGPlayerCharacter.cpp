@@ -155,7 +155,7 @@ void AMGPlayerCharacter::Tick(float DeltaTime)
 		}
 	}
 	
-	if (IsValid(NameWidgetComponent) == true && HasAuthority() == false)
+	if (IsValid(NameWidgetComponent) == true && GetNetMode() != NM_DedicatedServer)
 	{
 		FVector WidgetComponentLocation = NameWidgetComponent->GetComponentLocation();
 		FVector LocalPlayerCameraLocation = UGameplayStatics::GetPlayerCameraManager(this, 0)->GetCameraLocation();
