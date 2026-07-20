@@ -6,19 +6,19 @@
 
 AMGPlayerState::AMGPlayerState()
 {
-	bReplicates = true;
+    bReplicates = true;
 }
 
 void AMGPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
     DOREPLIFETIME(ThisClass, bReadyToReturn);
     DOREPLIFETIME(ThisClass, PlayerColor);
     DOREPLIFETIME(ThisClass, RoundScores);
-	DOREPLIFETIME(ThisClass, TotalScore);
-	DOREPLIFETIME(ThisClass, MGScore);
-	DOREPLIFETIME(ThisClass, Rank);
+    DOREPLIFETIME(ThisClass, TotalScore);
+    DOREPLIFETIME(ThisClass, MGScore);
+    DOREPLIFETIME(ThisClass, Rank);
 }
 
 void AMGPlayerState::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -35,7 +35,7 @@ void AMGPlayerState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AMGPlayerState::CopyProperties(APlayerState* PlayerState)
 {
     Super::CopyProperties(PlayerState);
- 
+
     MG_LOG_ROLE(LogMGNet, Log, TEXT(""));
     if (AMGPlayerState* NewPlayerState = Cast<AMGPlayerState>(PlayerState))
     {

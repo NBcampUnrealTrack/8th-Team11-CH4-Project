@@ -324,12 +324,38 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			break;
 		}
 	case EMatchState::Ending:
+	{
+		if (!bShowResultWidget)
 		{
+			bShowResultWidget = true;
+
+			UMGGameInstance* GI = Cast<UMGGameInstance>(GetGameInstance());
+			
+			const bool bIsMinigameRound = 
+			(ensure(IsValid(GI)) && GI->CurrentRoundState != ERoundState::FinalResult);
+			if (bIsMinigameRound)
+			{
+				for (AMGPlayerController* PC : AllPlayerControllers)
+				{
+					if (IsValid(PC))
+					{
+						PC->ClientRPCShowGameResultWidget(1);
+					}
+				}
+			}
+		}
+
 			// 남은 시간 알림
 			FString NotificationString = FString::Printf(TEXT("Moving to next stage in %d seconds..."), RemainWaitingTimeForEnding);
 			NotifyToAllPlayer(NotificationString);
 	
+			if (AMGGameStateBase* GS = GetGameState<AMGGameStateBase>())
+			{
+				GS->EndingTimeRemaining = RemainWaitingTimeForEnding;
+			}
+
 			--RemainWaitingTimeForEnding;
+
 	
 			// 카운트다운 종료 시 맵 이동
 			if (RemainWaitingTimeForEnding <= 0)

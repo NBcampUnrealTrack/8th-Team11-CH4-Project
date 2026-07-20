@@ -13,6 +13,8 @@ class MINIGAMES_API AMGButtonGameModeBase : public AMGGameModeBase
 public:
     AMGButtonGameModeBase();
 
+    virtual void Tick(float DeltaSeconds) override;
+
     bool bGameEnded = false;
 
 protected:
@@ -29,7 +31,7 @@ protected:
     FTimerHandle GameTimerHandle;
 
     UPROPERTY(EditAnywhere, Category = "Game Settings")
-    int32 GameDuration = 30;
+    int32 GameDuration = 90;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Settings")
     int32 TimeRemaining;
