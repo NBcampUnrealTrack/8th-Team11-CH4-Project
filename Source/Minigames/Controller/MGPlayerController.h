@@ -30,7 +30,7 @@ public:
 	virtual	void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UFUNCTION(Client, Reliable)
-	void ClientRPCShowGameResultWidget(int32 InRanking);
+	void ClientRPCShowGameResultWidget();
 
 	UFUNCTION(Client, Reliable)
 	void ClientRPCReturnToTitle();
@@ -80,7 +80,7 @@ public:
 	TSubclassOf<UUserWidget> NotificationTextUIClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSubclassOf<UUserWidget> GameResultUIClass;
+	TSubclassOf<UUW_GameResult> GameResultUIClass;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUW_LobbyLayout> LobbyLayoutClass;

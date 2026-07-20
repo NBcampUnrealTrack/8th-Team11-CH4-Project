@@ -5,7 +5,6 @@
 
 AMGButtonGameModeBase::AMGButtonGameModeBase()
 {
-    PrimaryActorTick.bCanEverTick = true;
 
     PlayerStateClass = AMGButtonPlayerState::StaticClass();
 
@@ -207,22 +206,4 @@ void AMGButtonGameModeBase::EndMinigame()
         GS->EndingTimeRemaining = RemainWaitingTimeForEnding;
         GS->OnGamePhaseChanged.Broadcast(CurrentPhase);
     }
-}
-
-void AMGButtonGameModeBase::Tick(float DeltaSeconds)
-{
-    Super::Tick(DeltaSeconds);
-
-    if (CurrentPhase != EGamePhase::GameOver)
-    {
-        return;
-    }
-
-    AMGButtonGameState* GS = GetGameState<AMGButtonGameState>();
-    if (!GS)
-    {
-        return;
-    }
-
-    GS->EndingTimeRemaining = RemainWaitingTimeForEnding;
 }

@@ -49,7 +49,5 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Scoreboard")
     TArray<AMGButtonPlayerState*> GetSortedPlayerStatesByScore();
 
-    virtual void GetLifetimeReplicatedProps(
-        TArray<FLifetimeProperty>& OutLifetimeProps
-    ) const override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

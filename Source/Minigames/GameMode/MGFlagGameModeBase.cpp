@@ -35,6 +35,7 @@ void AMGFlagGameModeBase::StartMinigame()
 void AMGFlagGameModeBase::EndMinigame()
 {
 	Super::EndMinigame();
+	DetermineWinner();
 	
 	DetermineWinner();
 	GetWorld()->GetTimerManager().ClearTimer(GameTimerHandle);

@@ -48,8 +48,8 @@ void AMGGameStateBase::OnRep_MatchState()
 		{
 			const bool bShouldBlockMove =
 				(MatchState == EMatchState::Entering ||
-					MatchState == EMatchState::Waiting ||
-					MatchState == EMatchState::Ending);
+				MatchState == EMatchState::Waiting ||
+				MatchState == EMatchState::Ending);
 
 			if (bShouldBlockMove)
 			{
@@ -120,7 +120,7 @@ void AMGGameStateBase::OnRep_EndingTimeRemaining()
 }
 
 TArray<AMGPlayerState*> AMGGameStateBase::GetSortedPlayerStatesByTotalScore()
-{ 
+{
 	TArray<AMGPlayerState*> SortedPlayers;
 
 	for (APlayerState* PS : PlayerArray)
@@ -131,18 +131,10 @@ TArray<AMGPlayerState*> AMGGameStateBase::GetSortedPlayerStatesByTotalScore()
 		}
 	}
 
-	SortedPlayers.Sort([](
-		const AMGPlayerState& A,
-		const AMGPlayerState& B)
+	SortedPlayers.Sort([](const AMGPlayerState& A, const AMGPlayerState& B)
 		{
 			return A.TotalScore > B.TotalScore;
 		});
-
-
-	for (int32 i = 0; i < SortedPlayers.Num(); i++)
-	{
-		SortedPlayers[i]->Rank = i + 1;
-	}
 
 	return SortedPlayers;
 }

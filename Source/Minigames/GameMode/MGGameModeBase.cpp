@@ -209,6 +209,26 @@ void AMGGameModeBase::StartMinigame()
 void AMGGameModeBase::EndMinigame()
 {
 	AMGGameStateBase* MGGameState = GetGameState<AMGGameStateBase>();
+
+	if (!MGGameState)
+	{
+		return;
+	}
+
+	TArray<AMGPlayerState*> SortedPlayers = MGGameState->GetSortedPlayerStatesByTotalScore();
+
+	int32 CurrentRank = 1;
+
+	for (int32 i = 0; i < SortedPlayers.Num(); i++)
+	{
+		if (i > 0 && SortedPlayers[i]->TotalScore != SortedPlayers[i - 1]->TotalScore)
+		{
+			CurrentRank = i + 1;
+		}
+
+		SortedPlayers[i]->Rank = CurrentRank;
+	}
+
 	MGGameState->SetMatchState(EMatchState::Ending);
 }
 
@@ -219,7 +239,7 @@ void AMGGameModeBase::OnCharacterDead(AMGPlayerController* InController)
 		return;
 	}
 
-	InController->ClientRPCShowGameResultWidget(AllPlayerControllers.Num());
+	InController->ClientRPCShowGameResultWidget();
 }
 
 void AMGGameModeBase::GiveScore(AMGPlayerState* PS, int32 Rank)
@@ -332,8 +352,8 @@ void AMGGameModeBase::OnMainTimerElapsed()
 			{
 				if (IsValid(PC))
 				{
-					UE_LOG(LogTemp, Warning, TEXT("RPC Send To PC"));
-					PC->ClientRPCShowGameResultWidget(1);
+					UE_LOG(LogTemp, Verbose, TEXT("RPC Send To PC"));
+					PC->ClientRPCShowGameResultWidget();
 				}
 			}
 		}

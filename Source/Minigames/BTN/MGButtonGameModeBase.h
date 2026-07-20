@@ -13,8 +13,6 @@ class MINIGAMES_API AMGButtonGameModeBase : public AMGGameModeBase
 public:
     AMGButtonGameModeBase();
 
-    virtual void Tick(float DeltaSeconds) override;
-
     bool bGameEnded = false;
 
 protected:
