@@ -10,7 +10,9 @@ AMGButtonGameState::AMGButtonGameState()
     TimeRemaining = 0;
 }
 
-void AMGButtonGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void AMGButtonGameState::GetLifetimeReplicatedProps(
+    TArray<FLifetimeProperty>& OutLifetimeProps
+) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
@@ -43,7 +45,9 @@ TArray<AMGButtonPlayerState*> AMGButtonGameState::GetSortedPlayerStatesByScore()
         }
     }
 
-    SortedPlayers.Sort([](const AMGButtonPlayerState& A, const AMGButtonPlayerState& B)
+    SortedPlayers.Sort([](
+        const AMGButtonPlayerState& A,
+        const AMGButtonPlayerState& B)
         {
             return A.GetScore() > B.GetScore();
         });

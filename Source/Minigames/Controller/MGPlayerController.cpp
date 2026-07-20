@@ -213,9 +213,9 @@ void AMGPlayerController::ClientRPCReturnToTitle_Implementation()
 	}
 }
 
-void AMGPlayerController::ClientRPCShowGameResultWidget_Implementation()
+void AMGPlayerController::ClientRPCShowGameResultWidget_Implementation(int32 InRanking)
 {
-	UE_LOG(LogTemp, Verbose, TEXT("===== Result Widget RPC Called ====="));
+	UE_LOG(LogTemp, Warning, TEXT("===== Result Widget RPC Called ====="));
 
 	if (!IsLocalController())
 	{
@@ -231,7 +231,7 @@ void AMGPlayerController::ClientRPCShowGameResultWidget_Implementation()
 
 	UE_LOG(LogTemp, Warning, TEXT("Creating Widget"));
 
-	UUW_GameResult* ResultWidget = CreateWidget<UUW_GameResult>(this, GameResultUIClass);
+	UUserWidget* ResultWidget = CreateWidget<UUserWidget>(this, GameResultUIClass);
 
 	if (IsValid(ResultWidget))
 	{
