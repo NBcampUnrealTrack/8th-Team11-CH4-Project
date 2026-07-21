@@ -83,7 +83,7 @@ Source/Minigames/
   Gimmick/                  # 폭탄, 깃발, 버튼, 이동 발판 등 상호작용 액터
   GameInstance/             # GameInstance, 온라인 서브시스템(EOS)
   UI/                       # UMG 위젯 (로비/채팅/미니맵/결과 등)
-  Data/ Type/               # 데이터 애셋, 열거형·구조체 정의
+  Data/ Type/               # 데이터 에셋, 열거형·구조체 정의
 ```
 
 클래스는 `MG` 접두사(예: `MGFlagGameModeBase`), UMG 위젯은 `UW_` 접두사(예: `UW_LobbyLayout`)를 사용합니다.
