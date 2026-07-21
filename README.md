@@ -52,6 +52,7 @@ Title  →  Lobby  →  Round 1  →  Round 2  →  Round 3  →  Final Result
 | 키 | 동작 |
 | --- | --- |
 | `W` `A` `S` `D` | 이동 |
+| `Space` | 점프 |
 | `E` | 폭탄 넘기기 / 깃발 뺏기 |
 
 ## 주요 기능
